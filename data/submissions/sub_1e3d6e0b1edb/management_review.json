@@ -1,30 +1,28 @@
 {
-  "id": "mgr_47f61dd5d859",
+  "id": "mgr_5cb4a9a31c96",
   "submission_id": "sub_1e3d6e0b1edb",
-  "reviewer_id": "user_77bf8bbdd4cd",
+  "reviewer_id": "user_f26c22da6822",
   "rubric_id": "rubric_bed_edging_v1",
   "rubric_version": 1,
   "service_type": "bed edging",
   "category_scores": {
-    "continuity": 4.0,
-    "depth_consistency": 4.0,
-    "turf_containment": 4.0,
+    "continuity": 4.5,
+    "depth_consistency": 4.5,
+    "turf_containment": 4.5,
     "cleanliness": 4.0,
-    "visual_finish": 4.0
+    "visual_finish": 4.5
   },
-  "total_score": 80.0,
-  "comments": "UI deterministic follow-up check from submissions list",
-  "disposition": "correction required",
-  "flagged_issues": [
-    "ui_followup_check"
-  ],
-  "created_at": "2026-03-30T03:32:55.230703+00:00",
-  "updated_at": "2026-03-30T03:32:55.230710+00:00",
+  "total_score": 88.4,
+  "comments": "Great work Today. Just a little detail to curb and building corners and its perfect.",
+  "disposition": "pass with notes",
+  "flagged_issues": [],
+  "created_at": "2026-03-30T05:31:51.879628+00:00",
+  "updated_at": "2026-03-30T05:31:51.879634+00:00",
   "audit_history": [
     {
-      "timestamp": "2026-03-30T03:32:55.230712+00:00",
+      "timestamp": "2026-03-30T05:31:51.879637+00:00",
       "action": "created",
-      "actor_id": "user_77bf8bbdd4cd",
+      "actor_id": "user_f26c22da6822",
       "note": "Management review submitted"
     }
   ]

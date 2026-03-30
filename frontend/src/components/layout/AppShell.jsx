@@ -10,14 +10,14 @@ import NotificationCenter from "@/components/common/NotificationCenter";
 const navigationByRole = {
   management: [
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
-    { to: "/jobs", label: "Jobs & QR", icon: FolderInput },
+    { to: "/jobs", label: "Alignment & QR", icon: FolderInput },
     { to: "/review", label: "Review Queue", icon: ClipboardCheck },
     { to: "/exports", label: "Exports", icon: FileOutput },
     { to: "/settings", label: "Settings", icon: Settings },
   ],
   owner: [
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
-    { to: "/jobs", label: "Jobs & QR", icon: FolderInput },
+    { to: "/jobs", label: "Alignment & QR", icon: FolderInput },
     { to: "/review", label: "Management QA", icon: ClipboardCheck },
     { to: "/owner", label: "Owner Review", icon: ShieldCheck },
     { to: "/analytics", label: "Calibration", icon: ChartColumn },

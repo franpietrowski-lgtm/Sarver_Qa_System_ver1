@@ -42,6 +42,11 @@ export const authPost = async (path, payload, options = {}) => {
   return response.data;
 };
 
+export const authPatch = async (path, payload, options = {}) => {
+  const response = await api.patch(path, payload, options);
+  return response.data;
+};
+
 export const authPostForm = async (path, formData) => {
   const response = await api.post(path, formData, {
     headers: { "Content-Type": "multipart/form-data" },

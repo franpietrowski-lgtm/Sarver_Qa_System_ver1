@@ -21,6 +21,8 @@ export default function OwnerPage() {
   const [trainingInclusion, setTrainingInclusion] = useState("approved");
   const [exclusionReason, setExclusionReason] = useState("");
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 8;
 
   const loadPage = async () => {
     const [submissionResponse, rubricResponse] = await Promise.all([
@@ -60,6 +62,9 @@ export default function OwnerPage() {
     return rubrics.find((item) => item.service_type === detail?.submission?.service_type);
   }, [detail, rubrics]);
 
+  const totalPages = Math.max(Math.ceil(submissions.length / pageSize), 1);
+  const paginatedSubmissions = submissions.slice((page - 1) * pageSize, page * pageSize);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!detail?.submission) return;
@@ -90,8 +95,15 @@ export default function OwnerPage() {
         <CardContent className="p-6">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Owner queue</p>
           <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Calibration & dataset approval</h2>
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm text-[#5c6d64]">
+            <p data-testid="owner-queue-pagination-label">Page {page} of {totalPages}</p>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" disabled={page === 1} onClick={() => setPage((current) => Math.max(current - 1, 1))} className="h-9 rounded-2xl" data-testid="owner-queue-prev-button">Prev</Button>
+              <Button type="button" variant="outline" disabled={page === totalPages} onClick={() => setPage((current) => Math.min(current + 1, totalPages))} className="h-9 rounded-2xl" data-testid="owner-queue-next-button">Next</Button>
+            </div>
+          </div>
           <div className="mt-5 space-y-3">
-            {submissions.map((submission) => (
+            {paginatedSubmissions.map((submission) => (
               <button key={submission.id} type="button" onClick={() => setSelectedId(submission.id)} className={`w-full rounded-[24px] border p-4 text-left ${selectedId === submission.id ? "border-[#243e36] bg-[#edf0e7]" : "border-border bg-[#f6f6f2]"}`} data-testid={`owner-queue-item-${submission.id}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div>

@@ -1,0 +1,91 @@
+{
+  "id": "sub_49a93a3c4557",
+  "submission_code": "SUB_49A93A3C4557",
+  "access_code": "b215f85a",
+  "crew_label": "Hardscape_Shrek",
+  "job_key": "forest highlands",
+  "job_id": null,
+  "job_name_input": "forest highlands",
+  "matched_job_id": null,
+  "match_status": "unmatched",
+  "match_confidence": 0.0,
+  "truck_number": "43",
+  "division": "SLMCO_Install",
+  "service_type": "",
+  "status": "Pending Match",
+  "note": "",
+  "area_tag": "",
+  "field_report": {
+    "type": "",
+    "notes": "",
+    "photo_files": [],
+    "reported": false
+  },
+  "gps": {
+    "lat": 40.46506,
+    "lng": -80.212138,
+    "accuracy": 139.0
+  },
+  "captured_at": "2026-03-30T05:23:21.140972+00:00",
+  "required_photo_count": 3,
+  "photo_count": 3,
+  "photo_files": [
+    {
+      "id": "file_cded5be8a0dc",
+      "filename": "01_c09457.png",
+      "original_name": "Aurea-inspiration.png",
+      "mime_type": "image/png",
+      "sequence": 1,
+      "size_bytes": 961542,
+      "local_path": "/app/data/submissions/sub_49a93a3c4557/01_c09457.png",
+      "relative_api_path": "/api/submissions/files/sub_49a93a3c4557/01_c09457.png",
+      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_49a93a3c4557/01_c09457.png",
+      "source_type": "local"
+    },
+    {
+      "id": "file_7fba35587657",
+      "filename": "02_62d259.png",
+      "original_name": "Aurea-inspiration2.png",
+      "mime_type": "image/png",
+      "sequence": 2,
+      "size_bytes": 969812,
+      "local_path": "/app/data/submissions/sub_49a93a3c4557/02_62d259.png",
+      "relative_api_path": "/api/submissions/files/sub_49a93a3c4557/02_62d259.png",
+      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_49a93a3c4557/02_62d259.png",
+      "source_type": "local"
+    },
+    {
+      "id": "file_1a39f8eb54f0",
+      "filename": "03_3a0306.png",
+      "original_name": "chapter1ART.png",
+      "mime_type": "image/png",
+      "sequence": 3,
+      "size_bytes": 1033574,
+      "local_path": "/app/data/submissions/sub_49a93a3c4557/03_3a0306.png",
+      "relative_api_path": "/api/submissions/files/sub_49a93a3c4557/03_3a0306.png",
+      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_49a93a3c4557/03_3a0306.png",
+      "source_type": "local"
+    }
+  ],
+  "local_folder_path": "/app/data/submissions/sub_49a93a3c4557",
+  "device_metadata": {
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+  },
+  "drive_sync_status": "pending_configuration",
+  "created_at": "2026-03-30T05:23:21.140982+00:00",
+  "updated_at": "2026-03-30T05:23:21.140984+00:00",
+  "audit_history": [
+    {
+      "timestamp": "2026-03-30T05:23:21.140986+00:00",
+      "action": "submitted",
+      "actor_id": "b215f85a",
+      "note": "Crew submission created"
+    },
+    {
+      "timestamp": "2026-03-30T05:23:21.140988+00:00",
+      "action": "status_change",
+      "actor_id": "b215f85a",
+      "note": "Lifecycle moved to Pending Match"
+    }
+  ]
+}

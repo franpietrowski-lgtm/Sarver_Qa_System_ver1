@@ -1,0 +1,31 @@
+{
+  "id": "mgr_47d936bcb953",
+  "submission_id": "sub_49a93a3c4557",
+  "reviewer_id": "user_0be7f7559776",
+  "rubric_id": "rubric_fall_cleanup_v1",
+  "rubric_version": 1,
+  "service_type": "fall cleanup",
+  "category_scores": {
+    "leaf_removal": 4.0,
+    "detail_finish": 3.0,
+    "bed_cleanup": 2.5,
+    "walkway_clearance": 3.0,
+    "visual_finish": 3.0
+  },
+  "total_score": 63.4,
+  "comments": "",
+  "disposition": "correction required",
+  "flagged_issues": [
+    "bed and details require check on learning evaluation--retraining"
+  ],
+  "created_at": "2026-03-30T05:27:08.811963+00:00",
+  "updated_at": "2026-03-30T05:27:08.811969+00:00",
+  "audit_history": [
+    {
+      "timestamp": "2026-03-30T05:27:08.811971+00:00",
+      "action": "created",
+      "actor_id": "user_0be7f7559776",
+      "note": "Management review submitted"
+    }
+  ]
+}

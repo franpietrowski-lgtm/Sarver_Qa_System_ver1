@@ -4,22 +4,38 @@ import { GitBranch, HardDrive, Link2, Network, Shapes } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { authGet } from "@/lib/api";
+import { Input } from "@/components/ui/input";
+import { authGet, authPatch, authPost } from "@/lib/api";
 import { toast } from "sonner";
+
+
+const STAFF_TITLES = ["GM", "Account Manager", "Production Manager", "Supervisor", "Owner"];
 
 
 export default function SettingsPage() {
   const [driveStatus, setDriveStatus] = useState(null);
   const [blueprint, setBlueprint] = useState(null);
   const [connecting, setConnecting] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    role: "management",
+    title: "Production Manager",
+    password: "",
+    is_active: true,
+  });
 
   const loadSettings = async () => {
-    const [driveResponse, blueprintResponse] = await Promise.all([
+    const [driveResponse, blueprintResponse, usersResponse] = await Promise.all([
       authGet("/integrations/drive/status"),
       authGet("/system/blueprint"),
+      authGet("/users"),
     ]);
     setDriveStatus(driveResponse);
     setBlueprint(blueprintResponse);
+    setUsers(usersResponse);
   };
 
   useEffect(() => {
@@ -36,6 +52,31 @@ export default function SettingsPage() {
       toast.error(error?.response?.data?.detail || "Google Drive connection is not configured yet");
     } finally {
       setConnecting(false);
+    }
+  };
+
+  const createUser = async (event) => {
+    event.preventDefault();
+    setCreatingUser(true);
+    try {
+      await authPost("/users", newUser);
+      toast.success("Staff account created.");
+      setNewUser({ name: "", email: "", role: "management", title: "Production Manager", password: "", is_active: true });
+      await loadSettings();
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Unable to create user");
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
+  const toggleUserStatus = async (userId, isActive) => {
+    try {
+      await authPatch(`/users/${userId}/status`, { is_active: isActive });
+      toast.success(isActive ? "Account authorized." : "Account deactivated.");
+      await loadSettings();
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Unable to update user status");
     }
   };
 
@@ -157,6 +198,56 @@ export default function SettingsPage() {
             ].map((step, index) => (
               <div key={step} className="rounded-[24px] border border-border bg-[#f6f6f2] p-4 text-sm text-[#5c6d64]" data-testid={`settings-learning-roadmap-step-${index + 1}`}>{step}</div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="settings-staff-management-card">
+        <CardContent className="p-8">
+          <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Sarver staff access</p>
+              <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Create and authorize implementation accounts</h3>
+              <form className="mt-6 grid gap-4" onSubmit={createUser} data-testid="settings-create-user-form">
+                <Input value={newUser.name} onChange={(event) => setNewUser((current) => ({ ...current, name: event.target.value }))} placeholder="Staff name" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="settings-user-name-input" />
+                <Input value={newUser.email} onChange={(event) => setNewUser((current) => ({ ...current, email: event.target.value }))} placeholder="Email" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="settings-user-email-input" />
+                <Input value={newUser.password} onChange={(event) => setNewUser((current) => ({ ...current, password: event.target.value }))} placeholder="Temporary password" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="settings-user-password-input" />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <select value={newUser.role} onChange={(event) => setNewUser((current) => ({ ...current, role: event.target.value, title: event.target.value === "owner" ? "Owner" : current.title }))} className="h-12 rounded-2xl border border-transparent bg-[#edf0e7] px-4 text-sm" data-testid="settings-user-role-select">
+                    <option value="management">Admin</option>
+                    <option value="owner">Owner</option>
+                  </select>
+                  <select value={newUser.title} onChange={(event) => setNewUser((current) => ({ ...current, title: event.target.value }))} className="h-12 rounded-2xl border border-transparent bg-[#edf0e7] px-4 text-sm" data-testid="settings-user-title-select">
+                    {STAFF_TITLES.filter((title) => newUser.role === "owner" ? title === "Owner" : title !== "Owner").map((title) => <option key={title} value={title}>{title}</option>)}
+                  </select>
+                </div>
+                <label className="flex items-center gap-3 rounded-2xl bg-[#f6f6f2] px-4 py-3 text-sm text-[#243e36]" data-testid="settings-user-active-toggle">
+                  <input type="checkbox" checked={newUser.is_active} onChange={(event) => setNewUser((current) => ({ ...current, is_active: event.target.checked }))} />
+                  Authorize immediately
+                </label>
+                <Button type="submit" disabled={creatingUser} className="h-12 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="settings-create-user-button">{creatingUser ? "Creating account..." : "Create staff account"}</Button>
+              </form>
+            </div>
+
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Current staff access</p>
+              <div className="mt-6 space-y-3">
+                {users.map((user) => (
+                  <div key={user.id} className="rounded-[24px] border border-border bg-[#f6f6f2] p-4" data-testid={`settings-user-row-${user.id}`}>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-[#243e36]">{user.name}</p>
+                        <p className="mt-1 text-sm text-[#5c6d64]">{user.email} · {user.title}</p>
+                      </div>
+                      <Badge className={`border-0 px-3 py-1 ${user.is_active ? "bg-[#d8f3dc] text-[#10261d]" : "bg-[#f5e3db] text-[#8a4d38]"}`}>{user.is_active ? "authorized" : "inactive"}</Badge>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" onClick={() => toggleUserStatus(user.id, !user.is_active)} className="h-10 rounded-2xl border-[#243e36]/15 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid={`settings-user-status-button-${user.id}`}>{user.is_active ? "Deactivate" : "Authorize"}</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

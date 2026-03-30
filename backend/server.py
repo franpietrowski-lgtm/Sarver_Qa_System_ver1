@@ -155,6 +155,23 @@ class ExportRunRequest(BaseModel):
     export_format: str
 
 
+class UserCreateRequest(BaseModel):
+    name: str
+    email: str
+    role: str = "management"
+    title: str
+    password: str
+    is_active: bool = True
+
+
+class UserStatusUpdateRequest(BaseModel):
+    is_active: bool
+
+
+class CrewLinkStatusUpdateRequest(BaseModel):
+    enabled: bool
+
+
 RUBRIC_LIBRARY = [
     {
         "id": "rubric_bed_edging_v1",
@@ -323,6 +340,8 @@ async def get_current_user(
     user = await db.users.find_one({"id": payload["sub"]}, {"_id": 0, "password_hash": 0})
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+    if not user.get("is_active", True):
+        raise HTTPException(status_code=403, detail="Account is inactive")
     return user
 
 
@@ -449,6 +468,10 @@ async def seed_defaults() -> None:
                     }
                 },
             )
+
+    await db.jobs.update_many({"division": "Cleanup"}, {"$set": {"division": "Maintenance", "updated_at": now_iso()}})
+    await db.crew_access_links.update_many({"division": "Cleanup"}, {"$set": {"division": "Maintenance", "updated_at": now_iso()}})
+    await db.submissions.update_many({"division": "Cleanup"}, {"$set": {"division": "Maintenance", "updated_at": now_iso()}})
         else:
             await db.users.insert_one(
                 {
@@ -744,6 +767,8 @@ async def login(payload: LoginRequest):
     user = await db.users.find_one({"email": payload.email.lower()}, {"_id": 0})
     if not user or not verify_password(payload.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
+    if not user.get("is_active", True):
+        raise HTTPException(status_code=403, detail="Account is inactive")
     token = create_access_token(user["id"], user["role"])
     await db.users.update_one(
         {"id": user["id"]},
@@ -1116,6 +1141,72 @@ async def create_crew_access_link(payload: CrewAccessCreate, user: dict = Depend
     }
     await db.crew_access_links.insert_one({**crew_link})
     return present_crew_link(crew_link)
+
+
+@api_router.patch("/crew-access-links/{crew_link_id}/status")
+async def update_crew_access_link_status(
+    crew_link_id: str,
+    payload: CrewLinkStatusUpdateRequest,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    await db.crew_access_links.update_one(
+        {"id": crew_link_id},
+        {
+            "$set": {"enabled": payload.enabled, "updated_at": now_iso()},
+            "$push": {"audit_history": audit_entry("status_update", user["id"], f"enabled={payload.enabled}")},
+        },
+    )
+    crew_link = await db.crew_access_links.find_one({"id": crew_link_id}, {"_id": 0})
+    if not crew_link:
+        raise HTTPException(status_code=404, detail="Crew link not found")
+    return present_crew_link(crew_link)
+
+
+@api_router.get("/users")
+async def get_users(user: dict = Depends(require_roles("management", "owner"))):
+    users = await db.users.find({}, {"_id": 0, "password_hash": 0}).sort("created_at", -1).to_list(200)
+    return users
+
+
+@api_router.post("/users")
+async def create_user(payload: UserCreateRequest, user: dict = Depends(require_roles("management", "owner"))):
+    existing = await db.users.find_one({"email": payload.email.lower()}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=409, detail="A user with this email already exists")
+    record = {
+        "id": make_id("user"),
+        "name": payload.name,
+        "email": payload.email.lower(),
+        "role": payload.role,
+        "title": payload.title,
+        "password_hash": get_password_hash(payload.password),
+        "is_active": payload.is_active,
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+        "audit_history": [audit_entry("created", user["id"], f"Staff account created for {payload.title}")],
+    }
+    await db.users.insert_one({**record})
+    record.pop("password_hash", None)
+    return record
+
+
+@api_router.patch("/users/{user_id}/status")
+async def update_user_status(
+    user_id: str,
+    payload: UserStatusUpdateRequest,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    await db.users.update_one(
+        {"id": user_id},
+        {
+            "$set": {"is_active": payload.is_active, "updated_at": now_iso()},
+            "$push": {"audit_history": audit_entry("status_update", user["id"], f"active={payload.is_active}")},
+        },
+    )
+    updated_user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated_user
 
 
 @api_router.get("/notifications")
