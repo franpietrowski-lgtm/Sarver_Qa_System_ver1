@@ -50,6 +50,11 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Fixed auth validation issue for seeded demo accounts and fixed Mongo ObjectId response leakage
 - Fixed export workflow regression so dataset generation no longer empties active review queues
 - Fixed authenticated export downloads in the frontend
+- Added in-app notification center for management/owner review activity
+- Added crew-facing follow-up notifications on the QR access portal when more photos are requested
+- Added notification generation rules for new submissions, owner-review-ready items, and correction requests
+- Added calibration heatmap analytics to surface grading variance by crew and service type
+- Added learning roadmap / AI-readiness messaging so the current labeled dataset can evolve into future automated grading
 
 ## Prioritized Backlog
 ### P0
@@ -61,6 +66,7 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Add richer job auto-match using imported coordinates and better route/time proximity rules
 - Add rubric version management UI (create new versions, activate/deactivate, threshold editing)
 - Add owner random sampling/high-value filters and variance drilldowns
+- Add AI-assisted score suggestion mode that recommends likely rubric scores before human confirmation
 
 ### P2
 - Add stronger offline tolerance for field crews
@@ -73,3 +79,4 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Expand seeded/sample data or import a real CSV to mirror production routing
 - Add deeper calibration analytics by reviewer and service type
 - Add editable admin settings for rubric thresholds and hard-fail conditions
+- Plan the first AI grading assistant phase using the stored gold dataset + variance history
