@@ -181,7 +181,10 @@ export default function ReviewPage() {
                     <div className="flex items-center gap-2 text-[#243e36]"><SearchCheck className="h-5 w-5" /><p className="text-sm font-semibold">Suggested job match</p></div>
                     <select value={selectedJobId} onChange={(event) => setSelectedJobId(event.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-transparent bg-white px-4 text-sm" data-testid="review-match-job-select">
                       <option value="">No job matched yet</option>
-                      {jobs.map((job) => (<option key={job.id} value={job.id}>{job.job_id} · {job.property_name}</option>))}
+                      {jobs.map((job) => {
+                        const label = `${job.job_id} · ${job.property_name}`;
+                        return <option key={job.id} value={job.id} label={label} />;
+                      })}
                     </select>
                     <Button type="button" onClick={handleMatchOverride} className="mt-3 h-11 w-full rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="review-confirm-match-button"><Link2 className="mr-2 h-4 w-4" />Confirm / override match</Button>
                   </div>
@@ -220,7 +223,7 @@ export default function ReviewPage() {
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-[#243e36]">Service type</label>
                     <select value={selectedServiceType} onChange={(event) => setSelectedServiceType(event.target.value)} className="h-12 w-full rounded-2xl border border-transparent bg-[#edf0e7] px-4 text-sm" data-testid="review-service-type-select">
-                      {rubrics.map((item) => (<option key={item.id} value={item.service_type}>{item.service_type}</option>))}
+                      {rubrics.map((item) => <option key={item.id} value={item.service_type} label={item.service_type} />)}
                     </select>
                   </div>
 

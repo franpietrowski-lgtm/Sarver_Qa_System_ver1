@@ -1,8 +1,80 @@
-import { useEffect, useState } from "react";
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useEffect, useMemo, useState } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { authGet } from "@/lib/api";
+
+
+function VerticalBars({ data, valueKey, labelKey, testId }) {
+  const maxValue = Math.max(...data.map((item) => item[valueKey] || 0), 1);
+
+  return (
+    <div className="grid h-[320px] grid-cols-3 items-end gap-4" data-testid={testId}>
+      {data.map((item) => {
+        const height = `${Math.max(((item[valueKey] || 0) / maxValue) * 100, 6)}%`;
+        return (
+          <div key={item[labelKey]} className="flex h-full flex-col justify-end gap-3">
+            <div className="flex-1 rounded-[24px] bg-[#f6f6f2] p-3">
+              <div className="flex h-full items-end justify-center rounded-[20px] bg-[#edf0e7] px-3 pb-3">
+                <div className="w-full rounded-[18px] bg-[#243e36]" style={{ height }} />
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-[#243e36]">{item[labelKey]}</p>
+              <p className="text-xs text-[#5c6d64]">{item[valueKey]}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+
+function TrendBars({ data, testId }) {
+  const maxValue = Math.max(...data.map((item) => item.count || 0), 1);
+
+  return (
+    <div className="flex h-[320px] items-end gap-4" data-testid={testId}>
+      {data.map((item) => {
+        const height = `${Math.max(((item.count || 0) / maxValue) * 100, 8)}%`;
+        return (
+          <div key={item.day} className="flex h-full flex-1 flex-col justify-end gap-3">
+            <div className="flex-1 rounded-[24px] bg-[#f6f6f2] p-3">
+              <div className="flex h-full items-end rounded-[20px] bg-[#edf0e7] px-3 pb-3">
+                <div className="w-full rounded-[18px] bg-[#7ca982]" style={{ height }} />
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-xs font-semibold text-[#243e36]">{item.day}</p>
+              <p className="text-xs text-[#5c6d64]">{item.count}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+
+function HorizontalBars({ data, testId }) {
+  const maxValue = Math.max(...data.map((item) => item.count || 0), 1);
+
+  return (
+    <div className="space-y-3" data-testid={testId}>
+      {data.map((item) => (
+        <div key={item.reason} className="rounded-[22px] bg-[#f6f6f2] p-4">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-[#243e36]">{item.reason}</p>
+            <p className="text-xs text-[#5c6d64]">{item.count}</p>
+          </div>
+          <div className="h-3 rounded-full bg-[#edf0e7]">
+            <div className="h-3 rounded-full bg-[#e07a5f]" style={{ width: `${Math.max(((item.count || 0) / maxValue) * 100, 6)}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 
 export default function AnalyticsPage() {
@@ -12,14 +84,20 @@ export default function AnalyticsPage() {
     authGet("/analytics/summary").then(setAnalytics);
   }, []);
 
+  const heatmapRows = useMemo(
+    () => Array.from(new Set((analytics?.calibration_heatmap || []).map((item) => item.crew))),
+    [analytics],
+  );
+  const heatmapColumns = useMemo(
+    () => Array.from(new Set((analytics?.calibration_heatmap || []).map((item) => item.service_type))),
+    [analytics],
+  );
+  const maxVariance = Math.max(...(analytics?.calibration_heatmap || []).map((item) => item.variance_average || 0), 1);
+  const getHeatCell = (crew, serviceType) => analytics?.calibration_heatmap?.find((item) => item.crew === crew && item.service_type === serviceType);
+
   if (!analytics) {
     return <div className="rounded-[28px] border border-border bg-white p-10 text-center text-[#243e36]" data-testid="analytics-loading-state">Loading analytics...</div>;
   }
-
-  const heatmapRows = Array.from(new Set((analytics.calibration_heatmap || []).map((item) => item.crew)));
-  const heatmapColumns = Array.from(new Set((analytics.calibration_heatmap || []).map((item) => item.service_type)));
-  const maxVariance = Math.max(...(analytics.calibration_heatmap || []).map((item) => item.variance_average || 0), 1);
-  const getHeatCell = (crew, serviceType) => analytics.calibration_heatmap.find((item) => item.crew === crew && item.service_type === serviceType);
 
   return (
     <div className="space-y-6" data-testid="analytics-page">
@@ -48,16 +126,8 @@ export default function AnalyticsPage() {
         <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-crew-chart-card">
           <CardContent className="p-8">
             <h3 className="font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Average score by crew</h3>
-            <div className="mt-6 h-[320px]" data-testid="analytics-crew-chart">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.average_score_by_crew}>
-                  <CartesianGrid stroke="#e2e2dc" vertical={false} />
-                  <XAxis dataKey="crew" tick={{ fill: "#41534a", fontSize: 12 }} />
-                  <YAxis tick={{ fill: "#41534a", fontSize: 12 }} />
-                  <Tooltip />
-                  <Bar dataKey="average_score" fill="#243e36" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="mt-6" data-testid="analytics-crew-chart">
+              <VerticalBars data={analytics.average_score_by_crew} valueKey="average_score" labelKey="crew" testId="analytics-crew-bars" />
             </div>
           </CardContent>
         </Card>
@@ -65,16 +135,8 @@ export default function AnalyticsPage() {
         <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-volume-chart-card">
           <CardContent className="p-8">
             <h3 className="font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Submission volume trends</h3>
-            <div className="mt-6 h-[320px]" data-testid="analytics-volume-chart">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={analytics.submission_volume_trends}>
-                  <CartesianGrid stroke="#e2e2dc" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fill: "#41534a", fontSize: 12 }} />
-                  <YAxis tick={{ fill: "#41534a", fontSize: 12 }} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="count" stroke="#7ca982" strokeWidth={3} dot={{ r: 4 }} />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="mt-6" data-testid="analytics-volume-chart">
+              <TrendBars data={analytics.submission_volume_trends} testId="analytics-volume-bars" />
             </div>
           </CardContent>
         </Card>
@@ -83,16 +145,8 @@ export default function AnalyticsPage() {
       <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-fail-chart-card">
         <CardContent className="p-8">
           <h3 className="font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Fail reason frequency</h3>
-          <div className="mt-6 h-[320px]" data-testid="analytics-fail-chart">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics.fail_reason_frequency}>
-                <CartesianGrid stroke="#e2e2dc" vertical={false} />
-                <XAxis dataKey="reason" tick={{ fill: "#41534a", fontSize: 12 }} interval={0} angle={-20} textAnchor="end" height={80} />
-                <YAxis tick={{ fill: "#41534a", fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#e07a5f" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="mt-6" data-testid="analytics-fail-chart">
+            <HorizontalBars data={analytics.fail_reason_frequency} testId="analytics-fail-bars" />
           </div>
         </CardContent>
       </Card>
@@ -109,7 +163,7 @@ export default function AnalyticsPage() {
               ))}
               {heatmapRows.map((crew) => (
                 <div key={crew} className="contents">
-                  <div key={`${crew}-label`} className="rounded-2xl bg-[#243e36] px-3 py-3 text-sm font-semibold text-white" data-testid={`analytics-heatmap-row-${crew.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}>{crew}</div>
+                  <div className="rounded-2xl bg-[#243e36] px-3 py-3 text-sm font-semibold text-white" data-testid={`analytics-heatmap-row-${crew.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}>{crew}</div>
                   {heatmapColumns.map((column) => {
                     const cell = getHeatCell(crew, column);
                     const intensity = cell ? Math.min((cell.variance_average || 0) / maxVariance, 1) : 0;

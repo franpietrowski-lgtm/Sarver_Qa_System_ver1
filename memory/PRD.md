@@ -18,7 +18,7 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Issue notifications: notify Production Managers + Account Managers first
 
 ## Architecture Decisions
-- Frontend: React 19 + React Router + Tailwind + shadcn/ui + Recharts + Framer Motion
+- Frontend: React 19 + React Router + Tailwind + shadcn/ui + Framer Motion
 - Backend: FastAPI + Motor + JWT auth + multipart upload handling
 - Database: MongoDB collections with app-managed string IDs (avoids ObjectId leakage in API responses)
 - Storage: local upload cache for fast proof capture, export files on server, Google Drive OAuth sync service layer prepared
@@ -67,6 +67,7 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Added field issue / damage / note reporting with attached issue photos into the review pipeline
 - Updated notifications so field issues route first to Production Managers and Account Managers
 - Updated the app styling direction to align more closely with Sarver Landscape branding cues
+- Reworked owner analytics visuals to lightweight CSS-based charts for a cleaner testable experience
 
 ## Prioritized Backlog
 ### P0
