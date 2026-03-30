@@ -1,0 +1,153 @@
+{
+  "theme_and_archetype": {
+    "theme": "light",
+    "archetype_number": 1,
+    "archetype_name": "Organic & Earthy",
+    "rationale": "The domain is a field quality capture system for a landscaping company. It requires a grounded, natural feel for crew members in the field, while maintaining a professional, clear, and high-trust interface for management and owner calibrating AI data. The 'Organic & Earthy' archetype perfectly balances physical utility with professional oversight.",
+    "vibe": "Tactical Botanical / Industrial Greenspace",
+    "design_principles": [
+      "Function Over Decoration: Field tools must be instantly usable. Elements should be large and tactile.",
+      "Clear Hierarchies: Dashboards need density but must not feel cluttered. Use 'Grid Borders' to structure the data rigidly.",
+      "Earthy Palette: UI elements should evoke the environment—soil, stone, and foliage—but maintain high contrast for outdoor visibility.",
+      "Accessible Motion: Use micro-interactions to confirm field actions (e.g., photo uploads, GPS matches)."
+    ]
+  },
+  "typography": {
+    "fonts": {
+      "heading": {
+        "family": "Cabinet Grotesk",
+        "rationale": "Provides a strong, slightly extended, and authoritative look that feels structural and corporate without being generic. Great for dashboard numbers and section titles.",
+        "weights": ["400", "700", "900"],
+        "css_import": "@import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,700,900&display=swap');"
+      },
+      "body": {
+        "family": "IBM Plex Sans",
+        "rationale": "Highly legible, technical, and space-efficient font perfect for dense data tables, forms, and field labels.",
+        "weights": ["400", "500", "600"],
+        "css_import": "@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');"
+      }
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl tracking-tighter font-black",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-bold",
+      "h3": "text-xl sm:text-2xl font-bold",
+      "body_large": "text-lg font-medium",
+      "body_base": "text-base font-normal",
+      "body_small": "text-sm font-medium",
+      "overline": "text-xs tracking-[0.2em] uppercase font-bold text-sage-600"
+    }
+  },
+  "color_palette": {
+    "base": {
+      "background": "#F6F6F2",
+      "surface": "#FFFFFF",
+      "surface_alt": "#EDEDE8",
+      "foreground": "#111815",
+      "border": "#E2E2DC"
+    },
+    "brand": {
+      "primary": "#243E36",
+      "primary_hover": "#1A2C26",
+      "primary_foreground": "#FFFFFF",
+      "secondary": "#7CA982",
+      "secondary_hover": "#68926E",
+      "secondary_foreground": "#FFFFFF"
+    },
+    "accents": {
+      "terracotta": "#E07A5F",
+      "ochre": "#DDA15E",
+      "moss": "#5F7464"
+    },
+    "status": {
+      "success": "#2D6A4F",
+      "success_bg": "#D8F3DC",
+      "warning": "#E85D04",
+      "warning_bg": "#FFD6BA",
+      "error": "#9D0208",
+      "error_bg": "#FFCAD4",
+      "info": "#0077B6",
+      "info_bg": "#CAF0F8"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Mobile-first, generous touch targets for the crew app. Dense, grid-aligned 'Control Room' layouts for management dashboards.",
+    "crew_app": {
+      "layout": "Single column, mobile-first, edge-to-edge containers on small screens. Max-width constraints on larger devices (max-w-md mx-auto) to maintain app-like feel.",
+      "padding": "p-6 sm:p-8",
+      "touch_targets": "Minimum 48px height for all interactive elements (buttons, inputs, image uploads)."
+    },
+    "dashboards": {
+      "layout": "Grid-based (Bento or Control Room style). 100vw edge-to-edge layout with persistent side navigation.",
+      "padding": "p-8",
+      "grid_pattern": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+      "cards": "Subtle border, flat shadow. Direct children must use h-full for equal column heights."
+    }
+  },
+  "surfaces_and_materials": {
+    "buttons": "Neumorphic-tactile. Flat solid colors with a 1px inner stroke to create crisp edges. Minimal drop shadow.",
+    "dashboard_cards": "Grid Borders style. border border-border bg-surface, rounded-md. Very subtle shadow-sm.",
+    "inputs": "bg-surface_alt border-transparent focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20",
+    "crew_photo_upload": "Dashed border (border-2 border-dashed border-border), bg-surface_alt, rounded-xl. Hover state darkens background slightly.",
+    "glass_headers": "backdrop-blur-xl bg-background/80 border-b border-border"
+  },
+  "components": {
+    "libraries_required": [
+      "lucide-react",
+      "@phosphor-icons/react",
+      "framer-motion",
+      "clsx",
+      "tailwind-merge"
+    ],
+    "shadcn_overrides": {
+      "Card": "Remove default shadow. Use `border border-border bg-surface rounded-lg`.",
+      "Button": "Remove border-radius default if it doesn't match the tactile feel. Use `rounded-md font-semibold`.",
+      "Input": "Increase height to `h-12` for better touchability on mobile devices.",
+      "Badge": "Use organic tinted backgrounds (e.g., bg-[#D8F3DC] text-[#2D6A4F]) with no borders.",
+      "Table": "Dense padding (`p-2` or `p-3`) for data-heavy management views."
+    }
+  },
+  "motion_and_interactions": {
+    "philosophy": "Functional and responsive. No decorative delays. State changes must feel immediate.",
+    "hover_states": "Buttons subtly darken (`hover:brightness-95`) and lift slightly (`-translate-y-0.5`).",
+    "page_transitions": "Fade and slide up (`initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}`).",
+    "list_stagger": "When loading lists of jobs or submissions, use framer-motion stagger logic (`staggerChildren: 0.05`).",
+    "photo_upload": "Scale down slightly on drag-over, scale back on drop. Success state should show a brief green flash or checkmark pop."
+  },
+  "media_and_images": {
+    "hero_login_background": {
+      "url": "https://images.unsplash.com/photo-1772816037169-4daa98b83098?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwyfHxsdXNoJTIwZ3JlZW4lMjBncmFzcyUyMHRleHR1cmV8ZW58MHx8fHwxNzc0ODM3ODk3fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Close up of vibrant green grass blades. Use as the background for the Management/Owner login screen. Overlay with `bg-background/80` or a heavy gradient to ensure form readability.",
+      "category": "background"
+    },
+    "soil_texture_accent": {
+      "url": "https://images.unsplash.com/photo-1630078167224-633fbac39843?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwxfHxzb2lsJTIwZGlydCUyMHRleHR1cmV8ZW58MHx8fHwxNzc0ODM3ODk4fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Brown stone and dirt fragments. Can be used as a very subtle, low-opacity background texture pattern or for a '404' screen.",
+      "category": "texture"
+    },
+    "sample_submission_photo": {
+      "url": "https://images.pexels.com/photos/6728925/pexels-photo-6728925.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Close-up of lawn mower on grass. Use this to mock up the field submission review screen.",
+      "category": "mockup_data"
+    },
+    "crew_avatar": {
+      "url": "https://images.unsplash.com/photo-1605117882932-f9e32b03fea9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwxfHxsYW5kc2NhcGluZyUyMGxhd24lMjBjYXJlfGVufDB8fHx8MTc3NDgzNzg4OHww&ixlib=rb-4.1.0&q=85",
+      "description": "Man with shovel. Use for crew profile avatars or to represent the 'Crew Member' role in the dashboard.",
+      "category": "mockup_data"
+    },
+    "truck_asset_photo": {
+      "url": "https://images.unsplash.com/photo-1696663118264-55a63c75409b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBsYW5kc2NhcGluZyUyMHRydWNrfGVufDB8fHx8MTc3NDgzNzg4OHww&ixlib=rb-4.1.0&q=85",
+      "description": "White truck. Use in the dashboard to represent Truck/Asset matching.",
+      "category": "mockup_data"
+    }
+  },
+  "data_testid_conventions": {
+    "rules": "All interactive elements MUST include a data-testid attribute in kebab-case, describing their role.",
+    "examples": {
+      "crew_submit_button": "crew-submit-photos-button",
+      "job_dropdown": "job-selection-dropdown",
+      "management_score_input": "rubric-score-input-{category}",
+      "owner_approve_button": "owner-approve-dataset-button",
+      "nav_link": "nav-link-{destination}"
+    }
+  }
+}
