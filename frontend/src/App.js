@@ -1,52 +1,93 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Toaster, toast } from "sonner";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import AppShell from "@/components/layout/AppShell";
+import { authGet, getStoredToken, loginRequest, logoutRequest, setStoredToken } from "@/lib/api";
+import AnalyticsPage from "@/pages/AnalyticsPage";
+import CrewCapturePage from "@/pages/CrewCapturePage";
+import ExportsPage from "@/pages/ExportsPage";
+import JobsPage from "@/pages/JobsPage";
+import LoginPage from "@/pages/LoginPage";
+import OverviewPage from "@/pages/OverviewPage";
+import OwnerPage from "@/pages/OwnerPage";
+import ReviewPage from "@/pages/ReviewPage";
+import SettingsPage from "@/pages/SettingsPage";
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+function ProtectedRoute({ authState, allowedRoles, onLogout, children }) {
+  if (authState.loading) {
+    return <div className="flex min-h-screen items-center justify-center bg-[#f6f6f2] text-lg font-semibold text-[#243e36]" data-testid="app-loading-state">Loading workspace...</div>;
+  }
+  if (!authState.user) {
+    return <Navigate to="/login" replace />;
+  }
+  if (allowedRoles && !allowedRoles.includes(authState.user.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <AppShell user={authState.user} onLogout={onLogout}>{children}</AppShell>;
+}
 
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
 
 function App() {
+  const [authState, setAuthState] = useState({ token: getStoredToken(), user: null, loading: true });
+
+  useEffect(() => {
+    const restoreSession = async () => {
+      const token = getStoredToken();
+      if (!token) {
+        setAuthState({ token: null, user: null, loading: false });
+        return;
+      }
+
+      try {
+        setStoredToken(token);
+        const user = await authGet("/auth/me");
+        setAuthState({ token, user, loading: false });
+      } catch {
+        logoutRequest();
+        setAuthState({ token: null, user: null, loading: false });
+      }
+    };
+
+    restoreSession();
+  }, []);
+
+  const handleLogin = async (email, password) => {
+    const result = await loginRequest(email, password);
+    setAuthState({ token: result.token, user: result.user, loading: false });
+    return result;
+  };
+
+  const handleLogout = () => {
+    logoutRequest();
+    setAuthState({ token: null, user: null, loading: false });
+    toast.success("You’ve been signed out.");
+  };
+
+  const pageProps = useMemo(
+    () => ({ user: authState.user }),
+    [authState.user],
+  );
+
   return (
     <div className="App">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
+          <Route path="/" element={<Navigate to={authState.user ? "/dashboard" : "/login"} replace />} />
+          <Route path="/login" element={<LoginPage onLogin={handleLogin} authUser={authState.user} />} />
+          <Route path="/crew/:code" element={<CrewCapturePage />} />
+          <Route path="/dashboard" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><OverviewPage {...pageProps} /></ProtectedRoute>} />
+          <Route path="/jobs" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><JobsPage {...pageProps} /></ProtectedRoute>} />
+          <Route path="/review" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><ReviewPage {...pageProps} /></ProtectedRoute>} />
+          <Route path="/owner" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><OwnerPage {...pageProps} /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><AnalyticsPage {...pageProps} /></ProtectedRoute>} />
+          <Route path="/exports" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><ExportsPage {...pageProps} /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><SettingsPage {...pageProps} /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
+      <Toaster richColors position="top-right" />
     </div>
   );
 }

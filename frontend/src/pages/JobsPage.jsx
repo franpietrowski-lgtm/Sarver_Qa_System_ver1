@@ -1,0 +1,171 @@
+import { useEffect, useMemo, useState } from "react";
+import { FileSpreadsheet, Plus, QrCode, UploadCloud } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { authGet, authPost, authPostForm, getApiOrigin } from "@/lib/api";
+import { toast } from "sonner";
+
+
+export default function JobsPage() {
+  const [jobs, setJobs] = useState([]);
+  const [crewLinks, setCrewLinks] = useState([]);
+  const [search, setSearch] = useState("");
+  const [csvFile, setCsvFile] = useState(null);
+  const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [newLink, setNewLink] = useState({ label: "", truck_number: "", division: "" });
+
+  const loadPage = async () => {
+    const [jobsResponse, crewResponse] = await Promise.all([
+      authGet("/jobs"),
+      authGet("/crew-access-links"),
+    ]);
+    setJobs(jobsResponse);
+    setCrewLinks(crewResponse);
+  };
+
+  useEffect(() => {
+    loadPage();
+  }, []);
+
+  const filteredJobs = useMemo(() => {
+    const searchValue = search.toLowerCase();
+    return jobs.filter((job) => `${job.job_id} ${job.job_name} ${job.property_name} ${job.truck_number}`.toLowerCase().includes(searchValue));
+  }, [jobs, search]);
+
+  const handleImport = async () => {
+    if (!csvFile) {
+      toast.error("Choose a CSV file before importing.");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("file", csvFile);
+    setImporting(true);
+    try {
+      const result = await authPostForm("/jobs/import-csv", formData);
+      toast.success(`Imported ${result.imported} jobs and updated ${result.updated}.`);
+      setCsvFile(null);
+      await loadPage();
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Import failed");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleCreateCrewLink = async (event) => {
+    event.preventDefault();
+    setCreating(true);
+    try {
+      await authPost("/crew-access-links", newLink);
+      toast.success("New crew QR link created.");
+      setNewLink({ label: "", truck_number: "", division: "" });
+      await loadPage();
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Unable to create crew link");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const appOrigin = getApiOrigin();
+
+  return (
+    <div className="space-y-6" data-testid="jobs-page">
+      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="jobs-import-card">
+          <CardContent className="p-8">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">LMN sync starter</p>
+            <h2 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Import jobs from CSV now, keep the API path ready for later.</h2>
+            <p className="mt-3 text-sm leading-6 text-[#5c6d64]">Upload LMN exports with job ID, property, service type, division, scheduled date, truck number, and route.</p>
+
+            <div className="mt-6 rounded-[28px] border border-dashed border-[#cdd3c8] bg-[#edf0e7] p-5" data-testid="jobs-import-dropzone">
+              <div className="flex items-center gap-3 text-[#243e36]"><FileSpreadsheet className="h-5 w-5" /><p className="text-sm font-semibold">Expected columns: Job ID, Job Name, Property Name, Address, Service Type, Scheduled Date, Division, Truck Number, Route.</p></div>
+              <Input type="file" accept=".csv" onChange={(event) => setCsvFile(event.target.files?.[0] || null)} className="mt-4 h-12 rounded-2xl border-transparent bg-white" data-testid="jobs-csv-file-input" />
+              <Button onClick={handleImport} disabled={importing} className="mt-4 h-12 w-full rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="jobs-csv-import-button">
+                <UploadCloud className="mr-2 h-4 w-4" />
+                {importing ? "Importing jobs..." : "Import CSV jobs"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="jobs-create-crew-link-card">
+          <CardContent className="p-8">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Crew QR control</p>
+            <h2 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight">Create unique QR entries for field access.</h2>
+            <form className="mt-6 grid gap-4" onSubmit={handleCreateCrewLink} data-testid="jobs-create-crew-link-form">
+              <Input value={newLink.label} onChange={(event) => setNewLink((current) => ({ ...current, label: event.target.value }))} placeholder="Crew label" className="h-12 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-label-input" />
+              <Input value={newLink.truck_number} onChange={(event) => setNewLink((current) => ({ ...current, truck_number: event.target.value }))} placeholder="Truck number" className="h-12 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-truck-input" />
+              <Input value={newLink.division} onChange={(event) => setNewLink((current) => ({ ...current, division: event.target.value }))} placeholder="Division" className="h-12 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-division-input" />
+              <Button type="submit" disabled={creating} className="h-12 rounded-2xl bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid="crew-link-create-button"><Plus className="mr-2 h-4 w-4" />{creating ? "Creating..." : "Create crew QR"}</Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="jobs-crew-qr-grid-card">
+        <CardContent className="p-8">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Active crew links</p>
+              <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Printable QR set</h3>
+            </div>
+            <QrCode className="h-6 w-6 text-[#243e36]" />
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {crewLinks.map((link) => {
+              const crewUrl = `${appOrigin}/crew/${link.code}`;
+              return (
+                <div key={link.id} className="rounded-[28px] border border-border bg-[#f6f6f2] p-5" data-testid={`crew-qr-card-${link.code}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[#243e36]" data-testid={`crew-qr-label-${link.code}`}>{link.label}</p>
+                      <p className="mt-1 text-sm text-[#5c6d64]" data-testid={`crew-qr-meta-${link.code}`}>{link.truck_number} · {link.division}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-center rounded-[28px] bg-white p-4">
+                    <QRCodeSVG value={crewUrl} size={128} includeMargin data-testid={`crew-qr-svg-${link.code}`} />
+                  </div>
+                  <Input value={crewUrl} readOnly className="mt-4 h-11 rounded-2xl border-transparent bg-white" data-testid={`crew-qr-url-${link.code}`} />
+                  <Button type="button" onClick={() => window.open(crewUrl, "_blank", "noopener,noreferrer")} className="mt-3 h-11 w-full rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid={`crew-qr-open-button-${link.code}`}>Open crew portal</Button>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="jobs-table-card">
+        <CardContent className="p-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Imported jobs</p>
+              <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Selection source for crews</h3>
+            </div>
+            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search jobs" className="h-11 max-w-sm rounded-2xl border-transparent bg-[#edf0e7]" data-testid="jobs-search-input" />
+          </div>
+
+          <div className="mt-6 overflow-hidden rounded-[28px] border border-border">
+            <div className="grid grid-cols-[1fr_1.2fr_0.9fr_0.8fr_0.8fr] gap-3 bg-[#edf0e7] px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-[#5f7464]">
+              <p>Job ID</p><p>Property</p><p>Service</p><p>Truck</p><p>Division</p>
+            </div>
+            {filteredJobs.slice(0, 40).map((job) => (
+              <div key={job.id} className="grid grid-cols-[1fr_1.2fr_0.9fr_0.8fr_0.8fr] gap-3 border-t border-border/80 px-4 py-4 text-sm text-[#243e36]" data-testid={`jobs-row-${job.id}`}>
+                <p>{job.job_id}</p>
+                <p>{job.property_name}</p>
+                <p>{job.service_type}</p>
+                <p>{job.truck_number}</p>
+                <p>{job.division}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

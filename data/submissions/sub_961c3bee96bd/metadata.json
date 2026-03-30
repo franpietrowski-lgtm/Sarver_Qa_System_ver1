@@ -1,0 +1,83 @@
+{
+  "id": "sub_961c3bee96bd",
+  "submission_code": "SUB_961C3BEE96BD",
+  "access_code": "000a07ca",
+  "crew_label": "North Crew",
+  "job_id": "LMN-4101",
+  "matched_job_id": "job_f4a5a92e3c10",
+  "match_status": "suggested",
+  "match_confidence": 0.7,
+  "truck_number": "TR-28405",
+  "division": "Install",
+  "service_type": "bed edging",
+  "status": "Ready for Review",
+  "note": "Automated validation capture",
+  "area_tag": "Front entry",
+  "gps": {
+    "lat": 43.651,
+    "lng": -79.381,
+    "accuracy": 6.0
+  },
+  "captured_at": "2026-03-30T02:56:38.383897+00:00",
+  "required_photo_count": 3,
+  "photo_count": 3,
+  "photo_files": [
+    {
+      "id": "file_1619a16a24fa",
+      "filename": "01_164de0.png",
+      "original_name": "photo1.png",
+      "mime_type": "image/png",
+      "sequence": 1,
+      "size_bytes": 68,
+      "local_path": "/app/data/submissions/sub_961c3bee96bd/01_164de0.png",
+      "relative_api_path": "/api/submissions/files/sub_961c3bee96bd/01_164de0.png",
+      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_961c3bee96bd/01_164de0.png",
+      "source_type": "local"
+    },
+    {
+      "id": "file_a38cbddab712",
+      "filename": "02_fe08c0.png",
+      "original_name": "photo2.png",
+      "mime_type": "image/png",
+      "sequence": 2,
+      "size_bytes": 68,
+      "local_path": "/app/data/submissions/sub_961c3bee96bd/02_fe08c0.png",
+      "relative_api_path": "/api/submissions/files/sub_961c3bee96bd/02_fe08c0.png",
+      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_961c3bee96bd/02_fe08c0.png",
+      "source_type": "local"
+    },
+    {
+      "id": "file_8e66e0b2656d",
+      "filename": "03_96c05e.png",
+      "original_name": "photo3.png",
+      "mime_type": "image/png",
+      "sequence": 3,
+      "size_bytes": 68,
+      "local_path": "/app/data/submissions/sub_961c3bee96bd/03_96c05e.png",
+      "relative_api_path": "/api/submissions/files/sub_961c3bee96bd/03_96c05e.png",
+      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_961c3bee96bd/03_96c05e.png",
+      "source_type": "local"
+    }
+  ],
+  "local_folder_path": "/app/data/submissions/sub_961c3bee96bd",
+  "device_metadata": {
+    "user_agent": "curl/7.88.1"
+  },
+  "drive_sync_status": "pending_configuration",
+  "created_at": "2026-03-30T02:56:38.383903+00:00",
+  "updated_at": "2026-03-30T02:56:38.383904+00:00",
+  "audit_history": [
+    {
+      "timestamp": "2026-03-30T02:56:38.383906+00:00",
+      "action": "submitted",
+      "actor_id": "000a07ca",
+      "note": "Crew submission created"
+    },
+    {
+      "timestamp": "2026-03-30T02:56:38.383908+00:00",
+      "action": "status_change",
+      "actor_id": "000a07ca",
+      "note": "Lifecycle moved to Ready for Review"
+    }
+  ]
+}

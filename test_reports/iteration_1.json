@@ -1,0 +1,61 @@
+{
+  "summary": "Executed backend pytest regression and frontend Playwright coverage for auth, crew portal, review, exports, analytics, jobs, and settings. Backend critical flows passed. Frontend found one critical integration failure in export download and one workflow-state regression tied to export behavior.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "/api/exports/run",
+        "issue": "`dataset_type=full` export mutates submission lifecycle by setting status='Exported' for all submissions in export rows, including records still in review stages.",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Export download from Exports page",
+        "issue": "Download button opens `/api/exports/{id}/download` in new tab without auth header; backend returns 401 Unauthorized.",
+        "affected_selectors": [
+          "[data-testid^='exports-download-button-']"
+        ]
+      },
+      {
+        "flow": "Management/Owner review queues after running full export",
+        "issue": "Queues become empty after full export because backend status mutation moves records to Exported; this blocks subsequent review UI actions.",
+        "affected_selectors": [
+          "[data-testid^='review-queue-item-']",
+          "[data-testid^='owner-queue-item-']"
+        ]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_field_quality_workflows.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix export lifecycle behavior: running exports should not globally overwrite submission statuses to Exported unless explicitly intended and scoped.",
+    "Fix export download auth flow in frontend (use authenticated request/blob download or tokenized URL strategy).",
+    "Retest owner finalization UI after export mutation fix, since queue depletion blocked completion in UI run."
+  ],
+  "critical_code_review_comments": [
+    "In backend `run_export`, status mutation is too broad for full datasets and can invalidate active review queues.",
+    "Frontend ExportsPage uses `window.open` with bare URL for protected downloads; this bypasses axios auth headers and causes 401."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_field_quality_workflows.py",
+    "/app/test_reports/iteration_1.json"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "80%"
+  },
+  "test_credentials": "Used /app/memory/test_credentials.md management@fieldquality.local and owner@fieldquality.local",
+  "seed_data_creation": "No manual seed scripts created. Test submissions/reviews were created through API test flows.",
+  "retest_needed": true,
+  "main_agent_can_self_test": false,
+  "context_for_next_testing_agent": "Backend regression suite is reusable at /app/backend/tests/test_field_quality_workflows.py and currently passes. UI navigation/pages load for management flows, but review queues are emptied after full export due status mutation, blocking reliable owner UI finalization checks. Avoid running full export before owner-flow verification until fixed.",
+  "rca of the issue": "RCA 1: Export queue depletion. In /app/backend/server.py run_export(), `rows` includes all submissions for full dataset, then update_many sets status='Exported' for every row submission_id. This mutates lifecycle state globally and removes items from review scopes. Repro: login management -> run full export -> visit /review or /owner -> queue empty. RCA 2: Download 401. In /app/frontend/src/pages/ExportsPage.jsx, download button uses window.open(`${apiOrigin}/api/exports/{id}/download`) which does not send bearer header. Endpoint is protected by require_roles, so request returns 401."
+}

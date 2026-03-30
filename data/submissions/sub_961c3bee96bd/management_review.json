@@ -1,0 +1,31 @@
+{
+  "id": "mgr_5322794ba158",
+  "submission_id": "sub_961c3bee96bd",
+  "reviewer_id": "user_77bf8bbdd4cd",
+  "rubric_id": "rubric_bed_edging_v1",
+  "rubric_version": 1,
+  "service_type": "bed edging",
+  "category_scores": {
+    "continuity": 4.0,
+    "depth_consistency": 4.0,
+    "turf_containment": 4.0,
+    "cleanliness": 5.0,
+    "visual_finish": 4.0
+  },
+  "total_score": 83.2,
+  "comments": "Management validation review",
+  "disposition": "pass with notes",
+  "flagged_issues": [
+    "minor_edge_touchup"
+  ],
+  "created_at": "2026-03-30T02:56:38.505413+00:00",
+  "updated_at": "2026-03-30T02:56:38.505421+00:00",
+  "audit_history": [
+    {
+      "timestamp": "2026-03-30T02:56:38.505424+00:00",
+      "action": "created",
+      "actor_id": "user_77bf8bbdd4cd",
+      "note": "Management review submitted"
+    }
+  ]
+}

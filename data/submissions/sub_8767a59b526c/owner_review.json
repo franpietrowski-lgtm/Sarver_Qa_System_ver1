@@ -1,0 +1,31 @@
+{
+  "id": "own_c856881774d4",
+  "submission_id": "sub_8767a59b526c",
+  "reviewer_id": "user_0be7f7559776",
+  "rubric_id": "rubric_bed_edging_v1",
+  "rubric_version": 1,
+  "service_type": "bed edging",
+  "category_scores": {
+    "continuity": 5.0,
+    "depth_consistency": 5.0,
+    "turf_containment": 5.0,
+    "cleanliness": 5.0,
+    "visual_finish": 5.0
+  },
+  "total_score": 100.0,
+  "comments": "TEST_owner_review",
+  "final_disposition": "pass",
+  "training_inclusion": "approved",
+  "exclusion_reason": "",
+  "variance_from_management": 20.0,
+  "created_at": "2026-03-30T02:59:01.670076+00:00",
+  "updated_at": "2026-03-30T02:59:01.670084+00:00",
+  "audit_history": [
+    {
+      "timestamp": "2026-03-30T02:59:01.670086+00:00",
+      "action": "created",
+      "actor_id": "user_0be7f7559776",
+      "note": "Owner review submitted"
+    }
+  ]
+}
