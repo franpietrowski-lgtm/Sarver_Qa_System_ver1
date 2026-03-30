@@ -22,6 +22,7 @@ export default function ReviewPage() {
   const [disposition, setDisposition] = useState("pass");
   const [flaggedIssues, setFlaggedIssues] = useState("");
   const [selectedJobId, setSelectedJobId] = useState("");
+  const [selectedServiceType, setSelectedServiceType] = useState("");
   const [saving, setSaving] = useState(false);
 
   const loadPage = async (nextFilter = filterBy) => {
@@ -48,24 +49,27 @@ export default function ReviewPage() {
         .then((response) => {
           setDetail(response);
           setSelectedJobId(response.job?.id || response.submission?.matched_job_id || "");
+          setSelectedServiceType(response.management_review?.service_type || response.submission?.service_type || response.job?.service_type || "bed edging");
           setComments(response.management_review?.comments || "");
           setDisposition(response.management_review?.disposition || "pass");
           setFlaggedIssues((response.management_review?.flagged_issues || []).join(", "));
-          const rubricCategories = response.rubric?.categories || [];
-          const nextScores = {};
-          rubricCategories.forEach((category) => {
-            nextScores[category.key] = response.management_review?.category_scores?.[category.key] ?? Math.max(category.max_score - 1, 1);
-          });
-          setScores(nextScores);
         })
         .catch(() => setDetail(null));
     }
   }, [selectedId]);
 
   const rubric = useMemo(() => {
-    if (detail?.rubric) return detail.rubric;
-    return rubrics.find((item) => item.service_type === detail?.submission?.service_type);
-  }, [detail, rubrics]);
+    return rubrics.find((item) => item.service_type === (selectedServiceType || detail?.submission?.service_type));
+  }, [detail, rubrics, selectedServiceType]);
+
+  useEffect(() => {
+    if (!rubric) return;
+    const nextScores = {};
+    rubric.categories.forEach((category) => {
+      nextScores[category.key] = detail?.management_review?.category_scores?.[category.key] ?? Math.max(category.max_score - 1, 1);
+    });
+    setScores(nextScores);
+  }, [rubric, detail]);
 
   const handleMatchOverride = async () => {
     if (!selectedJobId || !detail?.submission) return;
@@ -75,6 +79,7 @@ export default function ReviewPage() {
         job_id: selectedJobId,
         service_type: matchedJob?.service_type || detail.submission.service_type,
       });
+      if (matchedJob?.service_type) setSelectedServiceType(matchedJob.service_type);
       toast.success("Job match updated.");
       await loadPage(filterBy);
       const refreshed = await authGet(`/submissions/${detail.submission.id}`);
@@ -92,7 +97,7 @@ export default function ReviewPage() {
       await authPost("/reviews/management", {
         submission_id: detail.submission.id,
         job_id: selectedJobId,
-        service_type: detail.submission.service_type,
+        service_type: selectedServiceType,
         category_scores: scores,
         comments,
         disposition,
@@ -133,7 +138,7 @@ export default function ReviewPage() {
               <button key={submission.id} type="button" onClick={() => setSelectedId(submission.id)} className={`w-full rounded-[24px] border p-4 text-left transition-transform hover:-translate-y-0.5 ${selectedId === submission.id ? "border-[#243e36] bg-[#edf0e7]" : "border-border bg-[#f6f6f2]"}`} data-testid={`review-queue-item-${submission.id}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-[#243e36]">{submission.job_id || submission.submission_code}</p>
+                    <p className="text-sm font-semibold text-[#243e36]">{submission.job_name_input || submission.job_id || submission.submission_code}</p>
                     <p className="mt-1 text-sm text-[#5c6d64]">{submission.crew_label} · {submission.truck_number}</p>
                   </div>
                   <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]">{submission.status}</Badge>
@@ -151,8 +156,8 @@ export default function ReviewPage() {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Reviewing submission</p>
-                  <h2 className="mt-2 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]" data-testid="review-detail-title">{detail.submission.job_id || detail.submission.submission_code}</h2>
-                  <p className="mt-2 text-sm text-[#5c6d64]" data-testid="review-detail-meta">{detail.submission.crew_label} · {detail.submission.service_type} · Confidence {Math.round((detail.submission.match_confidence || 0) * 100)}%</p>
+                  <h2 className="mt-2 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]" data-testid="review-detail-title">{detail.submission.job_name_input || detail.submission.job_id || detail.submission.submission_code}</h2>
+                  <p className="mt-2 text-sm text-[#5c6d64]" data-testid="review-detail-meta">{detail.submission.crew_label} · {selectedServiceType || "service type pending"} · Confidence {Math.round((detail.submission.match_confidence || 0) * 100)}%</p>
                 </div>
                 <Badge className="border-0 bg-[#edf0e7] px-3 py-1 text-[#243e36]" data-testid="review-match-status-badge">{detail.submission.match_status}</Badge>
               </div>
@@ -175,6 +180,7 @@ export default function ReviewPage() {
                   <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4">
                     <div className="flex items-center gap-2 text-[#243e36]"><SearchCheck className="h-5 w-5" /><p className="text-sm font-semibold">Suggested job match</p></div>
                     <select value={selectedJobId} onChange={(event) => setSelectedJobId(event.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-transparent bg-white px-4 text-sm" data-testid="review-match-job-select">
+                      <option value="">No job matched yet</option>
                       {jobs.map((job) => (<option key={job.id} value={job.id}>{job.job_id} · {job.property_name}</option>))}
                     </select>
                     <Button type="button" onClick={handleMatchOverride} className="mt-3 h-11 w-full rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="review-confirm-match-button"><Link2 className="mr-2 h-4 w-4" />Confirm / override match</Button>
@@ -188,9 +194,26 @@ export default function ReviewPage() {
                       <p data-testid="review-metadata-note">Note: {detail.submission.note || "No note"}</p>
                     </div>
                   </div>
+
+                  {detail.submission.field_report?.reported && (
+                    <div className="rounded-[24px] border border-[#f2c9bc] bg-[#fff6f1] p-4" data-testid="review-field-report-card">
+                      <p className="text-sm font-semibold text-[#243e36]">Crew issue / damage report</p>
+                      <div className="mt-3 space-y-2 text-sm text-[#5c6d64]">
+                        <p data-testid="review-field-report-type">Type: {detail.submission.field_report.type || "General field report"}</p>
+                        <p data-testid="review-field-report-notes">Notes: {detail.submission.field_report.notes || "No extra details"}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <form className="space-y-4" onSubmit={handleSubmitReview} data-testid="review-scoring-form">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-[#243e36]">Service type</label>
+                    <select value={selectedServiceType} onChange={(event) => setSelectedServiceType(event.target.value)} className="h-12 w-full rounded-2xl border border-transparent bg-[#edf0e7] px-4 text-sm" data-testid="review-service-type-select">
+                      {rubrics.map((item) => (<option key={item.id} value={item.service_type}>{item.service_type}</option>))}
+                    </select>
+                  </div>
+
                   <div className="grid gap-4 md:grid-cols-2">
                     {rubric?.categories?.map((category) => (
                       <div key={category.key} className="rounded-[24px] border border-border bg-[#f6f6f2] p-4" data-testid={`review-score-card-${category.key}`}>

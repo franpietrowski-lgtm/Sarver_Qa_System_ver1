@@ -78,7 +78,7 @@ export default function OverviewPage({ user }) {
                 <div key={submission.id} className="rounded-[26px] border border-border bg-[#f6f6f2] p-4" data-testid={`overview-submission-card-${submission.id}`}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-[#243e36]" data-testid={`overview-submission-job-${submission.id}`}>{submission.job_id || submission.submission_code}</p>
+                      <p className="text-sm font-semibold text-[#243e36]" data-testid={`overview-submission-job-${submission.id}`}>{submission.job_name_input || submission.job_id || submission.submission_code}</p>
                       <p className="mt-1 text-sm text-[#5c6d64]" data-testid={`overview-submission-meta-${submission.id}`}>{submission.crew_label} · {submission.truck_number} · {submission.service_type}</p>
                     </div>
                     <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]" data-testid={`overview-submission-status-${submission.id}`}>{submission.status}</Badge>

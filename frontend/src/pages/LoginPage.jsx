@@ -10,11 +10,12 @@ import { publicGet } from "@/lib/api";
 
 
 const HERO_IMAGE = "https://images.unsplash.com/photo-1772816037169-4daa98b83098?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85";
+const LOGO_URL = "https://sarverlandscape.com/wp-content/uploads/2024/10/sarver-logo.png";
 
 
 export default function LoginPage({ onLogin, authUser }) {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("management@fieldquality.local");
+  const [email, setEmail] = useState("production.manager@fieldquality.local");
   const [password, setPassword] = useState("FieldQA123!");
   const [crewLinks, setCrewLinks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -53,9 +54,10 @@ export default function LoginPage({ onLogin, authUser }) {
           <div className="absolute inset-0 bg-[linear-gradient(135deg,_rgba(17,24,21,0.86),_rgba(36,62,54,0.58))]" />
           <div className="relative space-y-8">
             <div>
+              <img src={LOGO_URL} alt="Sarver Landscape" className="h-12 w-auto object-contain" data-testid="login-brand-logo" />
               <p className="text-xs font-bold uppercase tracking-[0.32em] text-[#d8f3dc]" data-testid="login-kicker-text">Landscaping QA Pipeline</p>
               <h1 className="mt-4 max-w-xl font-[Cabinet_Grotesk] text-5xl font-black tracking-tight text-white sm:text-6xl" data-testid="login-page-title">Capture field proof fast. Review it with training-grade structure.</h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/80 sm:text-base" data-testid="login-page-description">Crews submit from unique QR links, management scores against versioned rubrics, and owner calibration prepares clean datasets for future AI inspection models.</p>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/80 sm:text-base" data-testid="login-page-description">Inspired by Sarver’s brand tone, this workspace helps crews capture work cleanly, lets admins handle quality and field issues, and prepares reliable data for future automation.</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
@@ -83,7 +85,7 @@ export default function LoginPage({ onLogin, authUser }) {
               <div className="mb-8">
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]" data-testid="login-form-kicker">Admin access</p>
                 <h2 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]" data-testid="login-form-title">Management & owner sign-in</h2>
-                <p className="mt-3 text-sm text-[#5c6d64]" data-testid="login-form-description">Demo credentials are preloaded so you can review the full system immediately.</p>
+                <p className="mt-3 text-sm text-[#5c6d64]" data-testid="login-form-description">Demo credentials are preloaded so you can review the full system immediately. Production Manager is selected by default.</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4" data-testid="login-form">

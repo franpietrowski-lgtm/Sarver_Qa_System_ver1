@@ -30,6 +30,7 @@ const navigationByRole = {
 
 export default function AppShell({ user, onLogout, children }) {
   const navItems = navigationByRole[user?.role] || navigationByRole.management;
+  const logoUrl = "https://sarverlandscape.com/wp-content/uploads/2024/10/sarver-logo.png";
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(124,169,130,0.18),_transparent_28%),linear-gradient(180deg,_#f6f6f2_0%,_#edf0e7_100%)] text-foreground">
@@ -38,8 +39,9 @@ export default function AppShell({ user, onLogout, children }) {
           <div className="space-y-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]" data-testid="shell-kicker-text">Field Quality</p>
-              <h1 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]" data-testid="shell-app-title">Capture & Review</h1>
-              <p className="mt-2 text-sm text-[#41534a]" data-testid="shell-app-subtitle">Operational QA designed for crews, management, and owner calibration.</p>
+              <img src={logoUrl} alt="Sarver Landscape" className="mt-3 h-10 w-auto object-contain" data-testid="shell-brand-logo" />
+              <h1 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]" data-testid="shell-app-title">Quality Review</h1>
+              <p className="mt-2 text-sm text-[#41534a]" data-testid="shell-app-subtitle">Character, quality, and respect across crew capture, review, and automation readiness.</p>
             </div>
 
             <div className="rounded-3xl border border-border bg-[#243e36] p-5 text-white shadow-sm" data-testid="shell-user-card">
@@ -47,6 +49,7 @@ export default function AppShell({ user, onLogout, children }) {
                 <div>
                   <p className="text-sm text-white/70">Signed in as</p>
                   <p className="text-lg font-semibold" data-testid="shell-user-name">{user?.name}</p>
+                  {user?.title && <p className="text-sm text-white/70" data-testid="shell-user-title">{user.title}</p>}
                 </div>
                 <Badge className="border-0 bg-[#7ca982] px-3 py-1 text-[#10261d]" data-testid="shell-user-role-badge">{user?.role}</Badge>
               </div>

@@ -363,6 +363,7 @@ async def create_notification(
     audience: str,
     related_submission_id: str | None = None,
     target_role: str | None = None,
+    target_titles: list[str] | None = None,
     target_access_code: str | None = None,
     target_user_id: str | None = None,
     related_job_id: str | None = None,
@@ -374,6 +375,7 @@ async def create_notification(
         "message": message,
         "audience": audience,
         "target_role": target_role,
+        "target_titles": target_titles or [],
         "target_access_code": target_access_code,
         "target_user_id": target_user_id,
         "related_submission_id": related_submission_id,
@@ -393,32 +395,71 @@ async def seed_defaults() -> None:
     SUBMISSIONS_DIR.mkdir(parents=True, exist_ok=True)
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    if await db.users.count_documents({}) == 0:
-        users = [
-            {
-                "id": make_id("user"),
-                "name": "Maya Manager",
-                "email": "management@fieldquality.local",
-                "role": "management",
-                "password_hash": get_password_hash("FieldQA123!"),
-                "is_active": True,
-                "created_at": now_iso(),
-                "updated_at": now_iso(),
-                "audit_history": [audit_entry("seeded", "system", "Management demo account created")],
-            },
-            {
-                "id": make_id("user"),
-                "name": "Owen Owner",
-                "email": "owner@fieldquality.local",
-                "role": "owner",
-                "password_hash": get_password_hash("FieldQA123!"),
-                "is_active": True,
-                "created_at": now_iso(),
-                "updated_at": now_iso(),
-                "audit_history": [audit_entry("seeded", "system", "Owner demo account created")],
-            },
-        ]
-        await db.users.insert_many(users)
+    users = [
+        {
+            "name": "Maya Manager",
+            "email": "management@fieldquality.local",
+            "role": "management",
+            "title": "Production Manager",
+        },
+        {
+            "name": "Gina GM",
+            "email": "gm@fieldquality.local",
+            "role": "management",
+            "title": "GM",
+        },
+        {
+            "name": "Avery Account Manager",
+            "email": "account.manager@fieldquality.local",
+            "role": "management",
+            "title": "Account Manager",
+        },
+        {
+            "name": "Parker Production Manager",
+            "email": "production.manager@fieldquality.local",
+            "role": "management",
+            "title": "Production Manager",
+        },
+        {
+            "name": "Sam Supervisor",
+            "email": "supervisor@fieldquality.local",
+            "role": "management",
+            "title": "Supervisor",
+        },
+        {
+            "name": "Owen Owner",
+            "email": "owner@fieldquality.local",
+            "role": "owner",
+            "title": "Owner",
+        },
+    ]
+    for user in users:
+        existing = await db.users.find_one({"email": user["email"]}, {"_id": 0})
+        if existing:
+            await db.users.update_one(
+                {"email": user["email"]},
+                {
+                    "$set": {
+                        "name": user["name"],
+                        "role": user["role"],
+                        "title": user["title"],
+                        "is_active": True,
+                        "updated_at": now_iso(),
+                    }
+                },
+            )
+        else:
+            await db.users.insert_one(
+                {
+                    "id": make_id("user"),
+                    **user,
+                    "password_hash": get_password_hash("FieldQA123!"),
+                    "is_active": True,
+                    "created_at": now_iso(),
+                    "updated_at": now_iso(),
+                    "audit_history": [audit_entry("seeded", "system", f"{user['title']} demo account created")],
+                }
+            )
 
     if await db.rubric_definitions.count_documents({}) == 0:
         payload = []
@@ -445,6 +486,7 @@ async def seed_defaults() -> None:
                 {
                     "id": make_id("crew"),
                     "code": uuid.uuid4().hex[:8],
+                    "crew_member_id": make_id("crewid").upper(),
                     **item,
                     "enabled": True,
                     "created_at": now_iso(),
@@ -760,34 +802,41 @@ async def create_submission(
     background_tasks: BackgroundTasks,
     request: Request,
     access_code: str = Form(...),
-    job_id: str = Form(...),
+    job_id: str = Form(""),
+    job_name: str = Form(""),
     truck_number: str = Form(...),
     gps_lat: float = Form(...),
     gps_lng: float = Form(...),
     gps_accuracy: float = Form(0),
     note: str = Form(""),
     area_tag: str = Form(""),
+    issue_type: str = Form(""),
+    issue_notes: str = Form(""),
     photos: list[UploadFile] = File(...),
+    issue_photos: list[UploadFile] | None = File(None),
 ):
     crew_link = await db.crew_access_links.find_one({"code": access_code, "enabled": True}, {"_id": 0})
     if not crew_link:
         raise HTTPException(status_code=404, detail="Crew access link not found")
-    job = await db.jobs.find_one({"id": job_id}, {"_id": 0})
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+    job = await db.jobs.find_one({"id": job_id}, {"_id": 0}) if job_id else None
+    if not job and not job_name.strip():
+        raise HTTPException(status_code=400, detail="Job name is required")
 
-    rubric = await get_active_rubric(job["service_type"])
-    required_photo_count = rubric.get("min_photos", 2)
+    required_photo_count = 3
+    if job and job.get("service_type"):
+        rubric = await get_active_rubric(job["service_type"])
+        required_photo_count = rubric.get("min_photos", 3)
     if len(photos) < required_photo_count:
         raise HTTPException(
             status_code=400,
-            detail=f"At least {required_photo_count} photos are required for {job['service_type']}",
+            detail=f"At least {required_photo_count} photos are required for this submission",
         )
 
     recent_cutoff = (utc_now() - timedelta(minutes=15)).isoformat()
+    job_key = job["job_id"] if job else job_name.strip().lower()
     duplicate = await db.submissions.find_one(
         {
-            "job_id": job["job_id"],
+            "job_key": job_key,
             "truck_number": truck_number,
             "created_at": {"$gte": recent_cutoff},
         },
@@ -822,23 +871,53 @@ async def create_submission(
             }
         )
 
-    match_status, match_confidence = compute_match(job, truck_number, gps_lat, gps_lng)
-    status = "Ready for Review" if match_status in {"confirmed", "suggested"} else "Pending Match"
+    field_report_photo_files = []
+    for index, issue_photo in enumerate(issue_photos or [], start=1):
+        content = await issue_photo.read()
+        suffix = Path(issue_photo.filename or f"issue-{index}.jpg").suffix or ".jpg"
+        filename = f"issue_{index:02d}_{uuid.uuid4().hex[:6]}{suffix}"
+        file_path = local_folder / filename
+        file_path.write_bytes(content)
+        field_report_photo_files.append(
+            {
+                "id": make_id("issuefile"),
+                "filename": filename,
+                "original_name": issue_photo.filename,
+                "mime_type": issue_photo.content_type or "application/octet-stream",
+                "sequence": index,
+                "local_path": str(file_path),
+                "relative_api_path": f"/api/submissions/files/{submission_id}/{filename}",
+                "media_url": f"{os.environ['FRONTEND_URL']}/api/submissions/files/{submission_id}/{filename}",
+                "source_type": "local",
+            }
+        )
+
+    match_status, match_confidence = compute_match(job, truck_number, gps_lat, gps_lng) if job else ("unmatched", 0.0)
+    status = "Ready for Review" if job and match_status in {"confirmed", "suggested"} else "Pending Match"
+    job_name_value = job["job_name"] if job else job_name.strip()
     submission = {
         "id": submission_id,
         "submission_code": submission_id.upper(),
         "access_code": access_code,
         "crew_label": crew_link["label"],
-        "job_id": job["job_id"],
-        "matched_job_id": job["id"],
+        "job_key": job_key,
+        "job_id": job["job_id"] if job else None,
+        "job_name_input": job_name_value,
+        "matched_job_id": job["id"] if job else None,
         "match_status": match_status,
         "match_confidence": match_confidence,
         "truck_number": truck_number,
-        "division": job["division"],
-        "service_type": job["service_type"],
+        "division": job["division"] if job else crew_link["division"],
+        "service_type": job["service_type"] if job else "",
         "status": status,
         "note": note,
         "area_tag": area_tag,
+        "field_report": {
+            "type": issue_type,
+            "notes": issue_notes,
+            "photo_files": field_report_photo_files,
+            "reported": bool(issue_type or issue_notes or field_report_photo_files),
+        },
         "gps": {"lat": gps_lat, "lng": gps_lng, "accuracy": gps_accuracy},
         "captured_at": now_iso(),
         "required_photo_count": required_photo_count,
@@ -859,7 +938,7 @@ async def create_submission(
         {
             "audience": "crew",
             "target_access_code": access_code,
-            "related_job_id": job["job_id"],
+            "related_job_id": job_key,
             "status": "unread",
         },
         {
@@ -870,13 +949,23 @@ async def create_submission(
     await db.submissions.insert_one({**submission})
     await create_notification(
         title="New crew submission ready",
-        message=f"{crew_link['label']} submitted {job['job_id']} for management review.",
+        message=f"{crew_link['label']} submitted {job_name_value} for management review.",
         audience="management",
         target_role="management",
         related_submission_id=submission_id,
-        related_job_id=job["job_id"],
+        related_job_id=job_key,
         notification_type="new_submission",
     )
+    if submission["field_report"]["reported"]:
+        await create_notification(
+            title="Crew reported an issue or damage",
+            message=f"{crew_link['label']} reported '{issue_type or 'field issue'}' on {job_name_value}.",
+            audience="management",
+            target_titles=["Production Manager", "Account Manager"],
+            related_submission_id=submission_id,
+            related_job_id=job_key,
+            notification_type="field_issue",
+        )
     background_tasks.add_task(sync_submission_bundle, db, submission)
     return {"submission": submission}
 
@@ -1033,7 +1122,10 @@ async def get_notifications(
     user: dict = Depends(require_roles("management", "owner")),
     status: str = Query("all"),
 ):
-    query: dict[str, Any] = {"$or": [{"target_role": user["role"]}, {"target_user_id": user["id"]}]}
+    targets = [{"target_role": user["role"]}, {"target_user_id": user["id"]}]
+    if user.get("title"):
+        targets.append({"target_titles": user["title"]})
+    query: dict[str, Any] = {"$or": targets}
     if status != "all":
         query["status"] = status
     notifications = await db.notifications.find(query, {"_id": 0}).sort("created_at", -1).to_list(50)

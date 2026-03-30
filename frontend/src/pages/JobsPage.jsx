@@ -78,9 +78,9 @@ export default function JobsPage() {
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="jobs-import-card">
           <CardContent className="p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">LMN sync starter</p>
-            <h2 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Import jobs from CSV now, keep the API path ready for later.</h2>
-            <p className="mt-3 text-sm leading-6 text-[#5c6d64]">Upload LMN exports with job ID, property, service type, division, scheduled date, truck number, and route.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Job alignment import</p>
+            <h2 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Import external job data for admin matching and review alignment.</h2>
+            <p className="mt-3 text-sm leading-6 text-[#5c6d64]">Crews only enter Job Name in the field. Admins can use imported data here to align, match, and review submissions after the fact.</p>
 
             <div className="mt-6 rounded-[28px] border border-dashed border-[#cdd3c8] bg-[#edf0e7] p-5" data-testid="jobs-import-dropzone">
               <div className="flex items-center gap-3 text-[#243e36]"><FileSpreadsheet className="h-5 w-5" /><p className="text-sm font-semibold">Expected columns: Job ID, Job Name, Property Name, Address, Service Type, Scheduled Date, Division, Truck Number, Route.</p></div>

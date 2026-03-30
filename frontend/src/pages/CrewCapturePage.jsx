@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Camera, Crosshair, MapPinned, Upload } from "lucide-react";
 import { useParams } from "react-router-dom";
 
@@ -14,13 +14,14 @@ import { toast } from "sonner";
 export default function CrewCapturePage() {
   const { code } = useParams();
   const [crewLink, setCrewLink] = useState(null);
-  const [jobs, setJobs] = useState([]);
-  const [jobSearch, setJobSearch] = useState("");
-  const [jobId, setJobId] = useState("");
+  const [jobName, setJobName] = useState("");
   const [truckNumber, setTruckNumber] = useState("");
   const [note, setNote] = useState("");
   const [areaTag, setAreaTag] = useState("");
   const [photos, setPhotos] = useState([]);
+  const [issueType, setIssueType] = useState("");
+  const [issueNotes, setIssueNotes] = useState("");
+  const [issuePhotos, setIssuePhotos] = useState([]);
   const [gps, setGps] = useState(null);
   const [locating, setLocating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -28,14 +29,10 @@ export default function CrewCapturePage() {
 
   const loadCrewContext = async () => {
     try {
-      const [link, jobsResponse] = await Promise.all([
-        publicGet(`/public/crew-access/${code}`),
-        publicGet(`/public/jobs?access_code=${code}`),
-      ]);
+      const link = await publicGet(`/public/crew-access/${code}`);
       setCrewLink(link);
       setCrewNotifications(link.notifications || []);
       setTruckNumber(link.truck_number || "");
-      setJobs(jobsResponse.jobs || []);
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Crew access not found");
     }
@@ -73,18 +70,10 @@ export default function CrewCapturePage() {
     requestGps();
   }, []);
 
-  const filteredJobs = useMemo(() => {
-    const searchValue = jobSearch.toLowerCase();
-    return jobs.filter((job) => {
-      const text = `${job.job_id} ${job.job_name} ${job.property_name}`.toLowerCase();
-      return text.includes(searchValue);
-    });
-  }, [jobSearch, jobs]);
-
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!jobId || !truckNumber || !gps) {
-      toast.error("Job, truck number, and GPS are required.");
+    if (!jobName || !truckNumber || !gps) {
+      toast.error("Job Name, truck number, and GPS are required.");
       return;
     }
     if (!photos.length) {
@@ -94,22 +83,29 @@ export default function CrewCapturePage() {
 
     const formData = new FormData();
     formData.append("access_code", code);
-    formData.append("job_id", jobId);
+    formData.append("job_name", jobName);
     formData.append("truck_number", truckNumber);
     formData.append("gps_lat", gps.lat);
     formData.append("gps_lng", gps.lng);
     formData.append("gps_accuracy", gps.accuracy || 0);
     formData.append("note", note);
     formData.append("area_tag", areaTag);
+    formData.append("issue_type", issueType);
+    formData.append("issue_notes", issueNotes);
     photos.forEach((photo) => formData.append("photos", photo));
+    issuePhotos.forEach((photo) => formData.append("issue_photos", photo));
 
     setSubmitting(true);
     try {
       await authPostForm("/public/submissions", formData);
       toast.success("Submission captured — your proof is now in review queue.");
+      setJobName("");
       setNote("");
       setAreaTag("");
       setPhotos([]);
+      setIssueType("");
+      setIssueNotes("");
+      setIssuePhotos([]);
       requestGps();
       loadCrewContext();
     } catch (error) {
@@ -157,18 +153,8 @@ export default function CrewCapturePage() {
           <CardContent className="p-6">
             <form className="space-y-5" onSubmit={handleSubmit} data-testid="crew-capture-form">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-[#243e36]" htmlFor="crew-job-search">Search job</label>
-                <Input id="crew-job-search" value={jobSearch} onChange={(event) => setJobSearch(event.target.value)} placeholder="Search by LMN tag or property" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="crew-job-search-input" />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-[#243e36]" htmlFor="crew-job-select">Job tag</label>
-                <select id="crew-job-select" value={jobId} onChange={(event) => setJobId(event.target.value)} className="h-12 w-full rounded-2xl border border-transparent bg-[#edf0e7] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#243e36]/20" data-testid="job-selection-dropdown">
-                  <option value="">Select the job you’re at</option>
-                  {filteredJobs.map((job) => (
-                    <option key={job.id} value={job.id}>{job.job_id} · {job.property_name} · {job.service_type}</option>
-                  ))}
-                </select>
+                <label className="text-sm font-semibold text-[#243e36]" htmlFor="crew-job-name-input">Job Name</label>
+                <Input id="crew-job-name-input" value={jobName} onChange={(event) => setJobName(event.target.value)} placeholder="Enter the job name exactly as given to the crew" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="crew-job-name-input" />
               </div>
 
               <div className="space-y-2">
@@ -195,6 +181,33 @@ export default function CrewCapturePage() {
                 <label className="text-sm font-semibold text-[#243e36]" htmlFor="crew-note-input">Optional note</label>
                 <Textarea id="crew-note-input" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Anything unusual the reviewers should know?" className="min-h-[96px] rounded-2xl border-transparent bg-[#edf0e7]" data-testid="crew-note-input" />
               </div>
+
+              <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4" data-testid="crew-issue-report-card">
+                <p className="text-sm font-semibold text-[#243e36]">Issue / damage report</p>
+                <p className="mt-1 text-sm text-[#5c6d64]">Use this when crews need to report issues, damages, or field notes for admin follow-up.</p>
+                <div className="mt-4 grid gap-3">
+                  <Input value={issueType} onChange={(event) => setIssueType(event.target.value)} placeholder="Issue or damage type" className="h-12 rounded-2xl border-transparent bg-white" data-testid="crew-issue-type-input" />
+                  <Textarea value={issueNotes} onChange={(event) => setIssueNotes(event.target.value)} placeholder="Describe what happened and where it happened" className="min-h-[90px] rounded-2xl border-transparent bg-white" data-testid="crew-issue-notes-input" />
+                  <label htmlFor="crew-issue-photo-input" className="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#cdd3c8] bg-white text-sm font-semibold text-[#243e36]" data-testid="crew-issue-upload-field">
+                    <Upload className="h-4 w-4" />
+                    Add issue photo(s)
+                  </label>
+                  <input id="crew-issue-photo-input" type="file" multiple accept="image/*" className="hidden" onChange={(event) => setIssuePhotos(Array.from(event.target.files || []))} data-testid="crew-issue-photo-input" />
+                </div>
+              </div>
+
+              {issuePhotos.length > 0 && (
+                <div className="grid grid-cols-2 gap-3" data-testid="crew-issue-preview-grid">
+                  {issuePhotos.map((photo, index) => (
+                    <div key={`${photo.name}-${index}`} className="rounded-[24px] border border-border bg-[#f6f6f2] p-3" data-testid={`crew-issue-preview-${index + 1}`}>
+                      <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-[#dde4d6]">
+                        <img src={URL.createObjectURL(photo)} alt={photo.name} className="h-full w-full object-cover" />
+                      </div>
+                      <p className="mt-2 truncate text-xs font-semibold text-[#243e36]">{photo.name}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4" data-testid="crew-gps-card">
                 <div className="flex items-start justify-between gap-3">
