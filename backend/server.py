@@ -108,6 +108,13 @@ def write_json_artifact(folder_path: str | None, filename: str, payload: dict) -
     (folder / filename).write_bytes(dump_json_bytes(payload))
 
 
+def present_crew_link(crew_link: dict) -> dict:
+    return {
+        **crew_link,
+        "crew_member_id": crew_link.get("crew_member_id") or crew_link.get("code", "").upper(),
+    }
+
+
 class LoginRequest(BaseModel):
     email: str
     password: str
@@ -348,6 +355,37 @@ async def create_submission_snapshot(submission_id: str) -> dict:
         "job": job,
         "rubric": rubric,
     }
+
+
+async def create_notification(
+    title: str,
+    message: str,
+    audience: str,
+    related_submission_id: str | None = None,
+    target_role: str | None = None,
+    target_access_code: str | None = None,
+    target_user_id: str | None = None,
+    related_job_id: str | None = None,
+    notification_type: str = "info",
+) -> dict:
+    notification = {
+        "id": make_id("note"),
+        "title": title,
+        "message": message,
+        "audience": audience,
+        "target_role": target_role,
+        "target_access_code": target_access_code,
+        "target_user_id": target_user_id,
+        "related_submission_id": related_submission_id,
+        "related_job_id": related_job_id,
+        "notification_type": notification_type,
+        "status": "unread",
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+        "audit_history": [audit_entry("created", "system", title)],
+    }
+    await db.notifications.insert_one({**notification})
+    return notification
 
 
 async def seed_defaults() -> None:
@@ -688,7 +726,7 @@ async def get_blueprint(user: dict = Depends(require_roles("management", "owner"
 @api_router.get("/public/crew-access")
 async def get_public_crew_access():
     crew_links = await db.crew_access_links.find({"enabled": True}, {"_id": 0}).to_list(100)
-    return crew_links
+    return [present_crew_link(link) for link in crew_links]
 
 
 @api_router.get("/public/crew-access/{code}")
@@ -696,7 +734,11 @@ async def get_crew_access_link(code: str):
     crew_link = await db.crew_access_links.find_one({"code": code, "enabled": True}, {"_id": 0})
     if not crew_link:
         raise HTTPException(status_code=404, detail="Crew link not found")
-    return crew_link
+    notifications = await db.notifications.find(
+        {"audience": "crew", "target_access_code": code, "status": "unread"},
+        {"_id": 0},
+    ).sort("created_at", -1).to_list(20)
+    return {**present_crew_link(crew_link), "notifications": notifications}
 
 
 @api_router.get("/public/jobs")
@@ -813,7 +855,28 @@ async def create_submission(
         ],
     }
     write_json_artifact(str(local_folder), "metadata.json", submission)
+    await db.notifications.update_many(
+        {
+            "audience": "crew",
+            "target_access_code": access_code,
+            "related_job_id": job["job_id"],
+            "status": "unread",
+        },
+        {
+            "$set": {"status": "resolved", "updated_at": now_iso()},
+            "$push": {"audit_history": audit_entry("resolved", access_code, "Crew submitted follow-up proof")},
+        },
+    )
     await db.submissions.insert_one({**submission})
+    await create_notification(
+        title="New crew submission ready",
+        message=f"{crew_link['label']} submitted {job['job_id']} for management review.",
+        audience="management",
+        target_role="management",
+        related_submission_id=submission_id,
+        related_job_id=job["job_id"],
+        notification_type="new_submission",
+    )
     background_tasks.add_task(sync_submission_bundle, db, submission)
     return {"submission": submission}
 
@@ -943,7 +1006,8 @@ async def import_jobs_csv(
 
 @api_router.get("/crew-access-links")
 async def get_crew_access_links(user: dict = Depends(require_roles("management", "owner"))):
-    return await db.crew_access_links.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    crew_links = await db.crew_access_links.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return [present_crew_link(link) for link in crew_links]
 
 
 @api_router.post("/crew-access-links")
@@ -951,6 +1015,7 @@ async def create_crew_access_link(payload: CrewAccessCreate, user: dict = Depend
     crew_link = {
         "id": make_id("crew"),
         "code": uuid.uuid4().hex[:8],
+        "crew_member_id": make_id("crewid").upper(),
         "label": payload.label,
         "truck_number": payload.truck_number,
         "division": payload.division,
@@ -960,7 +1025,32 @@ async def create_crew_access_link(payload: CrewAccessCreate, user: dict = Depend
         "audit_history": [audit_entry("created", user["id"], "Crew QR link created")],
     }
     await db.crew_access_links.insert_one({**crew_link})
-    return crew_link
+    return present_crew_link(crew_link)
+
+
+@api_router.get("/notifications")
+async def get_notifications(
+    user: dict = Depends(require_roles("management", "owner")),
+    status: str = Query("all"),
+):
+    query: dict[str, Any] = {"$or": [{"target_role": user["role"]}, {"target_user_id": user["id"]}]}
+    if status != "all":
+        query["status"] = status
+    notifications = await db.notifications.find(query, {"_id": 0}).sort("created_at", -1).to_list(50)
+    unread_count = len([item for item in notifications if item.get("status") == "unread"])
+    return {"items": notifications, "unread_count": unread_count}
+
+
+@api_router.post("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, user: dict = Depends(require_roles("management", "owner"))):
+    await db.notifications.update_one(
+        {"id": notification_id, "$or": [{"target_role": user["role"]}, {"target_user_id": user["id"]}]},
+        {
+            "$set": {"status": "read", "updated_at": now_iso()},
+            "$push": {"audit_history": audit_entry("read", user["id"], "Notification opened")},
+        },
+    )
+    return {"ok": True}
 
 
 @api_router.get("/rubrics")
@@ -1074,6 +1164,25 @@ async def create_management_review(
             "$push": {"audit_history": audit_entry("management_reviewed", user["id"], payload.disposition)},
         },
     )
+    await create_notification(
+        title="Submission ready for owner review",
+        message=f"{submission['job_id']} was reviewed by management and is ready for owner calibration.",
+        audience="owner",
+        target_role="owner",
+        related_submission_id=payload.submission_id,
+        related_job_id=submission["job_id"],
+        notification_type="owner_review",
+    )
+    if payload.disposition in {"correction required", "insufficient evidence"}:
+        await create_notification(
+            title="More photos requested",
+            message=payload.comments or "Management requested a new photo upload for this job.",
+            audience="crew",
+            target_access_code=submission["access_code"],
+            related_submission_id=payload.submission_id,
+            related_job_id=submission["job_id"],
+            notification_type="crew_followup",
+        )
     write_json_artifact(submission.get("local_folder_path"), "management_review.json", review)
     updated_submission = await db.submissions.find_one({"id": payload.submission_id}, {"_id": 0})
     background_tasks.add_task(sync_submission_bundle, db, updated_submission)
@@ -1128,6 +1237,16 @@ async def create_owner_review(
             "$push": {"audit_history": audit_entry("owner_reviewed", user["id"], payload.final_disposition)},
         },
     )
+    if payload.final_disposition in {"correction required", "insufficient evidence"}:
+        await create_notification(
+            title="Owner requested another photo set",
+            message=payload.comments or "Owner review requires new field photos before final approval.",
+            audience="crew",
+            target_access_code=submission["access_code"],
+            related_submission_id=payload.submission_id,
+            related_job_id=submission["job_id"],
+            notification_type="crew_followup",
+        )
     write_json_artifact(submission.get("local_folder_path"), "owner_review.json", review)
     updated_submission = await db.submissions.find_one({"id": payload.submission_id}, {"_id": 0})
     background_tasks.add_task(sync_submission_bundle, db, updated_submission)
@@ -1175,12 +1294,51 @@ async def get_analytics_summary(user: dict = Depends(require_roles("management",
     ]
     average_by_crew.sort(key=lambda item: item["average_score"], reverse=True)
     variance_avg = round(sum(point["variance"] for point in variance_points) / max(len(variance_points), 1), 1)
+
+    heatmap_tracker: dict[tuple[str, str], dict] = {}
+    for submission in submissions:
+        management_review = mgmt_lookup.get(submission["id"])
+        owner_review = owner_lookup.get(submission["id"])
+        if not management_review and not owner_review:
+            continue
+        key = (submission.get("crew_label") or submission.get("truck_number"), submission.get("service_type") or "unspecified")
+        entry = heatmap_tracker.setdefault(
+            key,
+            {
+                "crew": key[0],
+                "service_type": key[1],
+                "management_scores": [],
+                "owner_scores": [],
+                "variances": [],
+            },
+        )
+        if management_review:
+            entry["management_scores"].append(management_review.get("total_score", 0))
+        if owner_review:
+            entry["owner_scores"].append(owner_review.get("total_score", 0))
+        if management_review and owner_review:
+            entry["variances"].append(owner_review.get("variance_from_management", 0))
+
+    calibration_heatmap = []
+    for entry in heatmap_tracker.values():
+        calibration_heatmap.append(
+            {
+                "crew": entry["crew"],
+                "service_type": entry["service_type"],
+                "management_average": round(sum(entry["management_scores"]) / max(len(entry["management_scores"]), 1), 1),
+                "owner_average": round(sum(entry["owner_scores"]) / max(len(entry["owner_scores"]), 1), 1),
+                "variance_average": round(sum(entry["variances"]) / max(len(entry["variances"]), 1), 1),
+                "sample_count": max(len(entry["management_scores"]), len(entry["owner_scores"])),
+            }
+        )
+
     return {
         "average_score_by_crew": average_by_crew,
         "score_variance_average": variance_avg,
         "fail_reason_frequency": [{"reason": key, "count": value} for key, value in fail_reasons.items()],
         "submission_volume_trends": [{"day": key, "count": value} for key, value in sorted(volume_by_day.items())],
         "training_approved_count": len([review for review in owner_reviews if review["training_inclusion"] == "approved"]),
+        "calibration_heatmap": calibration_heatmap,
     }
 
 

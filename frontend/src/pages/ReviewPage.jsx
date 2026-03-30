@@ -221,6 +221,7 @@ export default function ReviewPage() {
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-[#243e36]">Reviewer comments</label>
                     <Textarea value={comments} onChange={(event) => setComments(event.target.value)} className="min-h-[110px] rounded-2xl border-transparent bg-[#edf0e7]" data-testid="review-comments-input" />
+                    <p className="mt-2 text-xs text-[#5c6d64]" data-testid="review-followup-hint">Choosing correction required or insufficient evidence automatically creates a crew-facing re-upload notification.</p>
                   </div>
 
                   <Button type="submit" disabled={saving} className="h-12 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="review-submit-button"><Flag className="mr-2 h-4 w-4" />{saving ? "Saving review..." : "Save management review"}</Button>

@@ -24,22 +24,24 @@ export default function CrewCapturePage() {
   const [gps, setGps] = useState(null);
   const [locating, setLocating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [crewNotifications, setCrewNotifications] = useState([]);
+
+  const loadCrewContext = async () => {
+    try {
+      const [link, jobsResponse] = await Promise.all([
+        publicGet(`/public/crew-access/${code}`),
+        publicGet(`/public/jobs?access_code=${code}`),
+      ]);
+      setCrewLink(link);
+      setCrewNotifications(link.notifications || []);
+      setTruckNumber(link.truck_number || "");
+      setJobs(jobsResponse.jobs || []);
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Crew access not found");
+    }
+  };
 
   useEffect(() => {
-    const loadCrewContext = async () => {
-      try {
-        const [link, jobsResponse] = await Promise.all([
-          publicGet(`/public/crew-access/${code}`),
-          publicGet(`/public/jobs?access_code=${code}`),
-        ]);
-        setCrewLink(link);
-        setTruckNumber(link.truck_number || "");
-        setJobs(jobsResponse.jobs || []);
-      } catch (error) {
-        toast.error(error?.response?.data?.detail || "Crew access not found");
-      }
-    };
-
     loadCrewContext();
   }, [code]);
 
@@ -109,6 +111,7 @@ export default function CrewCapturePage() {
       setAreaTag("");
       setPhotos([]);
       requestGps();
+      loadCrewContext();
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Submission failed");
     } finally {
@@ -128,12 +131,27 @@ export default function CrewCapturePage() {
             {crewLink && (
               <div className="mt-5 flex flex-wrap gap-2">
                 <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-crew-badge">{crewLink.label}</Badge>
+                <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-crew-id-badge">ID {crewLink.crew_member_id}</Badge>
                 <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-truck-badge">{crewLink.truck_number}</Badge>
                 <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-division-badge">{crewLink.division}</Badge>
               </div>
             )}
           </CardContent>
         </Card>
+
+        {crewNotifications.length > 0 && (
+          <Card className="rounded-[32px] border-[#e07a5f]/30 bg-[#fff6f1] shadow-sm" data-testid="crew-notification-card">
+            <CardContent className="space-y-3 p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#b45a42]">Work follow-up</p>
+              {crewNotifications.map((item) => (
+                <div key={item.id} className="rounded-[22px] border border-[#f2c9bc] bg-white px-4 py-3" data-testid={`crew-notification-item-${item.id}`}>
+                  <p className="text-sm font-semibold text-[#243e36]">{item.title}</p>
+                  <p className="mt-1 text-sm text-[#5c6d64]">{item.message}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="crew-capture-form-card">
           <CardContent className="p-6">

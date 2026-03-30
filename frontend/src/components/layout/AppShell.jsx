@@ -4,6 +4,7 @@ import { NavLink } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import NotificationCenter from "@/components/common/NotificationCenter";
 
 
 const navigationByRole = {
@@ -50,6 +51,8 @@ export default function AppShell({ user, onLogout, children }) {
                 <Badge className="border-0 bg-[#7ca982] px-3 py-1 text-[#10261d]" data-testid="shell-user-role-badge">{user?.role}</Badge>
               </div>
             </div>
+
+            <NotificationCenter user={user} />
           </div>
 
           <nav className="mt-8 space-y-2">

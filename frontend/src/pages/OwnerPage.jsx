@@ -161,7 +161,10 @@ export default function OwnerPage() {
                 </div>
 
                 <div className="grid gap-4 xl:grid-cols-[1fr_0.85fr]">
-                  <Textarea value={comments} onChange={(event) => setComments(event.target.value)} className="min-h-[130px] rounded-2xl border-transparent bg-[#edf0e7]" data-testid="owner-comments-input" />
+                  <div>
+                    <Textarea value={comments} onChange={(event) => setComments(event.target.value)} className="min-h-[130px] rounded-2xl border-transparent bg-[#edf0e7]" data-testid="owner-comments-input" />
+                    <p className="mt-2 text-xs text-[#5c6d64]" data-testid="owner-followup-hint">Choosing correction required or insufficient evidence automatically creates a crew-facing follow-up notification.</p>
+                  </div>
                   <div className="rounded-[26px] border border-border bg-[#f6f6f2] p-5">
                     <div className="flex items-center gap-2 text-[#243e36]"><Scale className="h-5 w-5" /><p className="text-sm font-semibold">Calibration notes</p></div>
                     <div className="mt-3 space-y-2 text-sm text-[#5c6d64]">
@@ -185,6 +188,22 @@ export default function OwnerPage() {
                     <div className="aspect-[4/3] overflow-hidden bg-[#dde4d6]"><img src={photo.media_url} alt={photo.filename} className="h-full w-full object-cover" /></div>
                     <div className="p-4 text-sm font-semibold text-[#243e36]">{photo.filename}</div>
                   </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="owner-ai-readiness-card">
+            <CardContent className="p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Future AI grading path</p>
+              <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">The current human reviews are already building the learning dataset.</h3>
+              <div className="mt-5 grid gap-4 md:grid-cols-3">
+                {[
+                  'Images stay linked to jobs, crews, service types, and timestamps.',
+                  'Management and owner scores preserve calibration variance for training.',
+                  'Owner-approved records can become the gold dataset for future automated checks.',
+                ].map((item, index) => (
+                  <div key={item} className="rounded-[24px] border border-border bg-[#f6f6f2] p-4 text-sm text-[#5c6d64]" data-testid={`owner-ai-readiness-item-${index + 1}`}>{item}</div>
                 ))}
               </div>
             </CardContent>

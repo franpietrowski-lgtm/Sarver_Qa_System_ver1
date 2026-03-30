@@ -144,6 +144,22 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="settings-learning-roadmap-card">
+        <CardContent className="p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Learning roadmap</p>
+          <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">How this system can grow into automated quality checks</h3>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {[
+              'Phase 1: humans review photo batches and store rubric labels, comments, and variance data.',
+              'Phase 2: AI suggests likely scores and issues from the labeled image archive.',
+              'Phase 3: AI handles most grading while humans supervise edge cases and drift.',
+            ].map((step, index) => (
+              <div key={step} className="rounded-[24px] border border-border bg-[#f6f6f2] p-4 text-sm text-[#5c6d64]" data-testid={`settings-learning-roadmap-step-${index + 1}`}>{step}</div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

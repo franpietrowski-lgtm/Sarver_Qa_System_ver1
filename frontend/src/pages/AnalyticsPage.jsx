@@ -16,6 +16,11 @@ export default function AnalyticsPage() {
     return <div className="rounded-[28px] border border-border bg-white p-10 text-center text-[#243e36]" data-testid="analytics-loading-state">Loading analytics...</div>;
   }
 
+  const heatmapRows = Array.from(new Set((analytics.calibration_heatmap || []).map((item) => item.crew)));
+  const heatmapColumns = Array.from(new Set((analytics.calibration_heatmap || []).map((item) => item.service_type)));
+  const maxVariance = Math.max(...(analytics.calibration_heatmap || []).map((item) => item.variance_average || 0), 1);
+  const getHeatCell = (crew, serviceType) => analytics.calibration_heatmap.find((item) => item.crew === crew && item.service_type === serviceType);
+
   return (
     <div className="space-y-6" data-testid="analytics-page">
       <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-hero-card">
@@ -88,6 +93,44 @@ export default function AnalyticsPage() {
                 <Bar dataKey="count" fill="#e07a5f" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-heatmap-card">
+        <CardContent className="p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Calibration heatmap</p>
+          <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Where human grading varies by crew and service</h3>
+          <div className="mt-6 overflow-x-auto">
+            <div className="grid min-w-[720px] gap-3" style={{ gridTemplateColumns: `180px repeat(${Math.max(heatmapColumns.length, 1)}, minmax(140px, 1fr))` }} data-testid="analytics-heatmap-grid">
+              <div />
+              {heatmapColumns.map((column) => (
+                <div key={column} className="rounded-2xl bg-[#edf0e7] px-3 py-2 text-sm font-semibold text-[#243e36]" data-testid={`analytics-heatmap-column-${column.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}>{column}</div>
+              ))}
+              {heatmapRows.map((crew) => (
+                <div key={crew} className="contents">
+                  <div key={`${crew}-label`} className="rounded-2xl bg-[#243e36] px-3 py-3 text-sm font-semibold text-white" data-testid={`analytics-heatmap-row-${crew.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}>{crew}</div>
+                  {heatmapColumns.map((column) => {
+                    const cell = getHeatCell(crew, column);
+                    const intensity = cell ? Math.min((cell.variance_average || 0) / maxVariance, 1) : 0;
+                    const background = cell ? `rgba(224, 122, 95, ${0.12 + intensity * 0.6})` : "#f6f6f2";
+                    return (
+                      <div key={`${crew}-${column}`} className="rounded-2xl border border-border px-3 py-4 text-sm" style={{ background }} data-testid={`analytics-heatmap-cell-${crew.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${column.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}>
+                        {cell ? (
+                          <>
+                            <p className="font-semibold text-[#243e36]">Δ {cell.variance_average}</p>
+                            <p className="mt-1 text-xs text-[#41534a]">M {cell.management_average} · O {cell.owner_average}</p>
+                            <p className="mt-1 text-xs text-[#41534a]">{cell.sample_count} samples</p>
+                          </>
+                        ) : (
+                          <p className="text-xs text-[#7d8b84]">No data</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
