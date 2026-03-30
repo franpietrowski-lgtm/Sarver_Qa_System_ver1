@@ -122,7 +122,7 @@ export default function CrewCapturePage() {
           <CardContent className="p-6">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]" data-testid="crew-capture-kicker">Crew capture portal</p>
             <h1 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight" data-testid="crew-capture-title">Submit work proof in one pass</h1>
-            <p className="mt-3 text-sm text-white/80" data-testid="crew-capture-description">No login. Just select the job, confirm the truck, capture photos, and send.</p>
+            <p className="mt-3 text-sm text-white/80" data-testid="crew-capture-description">No login. Enter the job name, confirm the truck, capture photos, and send.</p>
 
             {crewLink && (
               <div className="mt-5 flex flex-wrap gap-2">

@@ -82,7 +82,7 @@ function App() {
           <Route path="/jobs" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><JobsPage {...pageProps} /></ProtectedRoute>} />
           <Route path="/review" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><ReviewPage {...pageProps} /></ProtectedRoute>} />
           <Route path="/owner" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><OwnerPage {...pageProps} /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><AnalyticsPage {...pageProps} /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><AnalyticsPage {...pageProps} /></ProtectedRoute>} />
           <Route path="/exports" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><ExportsPage {...pageProps} /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><SettingsPage {...pageProps} /></ProtectedRoute>} />
         </Routes>

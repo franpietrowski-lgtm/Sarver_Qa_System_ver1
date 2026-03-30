@@ -210,12 +210,12 @@ RUBRIC_LIBRARY = [
 SYSTEM_BLUEPRINT = {
     "architecture": {
         "frontend": [
-            "Public crew capture portal via unique QR route",
-            "Protected management and owner dashboards with role-aware navigation",
+            "Public crew capture portal via unique QR route with free-text job name entry",
+            "Protected admin and owner dashboards with role-aware navigation",
             "System blueprint page for architecture, schema, and rollout planning",
         ],
         "backend": [
-            "FastAPI API with JWT auth, job import, submissions, reviews, exports, analytics",
+            "FastAPI API with JWT auth, job alignment import, submissions, issue intake, reviews, exports, analytics",
             "MongoDB collections using string IDs for AI-ready relational linking",
             "Google Drive sync service with OAuth connection and structured folders",
         ],
@@ -235,15 +235,16 @@ SYSTEM_BLUEPRINT = {
         "export_records",
         "crew_access_links",
         "drive_credentials",
+        "notifications",
     ],
     "ui_screens": [
         "Login & system access",
         "Crew mobile capture portal",
         "Operations overview dashboard",
-        "Jobs import & QR access management",
+        "Jobs alignment import & QR access management",
         "Management review queue",
-        "Owner calibration & dataset approval",
-        "Analytics and exports workspace",
+        "Owner-only calibration & dataset approval",
+        "Owner analytics and exports workspace",
         "Integration settings and blueprint reference",
     ],
     "workflow_diagram": [
@@ -813,7 +814,7 @@ async def create_submission(
     issue_type: str = Form(""),
     issue_notes: str = Form(""),
     photos: list[UploadFile] = File(...),
-    issue_photos: list[UploadFile] | None = File(None),
+    issue_photos: list[UploadFile] = File([]),
 ):
     crew_link = await db.crew_access_links.find_one({"code": access_code, "enabled": True}, {"_id": 0})
     if not crew_link:
@@ -1135,8 +1136,11 @@ async def get_notifications(
 
 @api_router.post("/notifications/{notification_id}/read")
 async def mark_notification_read(notification_id: str, user: dict = Depends(require_roles("management", "owner"))):
+    targets = [{"target_role": user["role"]}, {"target_user_id": user["id"]}]
+    if user.get("title"):
+        targets.append({"target_titles": user["title"]})
     await db.notifications.update_one(
-        {"id": notification_id, "$or": [{"target_role": user["role"]}, {"target_user_id": user["id"]}]},
+        {"id": notification_id, "$or": targets},
         {
             "$set": {"status": "read", "updated_at": now_iso()},
             "$push": {"audit_history": audit_entry("read", user["id"], "Notification opened")},
@@ -1258,11 +1262,11 @@ async def create_management_review(
     )
     await create_notification(
         title="Submission ready for owner review",
-        message=f"{submission['job_id']} was reviewed by management and is ready for owner calibration.",
+        message=f"{submission.get('job_name_input') or submission.get('job_id') or submission['submission_code']} was reviewed by management and is ready for owner calibration.",
         audience="owner",
         target_role="owner",
         related_submission_id=payload.submission_id,
-        related_job_id=submission["job_id"],
+        related_job_id=submission.get("job_id") or submission.get("job_key"),
         notification_type="owner_review",
     )
     if payload.disposition in {"correction required", "insufficient evidence"}:
@@ -1272,7 +1276,7 @@ async def create_management_review(
             audience="crew",
             target_access_code=submission["access_code"],
             related_submission_id=payload.submission_id,
-            related_job_id=submission["job_id"],
+            related_job_id=submission.get("job_id") or submission.get("job_key"),
             notification_type="crew_followup",
         )
     write_json_artifact(submission.get("local_folder_path"), "management_review.json", review)
@@ -1336,7 +1340,7 @@ async def create_owner_review(
             audience="crew",
             target_access_code=submission["access_code"],
             related_submission_id=payload.submission_id,
-            related_job_id=submission["job_id"],
+            related_job_id=submission.get("job_id") or submission.get("job_key"),
             notification_type="crew_followup",
         )
     write_json_artifact(submission.get("local_folder_path"), "owner_review.json", review)
@@ -1444,6 +1448,7 @@ def build_export_rows(submissions: list[dict], management_lookup: dict, owner_lo
                 "submission_id": submission["id"],
                 "submission_code": submission["submission_code"],
                 "job_id": submission.get("job_id"),
+                "job_name_input": submission.get("job_name_input"),
                 "matched_job_id": submission.get("matched_job_id"),
                 "crew_label": submission.get("crew_label"),
                 "truck_number": submission.get("truck_number"),
@@ -1454,6 +1459,11 @@ def build_export_rows(submissions: list[dict], management_lookup: dict, owner_lo
                 "gps_lat": submission.get("gps", {}).get("lat"),
                 "gps_lng": submission.get("gps", {}).get("lng"),
                 "photo_urls": json.dumps([item.get("media_url") for item in submission.get("photo_files", [])]),
+                "field_report_type": submission.get("field_report", {}).get("type"),
+                "field_report_notes": submission.get("field_report", {}).get("notes"),
+                "field_report_photo_urls": json.dumps([
+                    item.get("media_url") for item in submission.get("field_report", {}).get("photo_files", [])
+                ]),
                 "management_total_score": management_review.get("total_score"),
                 "management_disposition": management_review.get("disposition"),
                 "owner_total_score": owner_review.get("total_score"),

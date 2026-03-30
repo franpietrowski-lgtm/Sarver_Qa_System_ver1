@@ -30,7 +30,7 @@ export default function OverviewPage({ user }) {
 
   const stats = [
     { icon: Activity, label: "Submissions", value: overview.totals.submissions, hint: "All captured proof records", testId: "overview-stat-submissions" },
-    { icon: FolderInput, label: "Imported jobs", value: overview.totals.jobs, hint: "LMN-ready records available to crews", testId: "overview-stat-jobs" },
+    { icon: FolderInput, label: "Imported jobs", value: overview.totals.jobs, hint: "Alignment records available for admin review", testId: "overview-stat-jobs" },
     { icon: ShieldCheck, label: "Owner queue", value: overview.queues.owner, hint: "Items needing final calibration", testId: "overview-stat-owner-queue" },
     { icon: UploadCloud, label: "Export ready", value: overview.queues.export_ready, hint: "Records ready for dataset packaging", testId: "overview-stat-export-ready" },
   ];

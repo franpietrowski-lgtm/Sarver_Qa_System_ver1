@@ -25,8 +25,8 @@ export default function AnalyticsPage() {
     <div className="space-y-6" data-testid="analytics-page">
       <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-hero-card">
         <CardContent className="p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Analytics dashboard</p>
-          <h2 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Crew performance, reviewer variance, and training signal quality.</h2>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Owner calibration dashboard</p>
+          <h2 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Owner-only calibration, reviewer drift, and training signal quality.</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <div className="rounded-[28px] border border-border bg-[#f6f6f2] p-5" data-testid="analytics-approved-card">
               <p className="text-sm text-[#5c6d64]">Training-approved records</p>
@@ -100,7 +100,7 @@ export default function AnalyticsPage() {
       <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-heatmap-card">
         <CardContent className="p-8">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Calibration heatmap</p>
-          <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Where human grading varies by crew and service</h3>
+          <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Where reviewer calibration varies by crew and service</h3>
           <div className="mt-6 overflow-x-auto">
             <div className="grid min-w-[720px] gap-3" style={{ gridTemplateColumns: `180px repeat(${Math.max(heatmapColumns.length, 1)}, minmax(140px, 1fr))` }} data-testid="analytics-heatmap-grid">
               <div />

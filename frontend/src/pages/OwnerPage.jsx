@@ -95,7 +95,7 @@ export default function OwnerPage() {
               <button key={submission.id} type="button" onClick={() => setSelectedId(submission.id)} className={`w-full rounded-[24px] border p-4 text-left ${selectedId === submission.id ? "border-[#243e36] bg-[#edf0e7]" : "border-border bg-[#f6f6f2]"}`} data-testid={`owner-queue-item-${submission.id}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-[#243e36]">{submission.job_id || submission.submission_code}</p>
+                    <p className="text-sm font-semibold text-[#243e36]">{submission.job_name_input || submission.job_id || submission.submission_code}</p>
                     <p className="mt-1 text-sm text-[#5c6d64]">{submission.service_type} · {submission.crew_label}</p>
                   </div>
                   <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]">{submission.status}</Badge>
@@ -112,7 +112,7 @@ export default function OwnerPage() {
             <CardContent className="grid gap-4 p-8 md:grid-cols-3">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Submission</p>
-                <p className="mt-2 text-2xl font-bold" data-testid="owner-summary-job-id">{detail.submission.job_id}</p>
+                <p className="mt-2 text-2xl font-bold" data-testid="owner-summary-job-id">{detail.submission.job_name_input || detail.submission.job_id}</p>
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Management score</p>
@@ -124,6 +124,31 @@ export default function OwnerPage() {
               </div>
             </CardContent>
           </Card>
+
+          {detail.submission.field_report?.reported && (
+            <Card className="rounded-[32px] border-[#f2c9bc] bg-[#fff6f1] shadow-sm" data-testid="owner-field-report-card">
+              <CardContent className="p-8">
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#b45a42]">Field issue intake</p>
+                <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Issue, damage, and note reporting</h3>
+                <div className="mt-4 grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+                  <div className="space-y-2 text-sm text-[#5c6d64]">
+                    <p data-testid="owner-field-report-type">Type: {detail.submission.field_report.type || "General field report"}</p>
+                    <p data-testid="owner-field-report-notes">Notes: {detail.submission.field_report.notes || "No extra details"}</p>
+                  </div>
+                  {!!detail.submission.field_report.photo_files?.length && (
+                    <div className="grid gap-4 sm:grid-cols-2" data-testid="owner-field-report-photo-grid">
+                      {detail.submission.field_report.photo_files.map((photo) => (
+                        <div key={photo.id} className="overflow-hidden rounded-[24px] border border-[#f2c9bc] bg-white">
+                          <div className="aspect-[4/3] overflow-hidden bg-[#f5e3db]"><img src={photo.media_url} alt={photo.filename} className="h-full w-full object-cover" /></div>
+                          <div className="p-4 text-sm font-semibold text-[#243e36]">{photo.filename}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="owner-form-card">
             <CardContent className="p-8">

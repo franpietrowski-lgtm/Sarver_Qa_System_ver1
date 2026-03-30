@@ -1,0 +1,31 @@
+{
+  "id": "mgr_2ef3f2b49d74",
+  "submission_id": "sub_d96091bbde81",
+  "reviewer_id": "user_ae5085da3091",
+  "rubric_id": "rubric_bed_edging_v1",
+  "rubric_version": 1,
+  "service_type": "bed edging",
+  "category_scores": {
+    "continuity": 4.0,
+    "depth_consistency": 4.0,
+    "turf_containment": 4.0,
+    "cleanliness": 4.0,
+    "visual_finish": 4.0
+  },
+  "total_score": 80.0,
+  "comments": "Reviewed field issue and quality photos.",
+  "disposition": "pass with notes",
+  "flagged_issues": [
+    "broken_irrigation_component"
+  ],
+  "created_at": "2026-03-30T05:00:41.837754+00:00",
+  "updated_at": "2026-03-30T05:00:41.837762+00:00",
+  "audit_history": [
+    {
+      "timestamp": "2026-03-30T05:00:41.837764+00:00",
+      "action": "created",
+      "actor_id": "user_ae5085da3091",
+      "note": "Management review submitted"
+    }
+  ]
+}

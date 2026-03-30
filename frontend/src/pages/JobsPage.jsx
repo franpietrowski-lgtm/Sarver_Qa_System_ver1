@@ -145,7 +145,7 @@ export default function JobsPage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Imported jobs</p>
-              <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Selection source for crews</h3>
+              <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Alignment source for admins</h3>
             </div>
             <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search jobs" className="h-11 max-w-sm rounded-2xl border-transparent bg-[#edf0e7]" data-testid="jobs-search-input" />
           </div>

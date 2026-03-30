@@ -11,6 +11,11 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Photo storage: app storage + Google Drive sync architecture now
 - Crew access: unique user QR code
 - Scope priority: as much of the full spec as possible
+- Admin account titles: GM, Account Manager, Production Manager, Supervisor (same review access)
+- Reviewer calibration: owner-only function
+- Crew data entry: free-text Job Name only for field input; align to imported job data later
+- Crew field reporting: issues, damages, and notes with photo attachments
+- Issue notifications: notify Production Managers + Account Managers first
 
 ## Architecture Decisions
 - Frontend: React 19 + React Router + Tailwind + shadcn/ui + Recharts + Framer Motion
@@ -19,18 +24,20 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Storage: local upload cache for fast proof capture, export files on server, Google Drive OAuth sync service layer prepared
 - Access model: public QR crew routes, protected management/owner routes with role-aware navigation
 - Review model: versioned rubric definitions stored in DB and applied by service type
+- Job alignment model: crews submit only the job name they were given; admin users align records to imported job data separately
 
 ## User Personas
-- Crew: mobile-first, no-login, rapid capture, minimal typing
-- Management: review queue operator, confirms matches, scores against rubric, flags issues
+- Crew: mobile-first, no-login, rapid capture, minimal typing, field issue reporting
+- Management/Admin: GM, Account Manager, Production Manager, Supervisor with shared review permissions
 - Owner: calibration authority, resolves variance, approves training inclusion, drives export quality
 
 ## Core Requirements
-- Crew submission with photos, job selection, truck number, GPS, timestamp, metadata
+- Crew submission with free-text job name, photos, truck number, GPS, timestamp, metadata
+- Crew issue/damage/note intake with optional issue photo attachments
 - CSV LMN-style job import and searchable job list
-- Auto-match confidence and match status support
+- Auto-match confidence and match status support for admin-side alignment
 - Management scoring workflow with disposition and comments
-- Owner calibration workflow with training inclusion/exclusion
+- Owner-only calibration workflow with training inclusion/exclusion
 - Versioned rubrics for bed edging, spring cleanup, fall cleanup
 - JSONL/CSV exports for full and owner-gold datasets
 - Analytics for crew scores, variance, fail reasons, and volume trends
@@ -55,6 +62,11 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Added notification generation rules for new submissions, owner-review-ready items, and correction requests
 - Added calibration heatmap analytics to surface grading variance by crew and service type
 - Added learning roadmap / AI-readiness messaging so the current labeled dataset can evolve into future automated grading
+- Updated admin model to GM / Account Manager / Production Manager / Supervisor plus Owner
+- Updated crew capture to use free-text Job Name instead of requiring job selection from imported data
+- Added field issue / damage / note reporting with attached issue photos into the review pipeline
+- Updated notifications so field issues route first to Production Managers and Account Managers
+- Updated the app styling direction to align more closely with Sarver Landscape branding cues
 
 ## Prioritized Backlog
 ### P0

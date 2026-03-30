@@ -202,6 +202,16 @@ export default function ReviewPage() {
                         <p data-testid="review-field-report-type">Type: {detail.submission.field_report.type || "General field report"}</p>
                         <p data-testid="review-field-report-notes">Notes: {detail.submission.field_report.notes || "No extra details"}</p>
                       </div>
+                      {!!detail.submission.field_report.photo_files?.length && (
+                        <div className="mt-4 grid grid-cols-2 gap-3" data-testid="review-field-report-photo-grid">
+                          {detail.submission.field_report.photo_files.map((photo) => (
+                            <div key={photo.id} className="overflow-hidden rounded-[20px] border border-[#f2c9bc] bg-white">
+                              <div className="aspect-[4/3] overflow-hidden bg-[#f5e3db]"><img src={photo.media_url} alt={photo.filename} className="h-full w-full object-cover" /></div>
+                              <div className="p-3 text-xs font-semibold text-[#243e36]">{photo.filename}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
