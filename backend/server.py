@@ -1255,8 +1255,8 @@ async def run_export(payload: ExportRunRequest, user: dict = Depends(require_rol
     await db.submissions.update_many(
         {"id": {"$in": [row["submission_id"] for row in rows]}},
         {
-            "$set": {"status": "Exported", "updated_at": now_iso()},
-            "$push": {"audit_history": audit_entry("exported", user["id"], export_id)},
+            "$set": {"last_exported_at": now_iso(), "last_export_id": export_id, "updated_at": now_iso()},
+            "$push": {"audit_history": audit_entry("dataset_exported", user["id"], export_id)},
         },
     )
     return record

@@ -49,6 +49,8 @@ export const authPostForm = async (path, formData) => {
   return response.data;
 };
 
+export const authDownload = async (path) => api.get(path, { responseType: "blob" });
+
 export const publicGet = async (path, options = {}) => {
   const response = await api.get(path, options);
   return response.data;
