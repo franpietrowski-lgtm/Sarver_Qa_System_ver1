@@ -276,7 +276,7 @@ SYSTEM_BLUEPRINT = {
         "Exported",
     ],
     "suggested_stack": {
-        "frontend": "React 19 + Tailwind + shadcn/ui + Recharts + Framer Motion",
+        "frontend": "React 19 + Tailwind + shadcn/ui + Framer Motion",
         "backend": "FastAPI + Motor + JWT auth + Google Drive API",
         "database": "MongoDB with collection-per-module structure",
     },
@@ -468,10 +468,6 @@ async def seed_defaults() -> None:
                     }
                 },
             )
-
-    await db.jobs.update_many({"division": "Cleanup"}, {"$set": {"division": "Maintenance", "updated_at": now_iso()}})
-    await db.crew_access_links.update_many({"division": "Cleanup"}, {"$set": {"division": "Maintenance", "updated_at": now_iso()}})
-    await db.submissions.update_many({"division": "Cleanup"}, {"$set": {"division": "Maintenance", "updated_at": now_iso()}})
         else:
             await db.users.insert_one(
                 {
@@ -484,6 +480,10 @@ async def seed_defaults() -> None:
                     "audit_history": [audit_entry("seeded", "system", f"{user['title']} demo account created")],
                 }
             )
+
+    await db.jobs.update_many({"division": "Cleanup"}, {"$set": {"division": "Maintenance", "updated_at": now_iso()}})
+    await db.crew_access_links.update_many({"division": "Cleanup"}, {"$set": {"division": "Maintenance", "updated_at": now_iso()}})
+    await db.submissions.update_many({"division": "Cleanup"}, {"$set": {"division": "Maintenance", "updated_at": now_iso()}})
 
     if await db.rubric_definitions.count_documents({}) == 0:
         payload = []

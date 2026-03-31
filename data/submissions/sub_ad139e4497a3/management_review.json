@@ -1,0 +1,29 @@
+{
+  "id": "mgr_0c3213546cf0",
+  "submission_id": "sub_ad139e4497a3",
+  "reviewer_id": "user_ae5085da3091",
+  "rubric_id": "rubric_fall_cleanup_v1",
+  "rubric_version": 1,
+  "service_type": "fall cleanup",
+  "category_scores": {
+    "leaf_removal": 4.0,
+    "detail_finish": 4.0,
+    "bed_cleanup": 4.0,
+    "walkway_clearance": 4.0,
+    "visual_finish": 4.0
+  },
+  "total_score": 80.0,
+  "comments": "TEST pagination owner queue setup",
+  "disposition": "pass with notes",
+  "flagged_issues": [],
+  "created_at": "2026-03-31T00:05:50.423332+00:00",
+  "updated_at": "2026-03-31T00:05:50.423339+00:00",
+  "audit_history": [
+    {
+      "timestamp": "2026-03-31T00:05:50.423341+00:00",
+      "action": "created",
+      "actor_id": "user_ae5085da3091",
+      "note": "Management review submitted"
+    }
+  ]
+}

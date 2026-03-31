@@ -68,6 +68,10 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Updated notifications so field issues route first to Production Managers and Account Managers
 - Updated the app styling direction to align more closely with Sarver Landscape branding cues
 - Reworked owner analytics visuals to lightweight CSS-based charts for a cleaner testable experience
+- Added crew link lifecycle controls so inactive QR links can be removed from active use without affecting prior submission history
+- Added staff account management with create + authorize/deactivate controls for implementation testing
+- Added owner queue pagination and a visible calibration heatmap legend
+- Updated alignment views to hide truck display and reflect Sarver division structure: Maintenance, Install, PHC - Plant Healthcare, and Sarver Tree
 
 ## Prioritized Backlog
 ### P0
@@ -93,3 +97,4 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Add deeper calibration analytics by reviewer and service type
 - Add editable admin settings for rubric thresholds and hard-fail conditions
 - Plan the first AI grading assistant phase using the stored gold dataset + variance history
+- Add staff password reset / invite flows for smoother production rollout
