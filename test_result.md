@@ -102,7 +102,104 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the live frontend at https://landscape-qa.preview.emergentagent.com for the Sarver Landscape field-quality app. Focus on login, analytics period tabs, owner page pagination, exports pagination, jobs page sections, settings Supabase wording, and crew portal visual polish."
+user_problem_statement: "Test the live backend at https://landscape-qa.preview.emergentagent.com for the Sarver Landscape field-quality app. Focus on recently changed backend/API flows including auth, storage status, multipart uploads, file retrieval, paginated endpoints, dashboard overview, analytics summary, and Google Drive retirement."
+
+backend:
+  - task: "POST /api/auth/login for owner and production manager"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Both owner and production manager login working correctly. Owner login returns Owen Owner (owner role), Production Manager login returns Parker Production Manager (management role). JWT tokens generated successfully."
+
+  - task: "GET /api/integrations/storage/status returns Supabase metadata"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Storage status endpoint working correctly. Returns provider=supabase, configured=true, bucket=qa-images with all required metadata fields."
+
+  - task: "POST /api/public/submissions multipart upload with 3 images and issue photo"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Multipart submission working correctly. Successfully uploads 3 photos + 1 issue photo. Returns submission with source_type=supabase, bucket=qa-images, storage_path fields as required."
+
+  - task: "GET /api/submissions/files/{submission_id}/{filename} returns image bytes"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "File retrieval working correctly. Successfully returns image bytes with proper content-type headers. Tested with uploaded submission files."
+
+  - task: "GET paginated endpoints return object responses with items + pagination"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "All paginated endpoints working correctly with new format. Tested: /api/submissions (management & owner scopes), /api/crew-access-links (inactive), /api/jobs, /api/exports. All return proper {items: [], pagination: {}} structure."
+
+  - task: "GET /api/dashboard/overview reflects storage readiness fields"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Dashboard overview working correctly. Returns storage readiness fields with provider=supabase, configured=true, connected=true."
+
+  - task: "GET /api/analytics/summary works for all period tabs"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Analytics summary working for all periods. Successfully tested daily, weekly, monthly, quarterly, and annual period parameters."
+
+  - task: "Google Drive connect/callback flow retired cleanly"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "Google Drive endpoints properly retired. /api/integrations/drive/callback and /api/integrations/drive/status return 404, indicating clean retirement without breaking app expectations."
 
 frontend:
   - task: "Login functionality with Owner credentials"
@@ -239,13 +336,14 @@ frontend:
 
 metadata:
   created_by: "testing_agent"
-  version: "1.0"
-  test_sequence: 1
+  version: "1.1"
+  test_sequence: 2
   run_ui: true
   last_tested: "2026-03-31"
 
 test_plan:
   current_focus:
+    - "All backend API flows tested and verified"
     - "All frontend flows tested and verified"
   stuck_tasks: []
   test_all: true
@@ -254,3 +352,5 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: "Completed comprehensive testing of all requested frontend flows. All tests passed successfully. Login works for owner, all protected routes accessible, analytics period tabs function correctly, pagination works across all pages (owner, exports, jobs), settings shows Supabase storage wording, and crew portal has proper visual polish without 'No login' text or raw IDCREWID_ strings. Minor note: Failed network requests are only Cloudflare RUM endpoints which don't affect functionality. Production Manager login test failed due to test script issue (already logged in as owner), not an application issue."
+    - agent: "testing"
+      message: "Completed comprehensive backend API testing with 100% success rate (17/17 tests passed). All requested backend flows working correctly: Auth login for both owner and production manager, Supabase storage status configured properly, multipart submissions with 3 images + issue photo working, file retrieval returning proper image bytes, all paginated endpoints using new {items, pagination} format, dashboard overview showing storage readiness, analytics summary working for all periods (daily/weekly/monthly/quarterly/annual), and Google Drive endpoints properly retired. No regressions, upload failures, serialization issues, or API contract issues found."
