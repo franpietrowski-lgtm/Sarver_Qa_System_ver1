@@ -14,8 +14,11 @@ import LoginPage from "@/pages/LoginPage";
 import OverviewPage from "@/pages/OverviewPage";
 import OwnerPage from "@/pages/OwnerPage";
 import RapidReviewPage from "@/pages/RapidReviewPage";
+import RepeatOffendersPage from "@/pages/RepeatOffendersPage";
 import ReviewPage from "@/pages/ReviewPage";
 import SettingsPage from "@/pages/SettingsPage";
+import StandardsLibraryPage from "@/pages/StandardsLibraryPage";
+import TrainingModePage from "@/pages/TrainingModePage";
 
 
 function ProtectedRoute({ authState, allowedRoles, onLogout, shell = true, children }) {
@@ -84,13 +87,16 @@ function App() {
             <Route path="/" element={<Navigate to={authState.user ? "/dashboard" : "/login"} replace />} />
             <Route path="/login" element={<LoginPage onLogin={handleLogin} authUser={authState.user} />} />
             <Route path="/crew/:code" element={<CrewCapturePage />} />
+            <Route path="/training/:code" element={<TrainingModePage />} />
             <Route path="/dashboard" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><OverviewPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/jobs" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management"]}><JobsPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/review" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management"]}><ReviewPage {...pageProps} /></ProtectedRoute>} />
-            <Route path="/rapid-review" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management", "owner"]} shell={false}><RapidReviewPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/rapid-review" element={<Navigate to="/rapid-review/mobile" replace />} />
             <Route path="/rapid-review/mobile" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management", "owner"]} shell={false}><RapidReviewPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/owner" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><OwnerPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><AnalyticsPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/standards" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><StandardsLibraryPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/repeat-offenders" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><RepeatOffendersPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/exports" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><ExportsPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><SettingsPage {...pageProps} /></ProtectedRoute>} />
           </Routes>

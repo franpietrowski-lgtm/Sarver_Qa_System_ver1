@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, MessageSquareQuote, MoonStar, Paintbrush, Smartphone, Sparkles, SunMedium, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, MessageSquareQuote, MoonStar, Paintbrush, Sparkles, SunMedium, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -51,6 +51,7 @@ export default function RapidReviewPage({ user }) {
   const [drawingActive, setDrawingActive] = useState(false);
   const [pendingRating, setPendingRating] = useState("");
   const [reviewerComment, setReviewerComment] = useState("");
+  const [hudDirection, setHudDirection] = useState("");
   const surfaceRef = useRef(null);
 
   const currentItem = queue[currentIndex] || null;
@@ -213,11 +214,21 @@ export default function RapidReviewPage({ user }) {
   };
 
   const handleDragEnd = async (_, info) => {
+    setHudDirection("");
     if (saving) return;
     if (info.offset.x <= -140) return requestRating("fail");
     if (info.offset.x >= 140) return requestRating("standard");
     if (info.offset.y <= -120) return requestRating("exemplary");
     if (info.offset.y >= 120) return requestRating("concern");
+  };
+
+  const handleDrag = (_, info) => {
+    const { x, y } = info.offset;
+    if (Math.abs(x) > Math.abs(y)) {
+      setHudDirection(x <= -60 ? "fail" : x >= 60 ? "standard" : "");
+      return;
+    }
+    setHudDirection(y <= -60 ? "exemplary" : y >= 60 ? "concern" : "");
   };
 
   const getRelativePoint = (event) => {
@@ -263,17 +274,14 @@ export default function RapidReviewPage({ user }) {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-white/10 bg-black/15 px-4 py-4 backdrop-blur-xl" data-testid="rapid-review-topbar">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/55">Rapid review</p>
-          <h1 className="mt-2 font-[Outfit] text-3xl font-semibold" data-testid="rapid-review-title">{mobileLane ? "Mobile swipe lane" : "Admin quality swipe lane"}</h1>
-          <p className="mt-1 text-sm text-white/70" data-testid="rapid-review-progress-text">Admin-only summary rating lane for supervisors, PMs, AMs, GMs, and owner.</p>
+          <h1 className="mt-2 font-[Outfit] text-3xl font-semibold" data-testid="rapid-review-title">Mobile swipe lane</h1>
+          <p className="mt-1 text-sm text-white/70" data-testid="rapid-review-progress-text">Phone-first admin lane with swipe HUD guidance and summary scoring.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge className="border-0 bg-white/10 text-white" data-testid="rapid-review-entry-badge">{mobileLane ? "Mobile link" : "Desktop lane"}</Badge>
+          <Badge className="border-0 bg-white/10 text-white" data-testid="rapid-review-entry-badge">Mobile link</Badge>
           <Button type="button" variant="outline" onClick={toggleTheme} className="rounded-full border-white/20 bg-white/10 text-white hover:bg-white/15" data-testid="rapid-review-theme-button">
             {isDark ? <SunMedium className="mr-2 h-4 w-4" /> : <MoonStar className="mr-2 h-4 w-4" />}
             {isDark ? "Default" : "Dark"}
-          </Button>
-          <Button type="button" variant="outline" onClick={() => navigate(mobileLane ? "/rapid-review" : "/rapid-review/mobile")} className="rounded-full border-white/20 bg-white/10 text-white hover:bg-white/15" data-testid="rapid-review-mode-switch-button">
-            <Smartphone className="mr-2 h-4 w-4" />{mobileLane ? "Open desktop lane" : "Open mobile lane"}
           </Button>
           <Button type="button" variant="outline" onClick={() => navigate(user?.role === "owner" ? "/owner" : "/review")} className="rounded-full border-white/20 bg-white/10 text-white hover:bg-white/15" data-testid="rapid-review-exit-button">
             <X className="mr-2 h-4 w-4" />Exit
@@ -281,7 +289,57 @@ export default function RapidReviewPage({ user }) {
         </div>
       </div>
 
-      <div className={`grid gap-4 ${mobileLane ? "" : "xl:grid-cols-[320px_1fr_320px]"}`}>
+      <div className="grid gap-4">
+        <div className="space-y-4">
+          {currentItem && currentDetail ? (
+            <>
+              <AnimatePresence mode="wait">
+                <motion.div key={currentItem.id} initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -28 }} transition={{ duration: 0.18 }}>
+                  <motion.div drag dragMomentum={false} onDrag={handleDrag} onDragEnd={handleDragEnd} className="overflow-hidden rounded-[36px] border border-white/10 bg-black/15 shadow-2xl backdrop-blur-xl" data-testid="rapid-review-image-surface">
+                    <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4 text-sm text-white/70">
+                      <div>
+                        <p className="font-semibold text-white" data-testid="rapid-review-current-job">{currentDetail.submission.job_name_input || currentDetail.submission.job_id || currentDetail.submission.submission_code}</p>
+                        <p className="mt-1 text-xs text-white/60" data-testid="rapid-review-current-meta">{currentDetail.submission.crew_label} · {currentDetail.submission.truck_number} · {currentDetail.submission.service_type}</p>
+                      </div>
+                      <Badge className="border-0 bg-white/10 text-white" data-testid="rapid-review-current-status">Edit full rubric later</Badge>
+                    </div>
+
+                    <div className="relative aspect-[4/5] w-full bg-[#101612]" ref={surfaceRef} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp}>
+                      {currentPhoto ? <img src={currentPhoto.media_url} alt={currentPhoto.filename} className="h-full w-full object-cover" data-testid="rapid-review-main-image" /> : <div className="flex h-full items-center justify-center text-white/60">No image available</div>}
+                      <div className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 rounded-full px-4 py-3 text-sm font-semibold transition ${hudDirection === "fail" ? "bg-[#7a2323]/80 text-white" : "bg-[#7a2323]/35 text-white/80"}`} data-testid="rapid-review-hud-left"><ArrowLeft className="mb-1 h-4 w-4" />Fail</div>
+                      <div className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-full px-4 py-3 text-sm font-semibold transition ${hudDirection === "standard" ? "bg-[#2d5a27]/80 text-white" : "bg-[#2d5a27]/35 text-white/80"}`} data-testid="rapid-review-hud-right"><ArrowRight className="mb-1 h-4 w-4" />Standard</div>
+                      <div className={`pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 rounded-full px-4 py-3 text-sm font-semibold transition ${hudDirection === "exemplary" ? "bg-[#2a5f73]/80 text-white" : "bg-[#2a5f73]/35 text-white/80"}`} data-testid="rapid-review-hud-up"><ChevronUp className="mb-1 h-4 w-4" />Exemplary</div>
+                      <div className={`pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full px-4 py-3 text-sm font-semibold transition ${hudDirection === "concern" ? "bg-[#9a5b15]/80 text-white" : "bg-[#9a5b15]/35 text-white/80"}`} data-testid="rapid-review-hud-down"><ChevronDown className="mb-1 h-4 w-4" />Concern</div>
+                      <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" data-testid="rapid-review-annotation-layer">
+                        {currentDrawings.map((path, index) => <path key={`${currentItem.id}-stroke-${index}`} d={path} fill="none" stroke="#fbbf24" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round" />)}
+                        {draftPath ? <path d={draftPath} fill="none" stroke="#fbbf24" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round" /> : null}
+                      </svg>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </AnimatePresence>
+
+              <div className="grid gap-3 sm:grid-cols-2" data-testid="rapid-review-action-row">
+                {Object.entries(RATING_CONFIG).map(([key, config]) => (
+                  <Button key={key} type="button" disabled={saving} onClick={() => requestRating(key)} className={`h-14 rounded-[20px] text-white ${config.color}`} data-testid={`rapid-review-${key}-button`}>
+                    {config.label}
+                  </Button>
+                ))}
+              </div>
+
+              <Button type="button" disabled={saving} onClick={skipCurrent} className="h-12 w-full rounded-[20px] bg-white/10 text-white hover:bg-white/15" data-testid="rapid-review-skip-button">Skip item</Button>
+            </>
+          ) : (
+            <Card className="rounded-[36px] border-white/10 bg-black/15 text-white backdrop-blur-xl" data-testid="rapid-review-empty-state">
+              <CardContent className="flex min-h-[420px] flex-col items-center justify-center p-10 text-center">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/50">Rapid review queue clear</p>
+                <h2 className="mt-4 font-[Outfit] text-4xl font-semibold">You’re caught up.</h2>
+                <Button type="button" onClick={loadQueue} className="mt-6 rounded-full bg-white/10 text-white hover:bg-white/15" data-testid="rapid-review-refresh-button">Refresh queue</Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
         <Card className="rounded-[32px] border-white/10 bg-black/15 text-white backdrop-blur-xl" data-testid="rapid-review-queue-card">
           <CardContent className="p-5">
             <div className="flex items-center justify-between gap-3">
@@ -312,53 +370,6 @@ export default function RapidReviewPage({ user }) {
             </div>
           </CardContent>
         </Card>
-
-        <div className="space-y-4">
-          {currentItem && currentDetail ? (
-            <>
-              <AnimatePresence mode="wait">
-                <motion.div key={currentItem.id} initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -28 }} transition={{ duration: 0.18 }}>
-                  <motion.div drag dragMomentum={false} onDragEnd={handleDragEnd} className="overflow-hidden rounded-[36px] border border-white/10 bg-black/15 shadow-2xl backdrop-blur-xl" data-testid="rapid-review-image-surface">
-                    <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4 text-sm text-white/70">
-                      <div>
-                        <p className="font-semibold text-white" data-testid="rapid-review-current-job">{currentDetail.submission.job_name_input || currentDetail.submission.job_id || currentDetail.submission.submission_code}</p>
-                        <p className="mt-1 text-xs text-white/60" data-testid="rapid-review-current-meta">{currentDetail.submission.crew_label} · {currentDetail.submission.truck_number} · {currentDetail.submission.service_type}</p>
-                      </div>
-                      <Badge className="border-0 bg-white/10 text-white" data-testid="rapid-review-current-status">Edit full rubric later</Badge>
-                    </div>
-
-                    <div className="relative aspect-[16/10] w-full bg-[#101612]" ref={surfaceRef} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp}>
-                      {currentPhoto ? <img src={currentPhoto.media_url} alt={currentPhoto.filename} className="h-full w-full object-contain" data-testid="rapid-review-main-image" /> : <div className="flex h-full items-center justify-center text-white/60">No image available</div>}
-                      <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" data-testid="rapid-review-annotation-layer">
-                        {currentDrawings.map((path, index) => <path key={`${currentItem.id}-stroke-${index}`} d={path} fill="none" stroke="#fbbf24" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round" />)}
-                        {draftPath ? <path d={draftPath} fill="none" stroke="#fbbf24" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round" /> : null}
-                      </svg>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              </AnimatePresence>
-
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="rapid-review-action-row">
-                {Object.entries(RATING_CONFIG).map(([key, config]) => (
-                  <Button key={key} type="button" disabled={saving} onClick={() => requestRating(key)} className={`h-14 rounded-[20px] text-white ${config.color}`} data-testid={`rapid-review-${key}-button`}>
-                    {config.label}
-                  </Button>
-                ))}
-              </div>
-
-              <Button type="button" disabled={saving} onClick={skipCurrent} className="h-12 w-full rounded-[20px] bg-white/10 text-white hover:bg-white/15" data-testid="rapid-review-skip-button">Skip item</Button>
-            </>
-          ) : (
-            <Card className="rounded-[36px] border-white/10 bg-black/15 text-white backdrop-blur-xl" data-testid="rapid-review-empty-state">
-              <CardContent className="flex min-h-[420px] flex-col items-center justify-center p-10 text-center">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/50">Rapid review queue clear</p>
-                <h2 className="mt-4 font-[Outfit] text-4xl font-semibold">You’re caught up.</h2>
-                <Button type="button" onClick={loadQueue} className="mt-6 rounded-full bg-white/10 text-white hover:bg-white/15" data-testid="rapid-review-refresh-button">Refresh queue</Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
         <Card className="rounded-[32px] border-white/10 bg-black/15 text-white backdrop-blur-xl" data-testid="rapid-review-side-panel">
           <CardContent className="space-y-5 p-5">
             <div>

@@ -61,4 +61,9 @@ export const publicGet = async (path, options = {}) => {
   return response.data;
 };
 
+export const publicPost = async (path, payload, options = {}) => {
+  const response = await api.post(path, payload, options);
+  return response.data;
+};
+
 export const getApiOrigin = () => BACKEND_URL;

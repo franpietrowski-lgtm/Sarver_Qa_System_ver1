@@ -404,6 +404,40 @@ class RapidReviewRequest(BaseModel):
     entry_mode: str = "desktop"
 
 
+class StandardItemRequest(BaseModel):
+    title: str
+    category: str
+    audience: str = "crew"
+    division_targets: list[str] = Field(default_factory=list)
+    checklist: list[str] = Field(default_factory=list)
+    notes: str = ""
+    owner_notes: str = ""
+    shoutout: str = ""
+    image_url: str
+    training_enabled: bool = True
+    question_type: str = "multiple_choice"
+    question_prompt: str = ""
+    choice_options: list[str] = Field(default_factory=list)
+    correct_answer: str = ""
+    is_active: bool = True
+
+
+class TrainingSessionCreateRequest(BaseModel):
+    access_code: str
+    division: str = ""
+    item_count: int = 5
+
+
+class TrainingAnswerSubmission(BaseModel):
+    item_id: str
+    response: str
+    time_seconds: float = 0
+
+
+class TrainingSessionSubmitRequest(BaseModel):
+    answers: list[TrainingAnswerSubmission]
+
+
 RUBRIC_LIBRARY = [
     {
         "id": "rubric_bed_edging_v1",
@@ -478,6 +512,8 @@ SYSTEM_BLUEPRINT = {
         "jobs",
         "submissions",
         "rapid_reviews",
+        "standards_library",
+        "training_sessions",
         "management_reviews",
         "owner_reviews",
         "rubric_definitions",
@@ -639,6 +675,141 @@ async def build_rapid_review_queue(page: int, limit: int) -> dict:
         .to_list(limit)
     )
     return build_paginated_response(items, page, limit, total)
+
+
+def match_training_answer(correct_answer: str, response: str) -> bool:
+    accepted_values = [item.strip().lower() for item in correct_answer.split("|") if item.strip()]
+    normalized_response = response.strip().lower()
+    return normalized_response in accepted_values if accepted_values else False
+
+
+def calculate_repeat_offender_level(count: int, thresholds: tuple[int, int, int]) -> str:
+    level_one, level_two, level_three = thresholds
+    if count >= level_three:
+        return "Level 3: Supervisor Review"
+    if count >= level_two:
+        return "Level 2: Training Required"
+    if count >= level_one:
+        return "Level 1: Warning"
+    return "Monitor"
+
+
+async def build_repeat_offender_summary(days: int, thresholds: tuple[int, int, int]) -> dict:
+    cutoff = (utc_now() - timedelta(days=days)).isoformat()
+    submissions = await db.submissions.find(
+        {"created_at": {"$gte": cutoff}},
+        {"_id": 0, "id": 1, "crew_label": 1, "access_code": 1, "division": 1, "job_name_input": 1, "job_id": 1, "field_report": 1, "created_at": 1},
+    ).to_list(5000)
+    submission_lookup = {item["id"]: item for item in submissions}
+    by_crew: dict[str, dict] = {}
+    heatmap: dict[tuple[str, str], dict] = {}
+
+    def register_event(submission_id: str, issue_type: str, source: str) -> None:
+        submission = submission_lookup.get(submission_id)
+        if not submission:
+            return
+        crew_key = submission.get("crew_label") or "Unknown Crew"
+        crew_entry = by_crew.setdefault(
+            crew_key,
+            {
+                "crew": crew_key,
+                "access_code": submission.get("access_code", ""),
+                "division": submission.get("division", ""),
+                "incident_count": 0,
+                "issue_types": {},
+                "submission_ids": [],
+                "related_submissions": [],
+            },
+        )
+        crew_entry["incident_count"] += 1
+        crew_entry["issue_types"][issue_type] = crew_entry["issue_types"].get(issue_type, 0) + 1
+        if submission_id not in crew_entry["submission_ids"]:
+            crew_entry["submission_ids"].append(submission_id)
+            crew_entry["related_submissions"].append(
+                {
+                    "submission_id": submission_id,
+                    "label": submission.get("job_name_input") or submission.get("job_id") or submission_id,
+                    "created_at": submission.get("created_at"),
+                    "source": source,
+                }
+            )
+        cell_key = (crew_key, issue_type)
+        cell = heatmap.setdefault(
+            cell_key,
+            {
+                "crew": crew_key,
+                "issue_type": issue_type,
+                "count": 0,
+                "submission_ids": [],
+            },
+        )
+        cell["count"] += 1
+        if submission_id not in cell["submission_ids"]:
+            cell["submission_ids"].append(submission_id)
+
+    rapid_reviews = await db.rapid_reviews.find(
+        {"created_at": {"$gte": cutoff}, "overall_rating": {"$in": ["fail", "concern"]}},
+        {"_id": 0, "submission_id": 1, "issue_tag": 1, "overall_rating": 1},
+    ).to_list(5000)
+    for review in rapid_reviews:
+        register_event(review["submission_id"], review.get("issue_tag") or review.get("overall_rating") or "rapid_review", "rapid_review")
+
+    management_reviews = await db.management_reviews.find(
+        {"created_at": {"$gte": cutoff}},
+        {"_id": 0, "submission_id": 1, "flagged_issues": 1, "disposition": 1},
+    ).to_list(5000)
+    for review in management_reviews:
+        if review.get("disposition") and review["disposition"] != "pass":
+            register_event(review["submission_id"], review["disposition"], "management_review")
+        for issue in review.get("flagged_issues", []):
+            register_event(review["submission_id"], issue, "management_review")
+
+    for submission in submissions:
+        field_report = submission.get("field_report") or {}
+        if field_report.get("reported"):
+            register_event(submission["id"], field_report.get("type") or "field_report", "field_report")
+
+    crew_summaries = []
+    for entry in by_crew.values():
+        entry["level"] = calculate_repeat_offender_level(entry["incident_count"], thresholds)
+        entry["top_issue_type"] = max(entry["issue_types"], key=entry["issue_types"].get) if entry["issue_types"] else ""
+        crew_summaries.append(entry)
+    crew_summaries.sort(key=lambda item: item["incident_count"], reverse=True)
+
+    heatmap_rows = list(heatmap.values())
+    for row in heatmap_rows:
+        crew_count = next((item["incident_count"] for item in crew_summaries if item["crew"] == row["crew"]), 0)
+        row["level"] = calculate_repeat_offender_level(crew_count, thresholds)
+    heatmap_rows.sort(key=lambda item: (item["crew"], -item["count"], item["issue_type"]))
+
+    return {
+        "window_days": days,
+        "thresholds": {"level_1": thresholds[0], "level_2": thresholds[1], "level_3": thresholds[2]},
+        "crew_summaries": crew_summaries,
+        "heatmap": heatmap_rows,
+    }
+
+
+async def get_recent_training_sessions(page: int, limit: int) -> dict:
+    total = await db.training_sessions.count_documents({})
+    items = (
+        await db.training_sessions.find({}, {"_id": 0})
+        .sort("created_at", -1)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .to_list(limit)
+    )
+    return build_paginated_response(items, page, limit, total)
+
+
+async def select_training_snapshots(division: str, item_count: int) -> list[dict]:
+    standards = await db.standards_library.find({"is_active": True, "training_enabled": True}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    eligible = [
+        item for item in standards
+        if item.get("audience") in {"crew", "both"}
+        and (not division or not item.get("division_targets") or division in item.get("division_targets", []))
+    ]
+    return eligible[:item_count]
 
 
 async def create_notification(
@@ -1010,11 +1181,98 @@ async def seed_defaults() -> None:
             await db.management_reviews.insert_one(management_review)
             await db.owner_reviews.insert_one(owner_review)
 
+    if await db.standards_library.count_documents({}) == 0:
+        standards = [
+            {
+                "id": make_id("std"),
+                "title": "Clean bed edge finish",
+                "category": "Edging",
+                "audience": "crew",
+                "division_targets": ["Maintenance", "Install"],
+                "checklist": ["Edge line reads clean", "No turf spill", "Street-facing finish shot included"],
+                "notes": "Use one wide establishing shot and one close-up of the edge line.",
+                "owner_notes": "Great baseline example for edging crews.",
+                "shoutout": "@North Crew",
+                "image_url": "https://images.unsplash.com/photo-1734303023491-db8037a21f09?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
+                "training_enabled": True,
+                "question_type": "multiple_choice",
+                "question_prompt": "Which result best matches this standard?",
+                "choice_options": ["Street-ready edge", "Needs more cleanup", "Unsafe site"],
+                "correct_answer": "Street-ready edge",
+                "is_active": True,
+                "created_at": now_iso(),
+                "updated_at": now_iso(),
+            },
+            {
+                "id": make_id("std"),
+                "title": "Mulch bed cleanliness",
+                "category": "Mulch",
+                "audience": "crew",
+                "division_targets": ["Install", "Maintenance"],
+                "checklist": ["Mulch kept out of turf", "Bed edge visible", "Depth looks even"],
+                "notes": "Capture texture and edge definition together.",
+                "owner_notes": "Use for install coaching when edges are lost.",
+                "shoutout": "@Install Team",
+                "image_url": "https://images.pexels.com/photos/30467599/pexels-photo-30467599.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "training_enabled": True,
+                "question_type": "multiple_choice",
+                "question_prompt": "What should a reviewer confirm first?",
+                "choice_options": ["Depth consistency", "Truck number", "Weather"],
+                "correct_answer": "Depth consistency",
+                "is_active": True,
+                "created_at": now_iso(),
+                "updated_at": now_iso(),
+            },
+            {
+                "id": make_id("std"),
+                "title": "Cleanup completion proof",
+                "category": "Cleanup",
+                "audience": "crew",
+                "division_targets": ["Maintenance", "PHC - Plant Healthcare"],
+                "checklist": ["Debris removed", "Walks clear", "Final condition is obvious"],
+                "notes": "Use a final shot that clearly proves the reset is complete.",
+                "owner_notes": "Best used for spring/fall cleanups.",
+                "shoutout": "@Cleanup Team",
+                "image_url": "https://images.unsplash.com/photo-1734079692160-fcbe4be6ab96?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
+                "training_enabled": True,
+                "question_type": "free_text",
+                "question_prompt": "In one phrase, what makes this proof set feel complete?",
+                "choice_options": [],
+                "correct_answer": "clear final condition|final condition is obvious|complete reset",
+                "is_active": True,
+                "created_at": now_iso(),
+                "updated_at": now_iso(),
+            },
+            {
+                "id": make_id("std"),
+                "title": "Tree pruning clarity",
+                "category": "Pruning",
+                "audience": "crew",
+                "division_targets": ["Sarver Tree"],
+                "checklist": ["Cut area visible", "Safety zone clear", "Final canopy view shown"],
+                "notes": "Always show both the cut detail and the cleared zone.",
+                "owner_notes": "Tree division standard example.",
+                "shoutout": "@Tree Crew",
+                "image_url": "https://images.unsplash.com/photo-1772764057845-121fd5f3ebe8?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
+                "training_enabled": True,
+                "question_type": "multiple_choice",
+                "question_prompt": "Which extra image should always be included with pruning work?",
+                "choice_options": ["Safety zone clear shot", "Truck dashboard", "Sky only"],
+                "correct_answer": "Safety zone clear shot",
+                "is_active": True,
+                "created_at": now_iso(),
+                "updated_at": now_iso(),
+            },
+        ]
+        await db.standards_library.insert_many(standards)
+
 
 @app.on_event("startup")
 async def startup_event():
     await seed_defaults()
     await db.rapid_reviews.create_index("submission_id", unique=True)
+    await db.standards_library.create_index("id", unique=True)
+    await db.training_sessions.create_index("code", unique=True)
     if storage_is_configured():
         try:
             get_supabase_client()
@@ -1570,6 +1828,252 @@ async def mark_notification_read(notification_id: str, user: dict = Depends(requ
 async def get_rubrics(user: dict = Depends(require_roles("management", "owner"))):
     rubrics = await db.rubric_definitions.find({"is_active": True}, {"_id": 0}).sort("service_type", 1).to_list(50)
     return rubrics
+
+
+@api_router.get("/standards")
+async def get_standards(
+    user: dict = Depends(require_roles("management", "owner")),
+    search: str = "",
+    category: str = "all",
+    division: str = "all",
+    audience: str = "all",
+    page: int = Query(1, ge=1),
+    limit: int = Query(12, ge=1, le=100),
+):
+    query: dict[str, Any] = {}
+    if search:
+        query["search_text"] = {"$regex": search.lower()}
+    if category != "all":
+        query["category"] = category
+    if audience != "all":
+        query["audience"] = audience
+    if division != "all":
+        query["$or"] = [{"division_targets": []}, {"division_targets": division}]
+    page = normalize_page(page)
+    limit = normalize_limit(limit, default=12, max_limit=100)
+    total = await db.standards_library.count_documents(query)
+    items = (
+        await db.standards_library.find(query, {"_id": 0})
+        .sort("created_at", -1)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .to_list(limit)
+    )
+    return build_paginated_response(items, page, limit, total)
+
+
+@api_router.post("/standards")
+async def create_standard_item(payload: StandardItemRequest, user: dict = Depends(require_roles("management", "owner"))):
+    document = {
+        "id": make_id("std"),
+        "title": payload.title,
+        "category": payload.category,
+        "audience": payload.audience,
+        "division_targets": payload.division_targets,
+        "checklist": payload.checklist,
+        "notes": payload.notes,
+        "owner_notes": payload.owner_notes,
+        "shoutout": payload.shoutout,
+        "image_url": payload.image_url,
+        "training_enabled": payload.training_enabled,
+        "question_type": payload.question_type,
+        "question_prompt": payload.question_prompt,
+        "choice_options": payload.choice_options,
+        "correct_answer": payload.correct_answer,
+        "is_active": payload.is_active,
+        "search_text": " ".join([
+            payload.title.lower(),
+            payload.category.lower(),
+            payload.notes.lower(),
+            " ".join(item.lower() for item in payload.division_targets),
+        ]),
+        "created_by": user["id"],
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+    }
+    response_document = {**document}
+    await db.standards_library.insert_one(document)
+    return response_document
+
+
+@api_router.patch("/standards/{standard_id}")
+async def update_standard_item(
+    standard_id: str,
+    payload: StandardItemRequest,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    update = {
+        "title": payload.title,
+        "category": payload.category,
+        "audience": payload.audience,
+        "division_targets": payload.division_targets,
+        "checklist": payload.checklist,
+        "notes": payload.notes,
+        "owner_notes": payload.owner_notes,
+        "shoutout": payload.shoutout,
+        "image_url": payload.image_url,
+        "training_enabled": payload.training_enabled,
+        "question_type": payload.question_type,
+        "question_prompt": payload.question_prompt,
+        "choice_options": payload.choice_options,
+        "correct_answer": payload.correct_answer,
+        "is_active": payload.is_active,
+        "search_text": " ".join([
+            payload.title.lower(),
+            payload.category.lower(),
+            payload.notes.lower(),
+            " ".join(item.lower() for item in payload.division_targets),
+        ]),
+        "updated_at": now_iso(),
+        "updated_by": user["id"],
+    }
+    await db.standards_library.update_one({"id": standard_id}, {"$set": update})
+    standard = await db.standards_library.find_one({"id": standard_id}, {"_id": 0})
+    if not standard:
+        raise HTTPException(status_code=404, detail="Standard item not found")
+    return standard
+
+
+@api_router.get("/repeat-offenders")
+async def get_repeat_offenders(
+    user: dict = Depends(require_roles("management", "owner")),
+    window_days: int = Query(30, ge=1, le=365),
+    threshold_one: int = Query(3, ge=1, le=20),
+    threshold_two: int = Query(5, ge=1, le=30),
+    threshold_three: int = Query(7, ge=1, le=50),
+):
+    return await build_repeat_offender_summary(window_days, (threshold_one, threshold_two, threshold_three))
+
+
+@api_router.get("/training-sessions")
+async def get_training_sessions(
+    user: dict = Depends(require_roles("management", "owner")),
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=50),
+):
+    page = normalize_page(page)
+    limit = normalize_limit(limit, default=10, max_limit=50)
+    return await get_recent_training_sessions(page, limit)
+
+
+@api_router.post("/training-sessions")
+async def create_training_session(
+    payload: TrainingSessionCreateRequest,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    crew_link = await db.crew_access_links.find_one({"code": payload.access_code}, {"_id": 0})
+    if not crew_link:
+        raise HTTPException(status_code=404, detail="Crew link not found")
+    division = payload.division or crew_link.get("division", "")
+    snapshots = await select_training_snapshots(division, max(1, min(payload.item_count, 5)))
+    if not snapshots:
+        raise HTTPException(status_code=400, detail="No training-ready standards match this division yet")
+    code = f"TRAIN{uuid.uuid4().hex[:8].upper()}"
+    session = {
+        "id": make_id("train"),
+        "code": code,
+        "crew_link_id": crew_link["id"],
+        "crew_label": crew_link.get("label", "Crew"),
+        "access_code": crew_link["code"],
+        "division": division,
+        "item_count": len(snapshots),
+        "items": snapshots,
+        "status": "active",
+        "score_percent": None,
+        "completion_rate": None,
+        "average_time_seconds": None,
+        "created_by": user["id"],
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+    }
+    response_session = {**session}
+    await db.training_sessions.insert_one(session)
+    return {**response_session, "session_url": f"{os.environ['FRONTEND_URL']}/training/{code}"}
+
+
+@api_router.get("/public/training/{code}")
+async def get_public_training_session(code: str):
+    session = await db.training_sessions.find_one({"code": code}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Training session not found")
+    if session.get("status") == "completed":
+        raise HTTPException(status_code=409, detail="Training session already completed")
+    public_items = []
+    for item in session.get("items", []):
+        public_items.append(
+            {
+                "id": item["id"],
+                "title": item["title"],
+                "category": item["category"],
+                "image_url": item["image_url"],
+                "notes": item.get("notes", ""),
+                "question_type": item.get("question_type", "multiple_choice"),
+                "question_prompt": item.get("question_prompt", ""),
+                "choice_options": item.get("choice_options", []),
+            }
+        )
+    return {
+        "session": {
+            "code": session["code"],
+            "crew_label": session.get("crew_label", "Crew"),
+            "division": session.get("division", ""),
+            "item_count": session.get("item_count", 0),
+        },
+        "items": public_items,
+    }
+
+
+@api_router.post("/public/training/{code}/submit")
+async def submit_public_training_session(code: str, payload: TrainingSessionSubmitRequest):
+    session = await db.training_sessions.find_one({"code": code}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Training session not found")
+    if session.get("status") == "completed":
+        raise HTTPException(status_code=409, detail="Training session already completed")
+
+    answer_lookup = {answer.item_id: answer for answer in payload.answers}
+    scored_answers = []
+    correct_count = 0
+    total_time = 0.0
+    for item in session.get("items", []):
+        answer = answer_lookup.get(item["id"])
+        response = answer.response if answer else ""
+        time_seconds = answer.time_seconds if answer else 0
+        is_correct = match_training_answer(item.get("correct_answer", ""), response)
+        if is_correct:
+            correct_count += 1
+        total_time += time_seconds
+        scored_answers.append(
+            {
+                "item_id": item["id"],
+                "response": response,
+                "time_seconds": time_seconds,
+                "is_correct": is_correct,
+            }
+        )
+
+    item_count = max(len(session.get("items", [])), 1)
+    score_percent = round(correct_count / item_count * 100, 1)
+    completion_rate = round(len(payload.answers) / item_count * 100, 1)
+    average_time = round(total_time / item_count, 1)
+    update = {
+        "status": "completed",
+        "answers": scored_answers,
+        "score_percent": score_percent,
+        "completion_rate": completion_rate,
+        "average_time_seconds": average_time,
+        "completed_at": now_iso(),
+        "updated_at": now_iso(),
+    }
+    await db.training_sessions.update_one({"code": code}, {"$set": update})
+    return {
+        "summary": {
+            "score_percent": score_percent,
+            "completion_rate": completion_rate,
+            "average_time_seconds": average_time,
+            "owner_message": "Great work — keep building standards that crews, clients, and reviewers can trust.",
+        }
+    }
 
 
 @api_router.get("/submissions")

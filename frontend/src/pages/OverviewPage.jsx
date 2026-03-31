@@ -1,6 +1,8 @@
-import { Activity, Boxes, FolderInput, ShieldCheck, Smartphone, UploadCloud, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Activity, Boxes, Copy, FolderInput, QrCode, ShieldCheck, Smartphone, UploadCloud } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+
+import { QRCodeSVG } from "qrcode.react";
 
 import StatCard from "@/components/common/StatCard";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +14,7 @@ import { authGet } from "@/lib/api";
 export default function OverviewPage({ user }) {
   const [overview, setOverview] = useState(null);
   const [submissions, setSubmissions] = useState([]);
+  const rapidReviewUrl = useMemo(() => (typeof window !== "undefined" ? `${window.location.origin}/rapid-review/mobile` : ""), []);
 
   useEffect(() => {
     const load = async () => {
@@ -31,6 +34,9 @@ export default function OverviewPage({ user }) {
   }
 
   const storage = overview.storage || overview.drive;
+  const copyRapidReviewLink = async () => {
+    await navigator.clipboard.writeText(rapidReviewUrl);
+  };
 
   const stats = [
     { icon: Activity, label: "Submissions", value: overview.totals.submissions, hint: "All captured proof records", testId: "overview-stat-submissions" },
@@ -112,17 +118,23 @@ export default function OverviewPage({ user }) {
       <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-rapid-review-launch-card">
         <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-8">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Rapid review lane</p>
-            <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Open the swipe lane for quick admin image qualification.</h3>
-            <p className="mt-2 text-sm text-[#5c6d64]">Use the desktop lane or jump straight into the mobile-focused link version.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Rapid review mobile launch</p>
+            <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Scan the phone link and open the swipe lane where admins actually review.</h3>
+            <p className="mt-2 text-sm text-[#5c6d64]">This is a mobile-only admin flow. Scan the QR from an admin phone, or copy the link to send directly.</p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild className="h-11 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="overview-open-rapid-review-button">
-              <Link to="/rapid-review"><Zap className="mr-2 h-4 w-4" />Open rapid review</Link>
-            </Button>
-            <Button asChild variant="outline" className="h-11 rounded-2xl border-[#243e36]/15 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid="overview-open-mobile-rapid-review-button">
-              <Link to="/rapid-review/mobile"><Smartphone className="mr-2 h-4 w-4" />Open mobile link</Link>
-            </Button>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="rounded-[28px] border border-border bg-[#f6f6f2] p-4" data-testid="overview-rapid-review-qr-card">
+              <QRCodeSVG value={rapidReviewUrl} size={128} bgColor="transparent" fgColor="#243e36" />
+            </div>
+            <div className="space-y-3">
+              <Button asChild className="h-11 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="overview-open-mobile-rapid-review-button">
+                <Link to="/rapid-review/mobile"><Smartphone className="mr-2 h-4 w-4" />Open mobile link</Link>
+              </Button>
+              <Button type="button" variant="outline" onClick={copyRapidReviewLink} className="h-11 rounded-2xl border-[#243e36]/15 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid="overview-copy-rapid-review-link-button">
+                <Copy className="mr-2 h-4 w-4" />Copy phone link
+              </Button>
+              <div className="flex items-center gap-2 text-sm text-[#5c6d64]"><QrCode className="h-4 w-4" />Admin phones only</div>
+            </div>
           </div>
         </CardContent>
       </Card>
