@@ -1,153 +1,110 @@
 {
-  "theme_and_archetype": {
-    "theme": "light",
-    "archetype_number": 1,
-    "archetype_name": "Organic & Earthy",
-    "rationale": "The domain is a field quality capture system for a landscaping company. It requires a grounded, natural feel for crew members in the field, while maintaining a professional, clear, and high-trust interface for management and owner calibrating AI data. The 'Organic & Earthy' archetype perfectly balances physical utility with professional oversight.",
-    "vibe": "Tactical Botanical / Industrial Greenspace",
-    "design_principles": [
-      "Function Over Decoration: Field tools must be instantly usable. Elements should be large and tactile.",
-      "Clear Hierarchies: Dashboards need density but must not feel cluttered. Use 'Grid Borders' to structure the data rigidly.",
-      "Earthy Palette: UI elements should evoke the environment—soil, stone, and foliage—but maintain high contrast for outdoor visibility.",
-      "Accessible Motion: Use micro-interactions to confirm field actions (e.g., photo uploads, GPS matches)."
-    ]
-  },
+  "project_name": "Sarver Landscape Internal Application",
+  "theme": "Light Default with Dark Mode Support",
+  "archetype": "Archetype 1 (Organic & Earthy)",
+  "global_rules": [
+    "Follow 'Organic & Earthy' color palette. No neon or synthetic colors.",
+    "Use generous padding (p-6, p-8, p-12) for containers.",
+    "Borders must be 1px and subtle. Shadows are soft ambient only.",
+    "Optical alignment over geometrical alignment.",
+    "Mobile-first for crew portal, desktop-optimized for dashboards.",
+    "All interactive elements must include 'data-testid' attributes."
+  ],
   "typography": {
-    "fonts": {
-      "heading": {
-        "family": "Cabinet Grotesk",
-        "rationale": "Provides a strong, slightly extended, and authoritative look that feels structural and corporate without being generic. Great for dashboard numbers and section titles.",
-        "weights": ["400", "700", "900"],
-        "css_import": "@import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,700,900&display=swap');"
-      },
-      "body": {
-        "family": "IBM Plex Sans",
-        "rationale": "Highly legible, technical, and space-efficient font perfect for dense data tables, forms, and field labels.",
-        "weights": ["400", "500", "600"],
-        "css_import": "@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');"
-      }
+    "font_families": {
+      "heading": "Outfit",
+      "body": "Manrope",
+      "mono": "JetBrains Mono"
     },
-    "scale": {
-      "h1": "text-4xl sm:text-5xl tracking-tighter font-black",
-      "h2": "text-2xl sm:text-3xl tracking-tight font-bold",
-      "h3": "text-xl sm:text-2xl font-bold",
-      "body_large": "text-lg font-medium",
-      "body_base": "text-base font-normal",
-      "body_small": "text-sm font-medium",
-      "overline": "text-xs tracking-[0.2em] uppercase font-bold text-sage-600"
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight font-bold text-slate-900 dark:text-slate-50",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight font-semibold text-slate-900 dark:text-slate-50",
+      "h3": "text-xl sm:text-2xl font-medium text-slate-800 dark:text-slate-100",
+      "h4": "text-lg sm:text-xl font-medium text-slate-800 dark:text-slate-100",
+      "body": "text-base leading-relaxed text-slate-600 dark:text-slate-300",
+      "small_label": "text-sm uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-semibold"
     }
   },
-  "color_palette": {
-    "base": {
-      "background": "#F6F6F2",
+  "colors": {
+    "light": {
+      "background": "#F5F7F5",
       "surface": "#FFFFFF",
-      "surface_alt": "#EDEDE8",
-      "foreground": "#111815",
-      "border": "#E2E2DC"
+      "primary": "#2D5A27",
+      "primary_hover": "#22441D",
+      "secondary": "#E8ECE7",
+      "text_main": "#1A1F18",
+      "text_muted": "#5C6B58",
+      "accent_warning": "#E67300",
+      "accent_danger": "#DC2626",
+      "border": "#D3DCD0",
+      "glass": "bg-white/70 backdrop-blur-xl border-white/40"
     },
-    "brand": {
-      "primary": "#243E36",
-      "primary_hover": "#1A2C26",
-      "primary_foreground": "#FFFFFF",
-      "secondary": "#7CA982",
-      "secondary_hover": "#68926E",
-      "secondary_foreground": "#FFFFFF"
-    },
-    "accents": {
-      "terracotta": "#E07A5F",
-      "ochre": "#DDA15E",
-      "moss": "#5F7464"
-    },
-    "status": {
-      "success": "#2D6A4F",
-      "success_bg": "#D8F3DC",
-      "warning": "#E85D04",
-      "warning_bg": "#FFD6BA",
-      "error": "#9D0208",
-      "error_bg": "#FFCAD4",
-      "info": "#0077B6",
-      "info_bg": "#CAF0F8"
+    "dark": {
+      "background": "#0D120E",
+      "surface": "#141A15",
+      "primary": "#4CAF50",
+      "primary_hover": "#388E3C",
+      "secondary": "#1E261F",
+      "text_main": "#F0F4EF",
+      "text_muted": "#A3B39E",
+      "accent_warning": "#FF9800",
+      "accent_danger": "#EF4444",
+      "border": "#212B23",
+      "glass": "bg-black/60 backdrop-blur-xl border-white/10"
     }
-  },
-  "spacing_and_layout": {
-    "philosophy": "Mobile-first, generous touch targets for the crew app. Dense, grid-aligned 'Control Room' layouts for management dashboards.",
-    "crew_app": {
-      "layout": "Single column, mobile-first, edge-to-edge containers on small screens. Max-width constraints on larger devices (max-w-md mx-auto) to maintain app-like feel.",
-      "padding": "p-6 sm:p-8",
-      "touch_targets": "Minimum 48px height for all interactive elements (buttons, inputs, image uploads)."
-    },
-    "dashboards": {
-      "layout": "Grid-based (Bento or Control Room style). 100vw edge-to-edge layout with persistent side navigation.",
-      "padding": "p-8",
-      "grid_pattern": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
-      "cards": "Subtle border, flat shadow. Direct children must use h-full for equal column heights."
-    }
-  },
-  "surfaces_and_materials": {
-    "buttons": "Neumorphic-tactile. Flat solid colors with a 1px inner stroke to create crisp edges. Minimal drop shadow.",
-    "dashboard_cards": "Grid Borders style. border border-border bg-surface, rounded-md. Very subtle shadow-sm.",
-    "inputs": "bg-surface_alt border-transparent focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20",
-    "crew_photo_upload": "Dashed border (border-2 border-dashed border-border), bg-surface_alt, rounded-xl. Hover state darkens background slightly.",
-    "glass_headers": "backdrop-blur-xl bg-background/80 border-b border-border"
   },
   "components": {
-    "libraries_required": [
-      "lucide-react",
-      "@phosphor-icons/react",
-      "framer-motion",
-      "clsx",
-      "tailwind-merge"
-    ],
-    "shadcn_overrides": {
-      "Card": "Remove default shadow. Use `border border-border bg-surface rounded-lg`.",
-      "Button": "Remove border-radius default if it doesn't match the tactile feel. Use `rounded-md font-semibold`.",
-      "Input": "Increase height to `h-12` for better touchability on mobile devices.",
-      "Badge": "Use organic tinted backgrounds (e.g., bg-[#D8F3DC] text-[#2D6A4F]) with no borders.",
-      "Table": "Dense padding (`p-2` or `p-3`) for data-heavy management views."
+    "buttons": "Shadcn custom. Minimal radius (max 8px). Primary actions use brand green with high-contrast text. Crew buttons must be min-h-[64px] for field gloved hands.",
+    "cards": "Dashboard widgets should use flat backgrounds with 1px subtle borders (border-border). Hover triggers slight lift (-translate-y-1) and shadow-lg.",
+    "forms": "Inputs use Shadcn. Crew Incident/Damage toggle must be a high-friction visual checkbox/switch to avoid misclicks. Form labels left-aligned.",
+    "rapid_review_interface": "Full-screen mode. Main image occupies 70% of view. Side panel (30%) for scoring rubric. Absolute positioning for swipe indicators or keyboard shortcuts (Left/Right arrows for fail/pass, Up for auto-pass).",
+    "login_background": "Implement out-of-focus vector grass via SVG and CSS. Use `<svg>` paths of grass blades anchored to the bottom, animated with CSS `transform: rotate()` keyframes, layered with `blur-md` and `opacity-50`."
+  },
+  "layout_strategies": {
+    "crew_portal": "Single-column mobile grid. Emphasize camera/photo submission actions.",
+    "management_dashboard": "The 'Control Room' grid. Dense and scannable. `grid-cols-1 md:grid-cols-3 lg:grid-cols-4`. Use `h-full` to stretch widgets.",
+    "owner_dashboard": "Emphasis on data-viz (Heatmap). Wide bento box layout for repeat offender tables and dataset export controls.",
+    "navigation": "Unified login -> Role-based routing. Header should use Glassmorphism strategy. Standard Library opens as a sliding sheet or dedicated tab for crew."
+  },
+  "motion": {
+    "rapid_review": "Cards should slide out smoothly left/right upon scoring. Zero loading delay between images (preload next image array).",
+    "login_grass": "Slow, organic sway. `animation: sway 4s ease-in-out infinite alternate;` applied to SVG elements.",
+    "hover_states": "All interactive elements must change color/brightness on hover. Buttons `hover:-translate-y-0.5`."
+  },
+  "media": {
+    "image_urls": {
+      "crew_work_1": {
+        "url": "https://images.unsplash.com/photo-1734079692160-fcbe4be6ab96?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MjJ8MHwxfHNlYXJjaHwzfHxsYW5kc2NhcGluZyUyMGNyZXclMjBjb3Vyc2V8ZW58MHx8fHwxNzc0OTI5MTU1fDA&ixlib=rb-4.1.0&q=85",
+        "category": "placeholder_data",
+        "description": "Crew member pulling wheelbarrow. Use as sample photo in rapid review or dashboards."
+      },
+      "crew_work_2": {
+        "url": "https://images.pexels.com/photos/30467599/pexels-photo-30467599.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "placeholder_data",
+        "description": "Gardeners using wheelbarrow in park."
+      },
+      "mowing_work": {
+        "url": "https://images.unsplash.com/photo-1734303023491-db8037a21f09?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MjJ8MHwxfHNlYXJjaHwxfHxsYW5kc2NhcGluZyUyMGNyZXclMjBjb3Vyc2V8ZW58MHx8fHwxNzc0OTI5MTU1fDA&ixlib=rb-4.1.0&q=85",
+        "category": "placeholder_data",
+        "description": "Lawn mowing landscape. Good for standard library examples."
+      },
+      "tree_pruning": {
+        "url": "https://images.unsplash.com/photo-1772764057845-121fd5f3ebe8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MTN8MHwxfHNlYXJjaHwxfHx0cmVlJTIwcHJ1bmluZyUyMGxhbmRzY2FwZXxlbnwwfHx8fDE3NzQ5MjkxNTd8MA&ixlib=rb-4.1.0&q=85",
+        "category": "placeholder_data",
+        "description": "Tree branches against blue sky. Good for Sarver Tree division placeholder."
+      }
     }
   },
-  "motion_and_interactions": {
-    "philosophy": "Functional and responsive. No decorative delays. State changes must feel immediate.",
-    "hover_states": "Buttons subtly darken (`hover:brightness-95`) and lift slightly (`-translate-y-0.5`).",
-    "page_transitions": "Fade and slide up (`initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}`).",
-    "list_stagger": "When loading lists of jobs or submissions, use framer-motion stagger logic (`staggerChildren: 0.05`).",
-    "photo_upload": "Scale down slightly on drag-over, scale back on drop. Success state should show a brief green flash or checkmark pop."
+  "iconography": {
+    "library": "lucide-react",
+    "usage": "Use stroke-width 1.5 or 2 based on density. Phosphor icons alternative if more diverse set needed."
   },
-  "media_and_images": {
-    "hero_login_background": {
-      "url": "https://images.unsplash.com/photo-1772816037169-4daa98b83098?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwyfHxsdXNoJTIwZ3JlZW4lMjBncmFzcyUyMHRleHR1cmV8ZW58MHx8fHwxNzc0ODM3ODk3fDA&ixlib=rb-4.1.0&q=85",
-      "description": "Close up of vibrant green grass blades. Use as the background for the Management/Owner login screen. Overlay with `bg-background/80` or a heavy gradient to ensure form readability.",
-      "category": "background"
-    },
-    "soil_texture_accent": {
-      "url": "https://images.unsplash.com/photo-1630078167224-633fbac39843?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwxfHxzb2lsJTIwZGlydCUyMHRleHR1cmV8ZW58MHx8fHwxNzc0ODM3ODk4fDA&ixlib=rb-4.1.0&q=85",
-      "description": "Brown stone and dirt fragments. Can be used as a very subtle, low-opacity background texture pattern or for a '404' screen.",
-      "category": "texture"
-    },
-    "sample_submission_photo": {
-      "url": "https://images.pexels.com/photos/6728925/pexels-photo-6728925.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-      "description": "Close-up of lawn mower on grass. Use this to mock up the field submission review screen.",
-      "category": "mockup_data"
-    },
-    "crew_avatar": {
-      "url": "https://images.unsplash.com/photo-1605117882932-f9e32b03fea9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwxfHxsYW5kc2NhcGluZyUyMGxhd24lMjBjYXJlfGVufDB8fHx8MTc3NDgzNzg4OHww&ixlib=rb-4.1.0&q=85",
-      "description": "Man with shovel. Use for crew profile avatars or to represent the 'Crew Member' role in the dashboard.",
-      "category": "mockup_data"
-    },
-    "truck_asset_photo": {
-      "url": "https://images.unsplash.com/photo-1696663118264-55a63c75409b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBsYW5kc2NhcGluZyUyMHRydWNrfGVufDB8fHx8MTc3NDgzNzg4OHww&ixlib=rb-4.1.0&q=85",
-      "description": "White truck. Use in the dashboard to represent Truck/Asset matching.",
-      "category": "mockup_data"
-    }
-  },
-  "data_testid_conventions": {
-    "rules": "All interactive elements MUST include a data-testid attribute in kebab-case, describing their role.",
-    "examples": {
-      "crew_submit_button": "crew-submit-photos-button",
-      "job_dropdown": "job-selection-dropdown",
-      "management_score_input": "rubric-score-input-{category}",
-      "owner_approve_button": "owner-approve-dataset-button",
-      "nav_link": "nav-link-{destination}"
-    }
-  }
+  "instructions_to_main_agent": [
+    "PHASE 1: Build the unified login screen with wobbling SVG grass, role credentials logic, and dark/light theme toggle. Theme toggle must persist without breaking login UI.",
+    "PHASE 2: Implement Role-Based Navigation Restrictions and routing structure (Crew, Management, Owner).",
+    "PHASE 3: Build Rapid Review Mode. It MUST be full-screen, minimal UI, with keyboard shortcuts (arrow keys) and swipe-capable cards. Preload images for instant transitions.",
+    "PHASE 4: Implement the Crew Portal with 'No-login' view, dynamic QR hook, and the Incident/Damage reporting toggle (high-friction).",
+    "PHASE 5: Build out the Owner/Management dashboards (Calibration heatmap, repeat offender tracking, dataviz).",
+    "Use standard HTML/Tailwind for structural overlays, Shadcn for intricate logic forms (like date pickers, dropdowns)."
+  ]
 }
