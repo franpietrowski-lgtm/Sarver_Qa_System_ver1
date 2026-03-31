@@ -21,6 +21,8 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Crew portal: standards highlights should be openable by crews; incident/damage entry should sit behind a toggle
 - Repeat offender thresholds: customizable later rather than fixed now
 - Login UX: branded start screen with standard user/pass flow, forgot user/pass link, grass-motion visuals, and role-aware post-login workflow
+- Rapid Review: admin-only feature for Supervisor, Production Manager, Account Manager, GM, and Owner; must support both desktop/admin lane and mobile-link lane
+- Rapid Review scoring: 4 states (Fail, Concern, Standard, Exemplary); Fail/Exemplary require reviewer comments before commit; one swipe sets an overall rating first and detailed rubric categories can be edited later
 
 ## Architecture Decisions
 - Frontend: React 19 + React Router + Tailwind + shadcn/ui + Framer Motion
@@ -95,6 +97,8 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Added full-screen Rapid Review mode for owner/management with queue strip, bulk pass/fail controls, pass/fail/flag/skip actions, keyboard shortcuts, swipe-capable cards, issue tagging, and inline annotation drawing
 - Added a crew-facing Standards Highlights tab and moved incident/damage reporting behind an explicit toggle to reduce accidental field entry
 - Added a safe image placeholder fallback for missing storage files so rapid review no longer throws server errors for broken image payloads
+- Refined Rapid Review into an admin-only summary-rating lane with dedicated desktop and mobile-link routes, 4 rating states (Fail, Concern, Standard, Exemplary), standardized rubric sums, and required comment modal for Fail/Exemplary actions
+- Added backend `rapid_reviews` summary records and queue exclusion so already-qualified items drop out of the swipe lane while still exposing summary cards in standard Review and Owner Review detail screens
 
 ## Prioritized Backlog
 ### P0
@@ -112,6 +116,7 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Add LMN direct API sync after CSV-first workflow is validated
 - Add richer job auto-match using imported coordinates and better route/time proximity rules
 - Add rubric version management UI (create new versions, activate/deactivate, threshold editing)
+- Persist rapid-review annotations/comments into richer audit artifacts and support revisiting/editing summary ratings
 - Add owner random sampling/high-value filters and variance drilldowns
 - Add AI-assisted score suggestion mode that recommends likely rubric scores before human confirmation
 
@@ -123,7 +128,7 @@ Build a lightweight, scalable internal application for a landscaping company tha
 
 ## Next Tasks List
 - Run deployment readiness / health review again against the updated Supabase + paginated-query build
-- Expand Rapid Review from Phase 1 into deeper scoring automation, stronger annotation persistence, and cleaner queue controls
+- Expand Rapid Review from Phase 1 into stronger queue filters, persistent annotations, and optional revisit/edit flows for summary ratings
 - Build owner/admin Standards Library authoring plus crew-targeted publishing controls
 - Build repeat offender heatmaps, escalation logic, and links into future training assignments
 - Expand seeded/sample data or import a real CSV to mirror production routing and validate multi-page queues further
