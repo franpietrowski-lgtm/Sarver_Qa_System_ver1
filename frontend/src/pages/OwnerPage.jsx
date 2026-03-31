@@ -127,6 +127,15 @@ export default function OwnerPage() {
 
       {detail ? (
         <div className="space-y-6">
+          {detail.rapid_review && (
+            <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="owner-rapid-summary-card">
+              <CardContent className="p-6">
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Rapid review summary</p>
+                <p className="mt-2 text-sm font-semibold text-[#243e36]">{detail.rapid_review.overall_rating} · rubric sum {detail.rapid_review.rubric_sum_percent}%</p>
+                <p className="mt-1 text-sm text-[#5c6d64]">{detail.rapid_review.comment || "No comment attached."}</p>
+              </CardContent>
+            </Card>
+          )}
           <Card className="rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="owner-summary-card">
             <CardContent className="grid gap-4 p-8 md:grid-cols-3">
               <div>

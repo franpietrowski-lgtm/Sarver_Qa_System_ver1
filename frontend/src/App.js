@@ -88,6 +88,7 @@ function App() {
             <Route path="/jobs" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management"]}><JobsPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/review" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management"]}><ReviewPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/rapid-review" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management", "owner"]} shell={false}><RapidReviewPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/rapid-review/mobile" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management", "owner"]} shell={false}><RapidReviewPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/owner" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><OwnerPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><AnalyticsPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/exports" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><ExportsPage {...pageProps} /></ProtectedRoute>} />

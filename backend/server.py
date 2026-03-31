@@ -55,6 +55,12 @@ ANALYTICS_PERIODS = {
     "quarterly": {"days": 90, "label": "Quarterly"},
     "annual": {"days": 365, "label": "Annual"},
 }
+RAPID_REVIEW_RATING_MULTIPLIERS = {
+    "fail": 0.2,
+    "concern": 0.55,
+    "standard": 0.82,
+    "exemplary": 1.0,
+}
 
 
 def utc_now() -> datetime:
@@ -389,6 +395,15 @@ class CrewLinkStatusUpdateRequest(BaseModel):
     enabled: bool
 
 
+class RapidReviewRequest(BaseModel):
+    submission_id: str
+    overall_rating: str
+    comment: str = ""
+    issue_tag: str = ""
+    annotation_count: int = 0
+    entry_mode: str = "desktop"
+
+
 RUBRIC_LIBRARY = [
     {
         "id": "rubric_bed_edging_v1",
@@ -462,6 +477,7 @@ SYSTEM_BLUEPRINT = {
     "database_schema": [
         "jobs",
         "submissions",
+        "rapid_reviews",
         "management_reviews",
         "owner_reviews",
         "rubric_definitions",
@@ -577,6 +593,7 @@ async def create_submission_snapshot(submission_id: str) -> dict:
         raise HTTPException(status_code=404, detail="Submission not found")
     management_review = await db.management_reviews.find_one({"submission_id": submission_id}, {"_id": 0})
     owner_review = await db.owner_reviews.find_one({"submission_id": submission_id}, {"_id": 0})
+    rapid_review = await db.rapid_reviews.find_one({"submission_id": submission_id}, {"_id": 0})
     job = None
     if submission.get("matched_job_id"):
         job = await db.jobs.find_one({"id": submission["matched_job_id"]}, {"_id": 0})
@@ -589,9 +606,39 @@ async def create_submission_snapshot(submission_id: str) -> dict:
         "submission": hydrate_submission_media(submission),
         "management_review": management_review,
         "owner_review": owner_review,
+        "rapid_review": rapid_review,
         "job": job,
         "rubric": rubric,
     }
+
+
+def calculate_rapid_review_score_summary(rubric: dict, overall_rating: str) -> dict:
+    total_weighted_points = sum(category["weight"] for category in rubric.get("categories", []))
+    normalized_percent = round(total_weighted_points * RAPID_REVIEW_RATING_MULTIPLIERS[overall_rating] * 100, 1)
+    return {
+        "overall_rating": overall_rating,
+        "rubric_sum_percent": normalized_percent,
+        "multiplier": RAPID_REVIEW_RATING_MULTIPLIERS[overall_rating],
+    }
+
+
+async def build_rapid_review_queue(page: int, limit: int) -> dict:
+    reviewed_submission_ids = await db.rapid_reviews.distinct("submission_id", {})
+    query: dict[str, Any] = {
+        "service_type": {"$ne": ""},
+        "status": {"$in": ["Ready for Review", "Management Reviewed", "Owner Reviewed", "Export Ready"]},
+    }
+    if reviewed_submission_ids:
+        query["id"] = {"$nin": reviewed_submission_ids}
+    total = await db.submissions.count_documents(query)
+    items = (
+        await db.submissions.find(query, get_submission_list_projection())
+        .sort("created_at", -1)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .to_list(limit)
+    )
+    return build_paginated_response(items, page, limit, total)
 
 
 async def create_notification(
@@ -967,6 +1014,7 @@ async def seed_defaults() -> None:
 @app.on_event("startup")
 async def startup_event():
     await seed_defaults()
+    await db.rapid_reviews.create_index("submission_id", unique=True)
     if storage_is_configured():
         try:
             get_supabase_client()
@@ -1559,6 +1607,17 @@ async def get_submissions(
     return build_paginated_response(submissions, page, limit, total)
 
 
+@api_router.get("/rapid-reviews/queue")
+async def get_rapid_review_queue(
+    user: dict = Depends(require_roles("management", "owner")),
+    page: int = Query(1, ge=1),
+    limit: int = Query(30, ge=1, le=100),
+):
+    page = normalize_page(page)
+    limit = normalize_limit(limit, default=30, max_limit=100)
+    return await build_rapid_review_queue(page, limit)
+
+
 @api_router.get("/submissions/{submission_id}")
 async def get_submission_detail(submission_id: str, user: dict = Depends(require_roles("management", "owner"))):
     return await create_submission_snapshot(submission_id)
@@ -1723,6 +1782,57 @@ async def create_owner_review(
     write_json_artifact(submission.get("local_folder_path"), "owner_review.json", review)
     updated_submission = await db.submissions.find_one({"id": payload.submission_id}, {"_id": 0})
     return {"review": review, "submission": updated_submission}
+
+
+@api_router.post("/rapid-reviews")
+async def create_rapid_review(
+    payload: RapidReviewRequest,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    if payload.overall_rating not in RAPID_REVIEW_RATING_MULTIPLIERS:
+        raise HTTPException(status_code=400, detail="Invalid rapid review rating")
+    if payload.overall_rating in {"fail", "exemplary"} and not payload.comment.strip():
+        raise HTTPException(status_code=400, detail="Comments are required for fail and exemplary rapid reviews")
+
+    snapshot = await create_submission_snapshot(payload.submission_id)
+    rubric = snapshot.get("rubric")
+    if not rubric:
+        raise HTTPException(status_code=400, detail="Rapid review requires a matched service rubric")
+
+    score_summary = calculate_rapid_review_score_summary(rubric, payload.overall_rating)
+    review = {
+        "id": make_id("rapid"),
+        "submission_id": payload.submission_id,
+        "reviewer_id": user["id"],
+        "reviewer_role": user["role"],
+        "reviewer_title": user.get("title", ""),
+        "rubric_id": rubric["id"],
+        "rubric_version": rubric["version"],
+        "service_type": snapshot["submission"].get("service_type") or (snapshot.get("job") or {}).get("service_type", ""),
+        "overall_rating": payload.overall_rating,
+        "rubric_sum_percent": score_summary["rubric_sum_percent"],
+        "multiplier": score_summary["multiplier"],
+        "comment": payload.comment.strip(),
+        "issue_tag": payload.issue_tag.strip(),
+        "annotation_count": max(payload.annotation_count, 0),
+        "entry_mode": payload.entry_mode,
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+        "audit_history": [audit_entry("rapid_reviewed", user["id"], f"Rapid review marked {payload.overall_rating}")],
+    }
+    await db.rapid_reviews.update_one(
+        {"submission_id": payload.submission_id},
+        {"$set": review},
+        upsert=True,
+    )
+    await db.submissions.update_one(
+        {"id": payload.submission_id},
+        {
+            "$set": {"updated_at": now_iso()},
+            "$push": {"audit_history": audit_entry("rapid_reviewed", user["id"], f"Rapid review marked {payload.overall_rating}")},
+        },
+    )
+    return {"rapid_review": review}
 
 
 @api_router.get("/analytics/summary")

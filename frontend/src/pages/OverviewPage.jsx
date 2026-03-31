@@ -1,8 +1,10 @@
-import { Activity, Boxes, FolderInput, ShieldCheck, UploadCloud } from "lucide-react";
+import { Activity, Boxes, FolderInput, ShieldCheck, Smartphone, UploadCloud, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 import StatCard from "@/components/common/StatCard";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { authGet } from "@/lib/api";
 
@@ -106,6 +108,24 @@ export default function OverviewPage({ user }) {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-rapid-review-launch-card">
+        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-8">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Rapid review lane</p>
+            <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Open the swipe lane for quick admin image qualification.</h3>
+            <p className="mt-2 text-sm text-[#5c6d64]">Use the desktop lane or jump straight into the mobile-focused link version.</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild className="h-11 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="overview-open-rapid-review-button">
+              <Link to="/rapid-review"><Zap className="mr-2 h-4 w-4" />Open rapid review</Link>
+            </Button>
+            <Button asChild variant="outline" className="h-11 rounded-2xl border-[#243e36]/15 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid="overview-open-mobile-rapid-review-button">
+              <Link to="/rapid-review/mobile"><Smartphone className="mr-2 h-4 w-4" />Open mobile link</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -173,6 +173,13 @@ export default function ReviewPage() {
         <div className="space-y-6">
           <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="review-detail-card">
             <CardContent className="p-8">
+              {detail.rapid_review && (
+                <div className="mb-6 rounded-[24px] border border-[#d7e3d9] bg-[#edf0e7] p-4" data-testid="review-rapid-summary-card">
+                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Rapid review summary</p>
+                  <p className="mt-2 text-sm font-semibold text-[#243e36]">{detail.rapid_review.overall_rating} · rubric sum {detail.rapid_review.rubric_sum_percent}%</p>
+                  <p className="mt-1 text-sm text-[#5c6d64]">{detail.rapid_review.comment || "No comment attached."}</p>
+                </div>
+              )}
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Reviewing submission</p>
