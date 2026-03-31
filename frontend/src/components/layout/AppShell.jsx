@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { ChartColumn, ClipboardCheck, FileOutput, FolderInput, LayoutDashboard, Settings, ShieldCheck } from "lucide-react";
+import { ChartColumn, ClipboardCheck, FileOutput, FolderInput, LayoutDashboard, MoonStar, Settings, ShieldCheck, SunMedium, Zap } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import NotificationCenter from "@/components/common/NotificationCenter";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 
 const navigationByRole = {
@@ -12,14 +13,13 @@ const navigationByRole = {
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { to: "/jobs", label: "Alignment & QR", icon: FolderInput },
     { to: "/review", label: "Review Queue", icon: ClipboardCheck },
-    { to: "/exports", label: "Exports", icon: FileOutput },
+    { to: "/rapid-review", label: "Rapid Review", icon: Zap },
     { to: "/settings", label: "Settings", icon: Settings },
   ],
   owner: [
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
-    { to: "/jobs", label: "Alignment & QR", icon: FolderInput },
-    { to: "/review", label: "Management QA", icon: ClipboardCheck },
     { to: "/owner", label: "Owner Review", icon: ShieldCheck },
+    { to: "/rapid-review", label: "Rapid Review", icon: Zap },
     { to: "/analytics", label: "Calibration", icon: ChartColumn },
     { to: "/exports", label: "Exports", icon: FileOutput },
     { to: "/settings", label: "Settings", icon: Settings },
@@ -30,9 +30,10 @@ const navigationByRole = {
 export default function AppShell({ user, onLogout, children }) {
   const navItems = navigationByRole[user?.role] || navigationByRole.management;
   const logoUrl = "https://sarverlandscape.com/wp-content/uploads/2024/10/sarver-logo.png";
+  const { isDark, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(124,169,130,0.18),_transparent_28%),linear-gradient(180deg,_#f6f6f2_0%,_#edf0e7_100%)] text-foreground">
+    <div className={`workspace-shell min-h-screen text-foreground ${isDark ? "theme-dark" : "theme-default bg-[radial-gradient(circle_at_top_left,_rgba(124,169,130,0.18),_transparent_28%),linear-gradient(180deg,_#f6f6f2_0%,_#edf0e7_100%)]"}`} data-testid="workspace-shell">
       <div className="grid min-h-screen lg:grid-cols-[280px_1fr]">
         <aside className="border-b border-border/80 bg-white/85 px-6 py-8 backdrop-blur-xl lg:border-b-0 lg:border-r">
           <div className="space-y-4">
@@ -55,6 +56,19 @@ export default function AppShell({ user, onLogout, children }) {
             </div>
 
             <NotificationCenter user={user} />
+
+            <div className="rounded-3xl border border-border bg-white/75 p-4" data-testid="shell-theme-card">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#5f7464]">Workspace theme</p>
+                  <p className="mt-1 text-sm text-[#41534a]" data-testid="shell-theme-state">{isDark ? "Dark mode active" : "Default mode active"}</p>
+                </div>
+                <Button onClick={toggleTheme} type="button" variant="outline" className="rounded-full border-[#243e36]/10 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid="shell-theme-toggle-button">
+                  {isDark ? <SunMedium className="mr-2 h-4 w-4" /> : <MoonStar className="mr-2 h-4 w-4" />}
+                  {isDark ? "Default" : "Dark"}
+                </Button>
+              </div>
+            </div>
           </div>
 
           <nav className="mt-8 space-y-2">

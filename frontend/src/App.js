@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster, toast } from "sonner";
 
 import AppShell from "@/components/layout/AppShell";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { authGet, getStoredToken, loginRequest, logoutRequest, setStoredToken } from "@/lib/api";
 import AnalyticsPage from "@/pages/AnalyticsPage";
 import CrewCapturePage from "@/pages/CrewCapturePage";
@@ -12,11 +13,12 @@ import JobsPage from "@/pages/JobsPage";
 import LoginPage from "@/pages/LoginPage";
 import OverviewPage from "@/pages/OverviewPage";
 import OwnerPage from "@/pages/OwnerPage";
+import RapidReviewPage from "@/pages/RapidReviewPage";
 import ReviewPage from "@/pages/ReviewPage";
 import SettingsPage from "@/pages/SettingsPage";
 
 
-function ProtectedRoute({ authState, allowedRoles, onLogout, children }) {
+function ProtectedRoute({ authState, allowedRoles, onLogout, shell = true, children }) {
   if (authState.loading) {
     return <div className="flex min-h-screen items-center justify-center bg-[#f6f6f2] text-lg font-semibold text-[#243e36]" data-testid="app-loading-state">Loading workspace...</div>;
   }
@@ -25,6 +27,9 @@ function ProtectedRoute({ authState, allowedRoles, onLogout, children }) {
   }
   if (allowedRoles && !allowedRoles.includes(authState.user.role)) {
     return <Navigate to="/dashboard" replace />;
+  }
+  if (!shell) {
+    return children;
   }
   return <AppShell user={authState.user} onLogout={onLogout}>{children}</AppShell>;
 }
@@ -73,20 +78,23 @@ function App() {
 
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to={authState.user ? "/dashboard" : "/login"} replace />} />
-          <Route path="/login" element={<LoginPage onLogin={handleLogin} authUser={authState.user} />} />
-          <Route path="/crew/:code" element={<CrewCapturePage />} />
-          <Route path="/dashboard" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><OverviewPage {...pageProps} /></ProtectedRoute>} />
-          <Route path="/jobs" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><JobsPage {...pageProps} /></ProtectedRoute>} />
-          <Route path="/review" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><ReviewPage {...pageProps} /></ProtectedRoute>} />
-          <Route path="/owner" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><OwnerPage {...pageProps} /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><AnalyticsPage {...pageProps} /></ProtectedRoute>} />
-          <Route path="/exports" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><ExportsPage {...pageProps} /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><SettingsPage {...pageProps} /></ProtectedRoute>} />
-        </Routes>
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Navigate to={authState.user ? "/dashboard" : "/login"} replace />} />
+            <Route path="/login" element={<LoginPage onLogin={handleLogin} authUser={authState.user} />} />
+            <Route path="/crew/:code" element={<CrewCapturePage />} />
+            <Route path="/dashboard" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><OverviewPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/jobs" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management"]}><JobsPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/review" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management"]}><ReviewPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/rapid-review" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management", "owner"]} shell={false}><RapidReviewPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/owner" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><OwnerPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><AnalyticsPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/exports" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><ExportsPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><SettingsPage {...pageProps} /></ProtectedRoute>} />
+          </Routes>
+        </BrowserRouter>
+      </ThemeProvider>
       <Toaster richColors position="top-right" />
     </div>
   );

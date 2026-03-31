@@ -1,5 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+
 .App {
     min-height: 100vh;
+    font-family: 'Manrope', sans-serif;
 }
 
 img {
@@ -12,4 +15,72 @@ input,
 textarea,
 select {
     font: inherit;
+}
+
+body {
+    margin: 0;
+    background: #f5f7f5;
+    color: #1a1f18;
+}
+
+h1,
+h2,
+h3,
+h4,
+[data-heading='display'] {
+    font-family: 'Outfit', sans-serif;
+}
+
+.login-grass-blade {
+    transform-origin: bottom center;
+    animation: sway 4.8s ease-in-out infinite alternate;
+}
+
+.login-grass-blade--slow {
+    animation-duration: 6.3s;
+}
+
+.login-grass-blade--fast {
+    animation-duration: 3.8s;
+}
+
+@keyframes sway {
+    0% { transform: rotate(-2deg) translateY(0px); }
+    100% { transform: rotate(2deg) translateY(-3px); }
+}
+
+.workspace-shell.theme-dark {
+    background: linear-gradient(180deg, #0d120e 0%, #141a15 100%);
+    color: #f0f4ef;
+}
+
+.workspace-shell.theme-dark [class*='bg-white'],
+.workspace-shell.theme-dark [class*='bg-[#f6f6f2]'],
+.workspace-shell.theme-dark [class*='bg-[#edf0e7]'] {
+    background-color: #141a15 !important;
+}
+
+.workspace-shell.theme-dark [class*='bg-[#243e36]'] {
+    background-color: #0f1712 !important;
+}
+
+.workspace-shell.theme-dark [class*='text-[#111815]'],
+.workspace-shell.theme-dark [class*='text-[#243e36]'],
+.workspace-shell.theme-dark [class*='text-[#41534a]'],
+.workspace-shell.theme-dark [class*='text-[#5c6d64]'],
+.workspace-shell.theme-dark [class*='text-foreground'] {
+    color: #f0f4ef !important;
+}
+
+.workspace-shell.theme-dark [class*='border-border'],
+.workspace-shell.theme-dark [class*='border-[#243e36]'],
+.workspace-shell.theme-dark [class*='border-white/10'],
+.workspace-shell.theme-dark [class*='border-white/15'] {
+    border-color: #2b372d !important;
+}
+
+.workspace-shell.theme-dark [class*='text-white/70'],
+.workspace-shell.theme-dark [class*='text-white/80'],
+.workspace-shell.theme-dark [class*='text-[#5f7464]'] {
+    color: #a3b39e !important;
 }

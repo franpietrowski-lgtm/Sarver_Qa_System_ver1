@@ -6,9 +6,36 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { authPostForm, publicGet } from "@/lib/api";
 import { toast } from "sonner";
+
+
+const STANDARDS_HIGHLIGHTS = [
+  {
+    id: "standard-edge-clean",
+    title: "Clean bed edge finish",
+    note: "Look for a confident edge line, contained turf, and a final pass that reads clean from the street.",
+    image: "https://images.unsplash.com/photo-1734303023491-db8037a21f09?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
+    category: "Edging",
+  },
+  {
+    id: "standard-cleanup-reset",
+    title: "Spring cleanup reset",
+    note: "Wide shot first, detail shots after. Reviewers want the property reset to feel complete, not partial.",
+    image: "https://images.pexels.com/photos/30467599/pexels-photo-30467599.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    category: "Cleanup",
+  },
+  {
+    id: "standard-tree-work",
+    title: "Tree work clarity",
+    note: "Show the cut area clearly and keep one framing shot that proves the work zone is safe and tidy.",
+    image: "https://images.unsplash.com/photo-1772764057845-121fd5f3ebe8?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
+    category: "Sarver Tree",
+  },
+];
 
 
 export default function CrewCapturePage() {
@@ -26,6 +53,7 @@ export default function CrewCapturePage() {
   const [locating, setLocating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [crewNotifications, setCrewNotifications] = useState([]);
+  const [incidentEnabled, setIncidentEnabled] = useState(false);
 
   const loadCrewContext = async () => {
     try {
@@ -90,10 +118,12 @@ export default function CrewCapturePage() {
     formData.append("gps_accuracy", gps.accuracy || 0);
     formData.append("note", note);
     formData.append("area_tag", areaTag);
-    formData.append("issue_type", issueType);
-    formData.append("issue_notes", issueNotes);
+    formData.append("issue_type", incidentEnabled ? issueType : "");
+    formData.append("issue_notes", incidentEnabled ? issueNotes : "");
     photos.forEach((photo) => formData.append("photos", photo));
-    issuePhotos.forEach((photo) => formData.append("issue_photos", photo));
+    if (incidentEnabled) {
+      issuePhotos.forEach((photo) => formData.append("issue_photos", photo));
+    }
 
     setSubmitting(true);
     try {
@@ -106,6 +136,7 @@ export default function CrewCapturePage() {
       setIssueType("");
       setIssueNotes("");
       setIssuePhotos([]);
+      setIncidentEnabled(false);
       requestGps();
       loadCrewContext();
     } catch (error) {
@@ -151,7 +182,14 @@ export default function CrewCapturePage() {
 
         <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="crew-capture-form-card">
           <CardContent className="p-6">
-            <form className="space-y-5" onSubmit={handleSubmit} data-testid="crew-capture-form">
+            <Tabs defaultValue="capture" className="space-y-4" data-testid="crew-portal-tabs">
+              <TabsList className="grid h-auto w-full grid-cols-2 rounded-[22px] bg-[#edf0e7] p-1" data-testid="crew-portal-tab-list">
+                <TabsTrigger value="capture" className="rounded-[18px] py-3 text-sm font-semibold" data-testid="crew-capture-tab-trigger">Work capture</TabsTrigger>
+                <TabsTrigger value="standards" className="rounded-[18px] py-3 text-sm font-semibold" data-testid="crew-standards-tab-trigger">Standards highlights</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="capture">
+                <form className="space-y-5" onSubmit={handleSubmit} data-testid="crew-capture-form">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-[#243e36]" htmlFor="crew-job-name-input">Job Name</label>
                 <Input id="crew-job-name-input" value={jobName} onChange={(event) => setJobName(event.target.value)} placeholder="Enter the job name exactly as given to the crew" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="crew-job-name-input" />
@@ -183,20 +221,30 @@ export default function CrewCapturePage() {
               </div>
 
               <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4" data-testid="crew-issue-report-card">
-                <p className="text-sm font-semibold text-[#243e36]">Issue / damage report</p>
-                <p className="mt-1 text-sm text-[#5c6d64]">Use this when crews need to report issues, damages, or field notes for admin follow-up.</p>
-                <div className="mt-4 grid gap-3">
-                  <Input value={issueType} onChange={(event) => setIssueType(event.target.value)} placeholder="Issue or damage type" className="h-12 rounded-2xl border-transparent bg-white" data-testid="crew-issue-type-input" />
-                  <Textarea value={issueNotes} onChange={(event) => setIssueNotes(event.target.value)} placeholder="Describe what happened and where it happened" className="min-h-[90px] rounded-2xl border-transparent bg-white" data-testid="crew-issue-notes-input" />
-                  <label htmlFor="crew-issue-photo-input" className="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#cdd3c8] bg-white text-sm font-semibold text-[#243e36]" data-testid="crew-issue-upload-field">
-                    <Upload className="h-4 w-4" />
-                    Add issue photo(s)
-                  </label>
-                  <input id="crew-issue-photo-input" type="file" multiple accept="image/*" className="hidden" onChange={(event) => setIssuePhotos(Array.from(event.target.files || []))} data-testid="crew-issue-photo-input" />
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-[#243e36]">Incident / damage reporting</p>
+                    <p className="mt-1 text-sm text-[#5c6d64]">Turn this on only when you need to report an issue, damage event, or follow-up note.</p>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-full bg-white px-3 py-2" data-testid="crew-issue-toggle-box">
+                    <span className="text-xs font-bold uppercase tracking-[0.24em] text-[#5f7464]">Report</span>
+                    <Switch checked={incidentEnabled} onCheckedChange={setIncidentEnabled} data-testid="crew-issue-toggle-switch" />
+                  </div>
                 </div>
+                {incidentEnabled && (
+                  <div className="mt-4 grid gap-3" data-testid="crew-issue-fields-wrap">
+                    <Input value={issueType} onChange={(event) => setIssueType(event.target.value)} placeholder="Issue or damage type" className="h-12 rounded-2xl border-transparent bg-white" data-testid="crew-issue-type-input" />
+                    <Textarea value={issueNotes} onChange={(event) => setIssueNotes(event.target.value)} placeholder="Describe what happened and where it happened" className="min-h-[90px] rounded-2xl border-transparent bg-white" data-testid="crew-issue-notes-input" />
+                    <label htmlFor="crew-issue-photo-input" className="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#cdd3c8] bg-white text-sm font-semibold text-[#243e36]" data-testid="crew-issue-upload-field">
+                      <Upload className="h-4 w-4" />
+                      Add issue photo(s)
+                    </label>
+                    <input id="crew-issue-photo-input" type="file" multiple accept="image/*" className="hidden" onChange={(event) => setIssuePhotos(Array.from(event.target.files || []))} data-testid="crew-issue-photo-input" />
+                  </div>
+                )}
               </div>
 
-              {issuePhotos.length > 0 && (
+              {incidentEnabled && issuePhotos.length > 0 && (
                 <div className="grid grid-cols-2 gap-3" data-testid="crew-issue-preview-grid">
                   {issuePhotos.map((photo, index) => (
                     <div key={`${photo.name}-${index}`} className="rounded-[24px] border border-border bg-[#f6f6f2] p-3" data-testid={`crew-issue-preview-${index + 1}`}>
@@ -239,7 +287,32 @@ export default function CrewCapturePage() {
                 <Camera className="mr-2 h-5 w-5" />
                 {submitting ? "Submitting proof..." : "Submit capture set"}
               </Button>
-            </form>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="standards" data-testid="crew-standards-tab-panel">
+                <div className="space-y-4">
+                  <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4">
+                    <p className="text-sm font-semibold text-[#243e36]">Crew standards library</p>
+                    <p className="mt-1 text-sm text-[#5c6d64]">Open this tab before you shoot a proof set when you want a fast reminder of what clean work should look like.</p>
+                  </div>
+                  {STANDARDS_HIGHLIGHTS.map((item) => (
+                    <div key={item.id} className="overflow-hidden rounded-[24px] border border-border bg-[#f6f6f2]" data-testid={`crew-standard-card-${item.id}`}>
+                      <div className="aspect-[5/3] overflow-hidden bg-[#dde4d6]">
+                        <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                      </div>
+                      <div className="space-y-2 p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-semibold text-[#243e36]">{item.title}</p>
+                          <Badge className="border-0 bg-white text-[#243e36]" data-testid={`crew-standard-category-${item.id}`}>{item.category}</Badge>
+                        </div>
+                        <p className="text-sm text-[#5c6d64]">{item.note}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 
