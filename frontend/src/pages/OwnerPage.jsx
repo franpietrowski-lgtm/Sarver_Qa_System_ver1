@@ -10,6 +10,9 @@ import { authGet, authPost } from "@/lib/api";
 import { toast } from "sonner";
 
 
+const PAGE_SIZE = 10;
+
+
 export default function OwnerPage() {
   const [submissions, setSubmissions] = useState([]);
   const [rubrics, setRubrics] = useState([]);
@@ -21,23 +24,29 @@ export default function OwnerPage() {
   const [trainingInclusion, setTrainingInclusion] = useState("approved");
   const [exclusionReason, setExclusionReason] = useState("");
   const [saving, setSaving] = useState(false);
-  const [page, setPage] = useState(1);
-  const pageSize = 8;
+  const [queuePagination, setQueuePagination] = useState({ page: 1, pages: 1, total: 0, limit: PAGE_SIZE });
 
-  const loadPage = async () => {
+  const loadPage = async (nextPage = queuePagination.page, preserveSelection = true) => {
     const [submissionResponse, rubricResponse] = await Promise.all([
-      authGet("/submissions?scope=owner&filter_by=all"),
+      authGet(`/submissions?scope=owner&filter_by=all&page=${nextPage}&limit=${PAGE_SIZE}`),
       authGet("/rubrics"),
     ]);
-    setSubmissions(submissionResponse);
+    const items = submissionResponse.items || [];
+    setSubmissions(items);
+    setQueuePagination(submissionResponse.pagination || { page: nextPage, pages: 1, total: items.length, limit: PAGE_SIZE });
     setRubrics(rubricResponse);
-    if (!selectedId && submissionResponse[0]) {
-      setSelectedId(submissionResponse[0].id);
+    const nextSelectedId = preserveSelection && items.some((item) => item.id === selectedId)
+      ? selectedId
+      : items[0]?.id || "";
+
+    setSelectedId(nextSelectedId);
+    if (!nextSelectedId) {
+      setDetail(null);
     }
   };
 
   useEffect(() => {
-    loadPage();
+    loadPage(1, false);
   }, []);
 
   useEffect(() => {
@@ -62,9 +71,6 @@ export default function OwnerPage() {
     return rubrics.find((item) => item.service_type === detail?.submission?.service_type);
   }, [detail, rubrics]);
 
-  const totalPages = Math.max(Math.ceil(submissions.length / pageSize), 1);
-  const paginatedSubmissions = submissions.slice((page - 1) * pageSize, page * pageSize);
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!detail?.submission) return;
@@ -79,7 +85,7 @@ export default function OwnerPage() {
         exclusion_reason: exclusionReason,
       });
       toast.success("Owner calibration saved.");
-      await loadPage();
+      await loadPage(queuePagination.page, true);
       const refreshed = await authGet(`/submissions/${detail.submission.id}`);
       setDetail(refreshed);
     } catch (error) {
@@ -96,14 +102,14 @@ export default function OwnerPage() {
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Owner queue</p>
           <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Calibration & dataset approval</h2>
           <div className="mt-4 flex items-center justify-between gap-3 text-sm text-[#5c6d64]">
-            <p data-testid="owner-queue-pagination-label">Page {page} of {totalPages}</p>
+            <p data-testid="owner-queue-pagination-label">Page {queuePagination.page} of {queuePagination.pages} · {queuePagination.total} records</p>
             <div className="flex gap-2">
-              <Button type="button" variant="outline" disabled={page === 1} onClick={() => setPage((current) => Math.max(current - 1, 1))} className="h-9 rounded-2xl" data-testid="owner-queue-prev-button">Prev</Button>
-              <Button type="button" variant="outline" disabled={page === totalPages} onClick={() => setPage((current) => Math.min(current + 1, totalPages))} className="h-9 rounded-2xl" data-testid="owner-queue-next-button">Next</Button>
+              <Button type="button" variant="outline" disabled={!queuePagination.has_prev} onClick={() => loadPage(Math.max(queuePagination.page - 1, 1), false)} className="h-9 rounded-2xl" data-testid="owner-queue-prev-button">Prev</Button>
+              <Button type="button" variant="outline" disabled={!queuePagination.has_next} onClick={() => loadPage(Math.min(queuePagination.page + 1, queuePagination.pages), false)} className="h-9 rounded-2xl" data-testid="owner-queue-next-button">Next</Button>
             </div>
           </div>
           <div className="mt-5 space-y-3">
-            {paginatedSubmissions.map((submission) => (
+            {submissions.map((submission) => (
               <button key={submission.id} type="button" onClick={() => setSelectedId(submission.id)} className={`w-full rounded-[24px] border p-4 text-left ${selectedId === submission.id ? "border-[#243e36] bg-[#edf0e7]" : "border-border bg-[#f6f6f2]"}`} data-testid={`owner-queue-item-${submission.id}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -114,6 +120,7 @@ export default function OwnerPage() {
                 </div>
               </button>
             ))}
+            {submissions.length === 0 && <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4 text-sm text-[#5c6d64]" data-testid="owner-queue-empty-state">No owner-calibration items match this page yet.</div>}
           </div>
         </CardContent>
       </Card>

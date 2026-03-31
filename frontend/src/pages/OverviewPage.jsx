@@ -15,10 +15,10 @@ export default function OverviewPage({ user }) {
     const load = async () => {
       const [overviewResponse, submissionsResponse] = await Promise.all([
         authGet("/dashboard/overview"),
-        authGet("/submissions?scope=all"),
+        authGet("/submissions?scope=all&page=1&limit=6"),
       ]);
       setOverview(overviewResponse);
-      setSubmissions(submissionsResponse.slice(0, 6));
+      setSubmissions(submissionsResponse.items || []);
     };
 
     load();
@@ -27,6 +27,8 @@ export default function OverviewPage({ user }) {
   if (!overview) {
     return <div className="rounded-[28px] border border-border bg-white p-10 text-center text-[#243e36]" data-testid="overview-loading-state">Loading overview...</div>;
   }
+
+  const storage = overview.storage || overview.drive;
 
   const stats = [
     { icon: Activity, label: "Submissions", value: overview.totals.submissions, hint: "All captured proof records", testId: "overview-stat-submissions" },
@@ -42,7 +44,7 @@ export default function OverviewPage({ user }) {
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]" data-testid="overview-kicker-text">Operations pulse</p>
             <h2 className="mt-3 font-[Cabinet_Grotesk] text-5xl font-black tracking-tight text-[#111815]" data-testid="overview-title">Keep crews fast. Keep labels consistent. Keep training data clean.</h2>
-            <p className="mt-4 max-w-3xl text-sm leading-6 text-[#5c6d64]" data-testid="overview-description">This workspace gives {user?.role} users a shared view of capture volume, review queues, Drive readiness, and export momentum.</p>
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-[#5c6d64]" data-testid="overview-description">This workspace gives {user?.role} users a shared view of capture volume, review queues, storage readiness, and export momentum.</p>
           </div>
           <div className="grid gap-4 rounded-[28px] border border-border bg-[#edf0e7] p-6" data-testid="overview-workflow-health-card">
             <div>
@@ -51,8 +53,8 @@ export default function OverviewPage({ user }) {
               <p className="mt-2 text-sm text-[#5c6d64]" data-testid="overview-review-velocity-hint">Share of captured work already moving through review and export stages.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]" data-testid="overview-drive-config-badge">Drive configured: {overview.drive.configured ? "Yes" : "No"}</Badge>
-              <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]" data-testid="overview-drive-connected-badge">Drive connected: {overview.drive.connected ? "Yes" : "No"}</Badge>
+              <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]" data-testid="overview-drive-config-badge">Storage configured: {storage?.configured ? "Yes" : "No"}</Badge>
+              <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]" data-testid="overview-drive-connected-badge">Storage ready: {storage?.connected ? "Yes" : "No"}</Badge>
             </div>
           </div>
         </CardContent>

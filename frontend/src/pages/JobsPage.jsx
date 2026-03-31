@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { FileSpreadsheet, Plus, QrCode, UploadCloud } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -10,37 +10,44 @@ import { toast } from "sonner";
 
 
 const DIVISIONS = ["Maintenance", "Install", "PHC - Plant Healthcare", "Sarver Tree"];
+const PAGE_SIZE = 10;
 
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState([]);
-  const [crewLinks, setCrewLinks] = useState([]);
+  const [activeLinks, setActiveLinks] = useState([]);
+  const [inactiveLinks, setInactiveLinks] = useState([]);
   const [search, setSearch] = useState("");
   const [csvFile, setCsvFile] = useState(null);
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [newLink, setNewLink] = useState({ label: "", truck_number: "", division: DIVISIONS[0] });
+  const [jobPagination, setJobPagination] = useState({ page: 1, pages: 1, total: 0, limit: PAGE_SIZE });
+  const [activeLinkPagination, setActiveLinkPagination] = useState({ page: 1, pages: 1, total: 0, limit: PAGE_SIZE });
+  const [inactiveLinkPagination, setInactiveLinkPagination] = useState({ page: 1, pages: 1, total: 0, limit: PAGE_SIZE });
 
-  const loadPage = async () => {
-    const [jobsResponse, crewResponse] = await Promise.all([
-      authGet("/jobs"),
-      authGet("/crew-access-links"),
+  const loadPage = async ({
+    nextJobPage = jobPagination.page,
+    nextActivePage = activeLinkPagination.page,
+    nextInactivePage = inactiveLinkPagination.page,
+    nextSearch = search,
+  } = {}) => {
+    const [jobsResponse, activeResponse, inactiveResponse] = await Promise.all([
+      authGet(`/jobs?search=${encodeURIComponent(nextSearch)}&page=${nextJobPage}&limit=${PAGE_SIZE}`),
+      authGet(`/crew-access-links?status=active&page=${nextActivePage}&limit=${PAGE_SIZE}`),
+      authGet(`/crew-access-links?status=inactive&page=${nextInactivePage}&limit=${PAGE_SIZE}`),
     ]);
-    setJobs(jobsResponse);
-    setCrewLinks(crewResponse);
+    setJobs(jobsResponse.items || []);
+    setJobPagination(jobsResponse.pagination || { page: nextJobPage, pages: 1, total: 0, limit: PAGE_SIZE });
+    setActiveLinks(activeResponse.items || []);
+    setActiveLinkPagination(activeResponse.pagination || { page: nextActivePage, pages: 1, total: 0, limit: PAGE_SIZE });
+    setInactiveLinks(inactiveResponse.items || []);
+    setInactiveLinkPagination(inactiveResponse.pagination || { page: nextInactivePage, pages: 1, total: 0, limit: PAGE_SIZE });
   };
 
   useEffect(() => {
-    loadPage();
+    loadPage({ nextJobPage: 1, nextActivePage: 1, nextInactivePage: 1 });
   }, []);
-
-  const filteredJobs = useMemo(() => {
-    const searchValue = search.toLowerCase();
-    return jobs.filter((job) => `${job.job_id} ${job.job_name} ${job.property_name} ${job.division} ${job.service_type}`.toLowerCase().includes(searchValue));
-  }, [jobs, search]);
-
-  const activeLinks = crewLinks.filter((link) => link.enabled !== false);
-  const inactiveLinks = crewLinks.filter((link) => link.enabled === false);
 
   const handleImport = async () => {
     if (!csvFile) {
@@ -54,7 +61,7 @@ export default function JobsPage() {
       const result = await authPostForm("/jobs/import-csv", formData);
       toast.success(`Imported ${result.imported} jobs and updated ${result.updated}.`);
       setCsvFile(null);
-      await loadPage();
+      await loadPage({ nextJobPage: 1, nextActivePage: 1, nextInactivePage: 1 });
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Import failed");
     } finally {
@@ -69,7 +76,7 @@ export default function JobsPage() {
       await authPost("/crew-access-links", newLink);
       toast.success("New crew QR link created.");
       setNewLink({ label: "", truck_number: "", division: DIVISIONS[0] });
-      await loadPage();
+      await loadPage({ nextActivePage: 1, nextInactivePage: 1 });
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Unable to create crew link");
     } finally {
@@ -87,6 +94,12 @@ export default function JobsPage() {
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Unable to update crew link");
     }
+  };
+
+  const handleSearchChange = async (event) => {
+    const nextValue = event.target.value;
+    setSearch(nextValue);
+    await loadPage({ nextSearch: nextValue, nextJobPage: 1 });
   };
 
   return (
@@ -135,6 +148,14 @@ export default function JobsPage() {
             <QrCode className="h-6 w-6 text-[#243e36]" />
           </div>
 
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm text-[#5c6d64]">
+            <p data-testid="jobs-active-pagination-label">Page {activeLinkPagination.page} of {activeLinkPagination.pages} · {activeLinkPagination.total} active links</p>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" disabled={!activeLinkPagination.has_prev} onClick={() => loadPage({ nextActivePage: Math.max(activeLinkPagination.page - 1, 1) })} className="h-9 rounded-2xl" data-testid="jobs-active-prev-button">Prev</Button>
+              <Button type="button" variant="outline" disabled={!activeLinkPagination.has_next} onClick={() => loadPage({ nextActivePage: Math.min(activeLinkPagination.page + 1, activeLinkPagination.pages) })} className="h-9 rounded-2xl" data-testid="jobs-active-next-button">Next</Button>
+            </div>
+          </div>
+
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {activeLinks.map((link) => {
               const crewUrl = `${appOrigin}/crew/${link.code}`;
@@ -155,6 +176,7 @@ export default function JobsPage() {
                 </div>
               );
             })}
+            {activeLinks.length === 0 && <div className="rounded-[24px] bg-[#f6f6f2] p-5 text-sm text-[#5c6d64]" data-testid="jobs-active-empty-state">No active crew links on this page yet.</div>}
           </div>
         </CardContent>
       </Card>
@@ -163,6 +185,13 @@ export default function JobsPage() {
         <CardContent className="p-8">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Inactive crew links</p>
           <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Archived without touching prior submission history</h3>
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm text-[#5c6d64]">
+            <p data-testid="jobs-inactive-pagination-label">Page {inactiveLinkPagination.page} of {inactiveLinkPagination.pages} · {inactiveLinkPagination.total} archived links</p>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" disabled={!inactiveLinkPagination.has_prev} onClick={() => loadPage({ nextInactivePage: Math.max(inactiveLinkPagination.page - 1, 1) })} className="h-9 rounded-2xl" data-testid="jobs-inactive-prev-button">Prev</Button>
+              <Button type="button" variant="outline" disabled={!inactiveLinkPagination.has_next} onClick={() => loadPage({ nextInactivePage: Math.min(inactiveLinkPagination.page + 1, inactiveLinkPagination.pages) })} className="h-9 rounded-2xl" data-testid="jobs-inactive-next-button">Next</Button>
+            </div>
+          </div>
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {inactiveLinks.length === 0 ? <div className="rounded-[24px] bg-[#f6f6f2] p-5 text-sm text-[#5c6d64]">No inactive crew links yet.</div> : inactiveLinks.map((link) => (
               <div key={link.id} className="rounded-[28px] border border-border bg-[#f6f6f2] p-5" data-testid={`inactive-crew-card-${link.code}`}>
@@ -182,14 +211,22 @@ export default function JobsPage() {
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Imported jobs</p>
               <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Alignment source for admins</h3>
             </div>
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search jobs" className="h-11 max-w-sm rounded-2xl border-transparent bg-[#edf0e7]" data-testid="jobs-search-input" />
+            <Input value={search} onChange={handleSearchChange} placeholder="Search jobs" className="h-11 max-w-sm rounded-2xl border-transparent bg-[#edf0e7]" data-testid="jobs-search-input" />
+          </div>
+
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm text-[#5c6d64]">
+            <p data-testid="jobs-table-pagination-label">Page {jobPagination.page} of {jobPagination.pages} · {jobPagination.total} jobs</p>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" disabled={!jobPagination.has_prev} onClick={() => loadPage({ nextJobPage: Math.max(jobPagination.page - 1, 1) })} className="h-9 rounded-2xl" data-testid="jobs-table-prev-button">Prev</Button>
+              <Button type="button" variant="outline" disabled={!jobPagination.has_next} onClick={() => loadPage({ nextJobPage: Math.min(jobPagination.page + 1, jobPagination.pages) })} className="h-9 rounded-2xl" data-testid="jobs-table-next-button">Next</Button>
+            </div>
           </div>
 
           <div className="mt-6 overflow-hidden rounded-[28px] border border-border">
             <div className="grid grid-cols-[1fr_1.3fr_1fr_0.9fr_1fr] gap-3 bg-[#edf0e7] px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-[#5f7464]">
               <p>Job ID</p><p>Property</p><p>Service</p><p>Division</p><p>Scheduled</p>
             </div>
-            {filteredJobs.slice(0, 40).map((job) => (
+            {jobs.map((job) => (
               <div key={job.id} className="grid grid-cols-[1fr_1.3fr_1fr_0.9fr_1fr] gap-3 border-t border-border/80 px-4 py-4 text-sm text-[#243e36]" data-testid={`jobs-row-${job.id}`}>
                 <p>{job.job_id}</p>
                 <p>{job.property_name}</p>
@@ -198,6 +235,7 @@ export default function JobsPage() {
                 <p>{job.scheduled_date?.slice(0, 10)}</p>
               </div>
             ))}
+            {jobs.length === 0 && <div className="border-t border-border/80 px-4 py-4 text-sm text-[#5c6d64]" data-testid="jobs-table-empty-state">No imported jobs match this search yet.</div>}
           </div>
         </CardContent>
       </Card>

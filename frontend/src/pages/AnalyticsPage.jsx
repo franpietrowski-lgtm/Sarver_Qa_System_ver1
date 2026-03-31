@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { authGet } from "@/lib/api";
+
+
+const PERIOD_OPTIONS = [
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "quarterly", label: "Quarterly" },
+  { value: "annual", label: "Annual" },
+];
 
 
 function VerticalBars({ data, valueKey, labelKey, testId }) {
@@ -79,10 +89,19 @@ function HorizontalBars({ data, testId }) {
 
 export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState(null);
+  const [period, setPeriod] = useState("monthly");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    authGet("/analytics/summary").then(setAnalytics);
-  }, []);
+    const loadAnalytics = async () => {
+      setLoading(true);
+      const response = await authGet(`/analytics/summary?period=${period}`);
+      setAnalytics(response);
+      setLoading(false);
+    };
+
+    loadAnalytics();
+  }, [period]);
 
   const heatmapRows = useMemo(
     () => Array.from(new Set((analytics?.calibration_heatmap || []).map((item) => item.crew))),
@@ -95,16 +114,31 @@ export default function AnalyticsPage() {
   const maxVariance = Math.max(...(analytics?.calibration_heatmap || []).map((item) => item.variance_average || 0), 1);
   const getHeatCell = (crew, serviceType) => analytics?.calibration_heatmap?.find((item) => item.crew === crew && item.service_type === serviceType);
 
-  if (!analytics) {
+  if (loading || !analytics) {
     return <div className="rounded-[28px] border border-border bg-white p-10 text-center text-[#243e36]" data-testid="analytics-loading-state">Loading analytics...</div>;
   }
 
   return (
     <div className="space-y-6" data-testid="analytics-page">
+      <div className="flex flex-wrap gap-2" data-testid="analytics-period-tabs">
+        {PERIOD_OPTIONS.map((option) => (
+          <Button
+            key={option.value}
+            type="button"
+            variant="outline"
+            onClick={() => setPeriod(option.value)}
+            className={`h-10 rounded-full px-4 ${period === option.value ? "border-[#243e36] bg-[#243e36] text-white hover:bg-[#1a2c26]" : "border-[#243e36]/10 bg-white text-[#243e36] hover:bg-[#edf0e7]"}`}
+            data-testid={`analytics-period-button-${option.value}`}
+          >
+            {option.label}
+          </Button>
+        ))}
+      </div>
+
       <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-hero-card">
         <CardContent className="p-8">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Owner calibration dashboard</p>
-          <h2 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Owner-only calibration, reviewer drift, and training signal quality.</h2>
+          <h2 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Owner-only calibration, reviewer drift, and training signal quality by {analytics.period_label.toLowerCase()} window.</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <div className="rounded-[28px] border border-border bg-[#f6f6f2] p-5" data-testid="analytics-approved-card">
               <p className="text-sm text-[#5c6d64]">Training-approved records</p>

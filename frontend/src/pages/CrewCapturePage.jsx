@@ -120,14 +120,14 @@ export default function CrewCapturePage() {
       <div className="mx-auto max-w-md space-y-5">
         <Card className="overflow-hidden rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="crew-capture-header-card">
           <CardContent className="p-6">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]" data-testid="crew-capture-kicker">Crew capture portal</p>
-            <h1 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight" data-testid="crew-capture-title">Submit work proof in one pass</h1>
-            <p className="mt-3 text-sm text-white/80" data-testid="crew-capture-description">No login. Enter the job name, confirm the truck, capture photos, and send.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]" data-testid="crew-capture-kicker">Sarver landscape field capture</p>
+            <h1 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight" data-testid="crew-capture-title">Capture work proof in one clean pass</h1>
+            <p className="mt-3 text-sm text-white/80" data-testid="crew-capture-description">Enter the job name, confirm the truck, add clear photos, and send the work set to review.</p>
 
             {crewLink && (
               <div className="mt-5 flex flex-wrap gap-2">
                 <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-crew-badge">{crewLink.label}</Badge>
-                <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-crew-id-badge">ID {crewLink.crew_member_id}</Badge>
+                <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-crew-id-badge">Crew pass active</Badge>
                 <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-truck-badge">{crewLink.truck_number}</Badge>
                 <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-division-badge">{crewLink.division}</Badge>
               </div>

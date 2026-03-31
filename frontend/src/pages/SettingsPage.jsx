@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { GitBranch, HardDrive, Link2, Network, Shapes } from "lucide-react";
+import { GitBranch, HardDrive, Network, Shapes } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,8 @@ const STAFF_TITLES = ["GM", "Account Manager", "Production Manager", "Supervisor
 
 
 export default function SettingsPage() {
-  const [driveStatus, setDriveStatus] = useState(null);
+  const [storageStatus, setStorageStatus] = useState(null);
   const [blueprint, setBlueprint] = useState(null);
-  const [connecting, setConnecting] = useState(false);
   const [users, setUsers] = useState([]);
   const [creatingUser, setCreatingUser] = useState(false);
   const [newUser, setNewUser] = useState({
@@ -28,12 +27,12 @@ export default function SettingsPage() {
   });
 
   const loadSettings = async () => {
-    const [driveResponse, blueprintResponse, usersResponse] = await Promise.all([
-      authGet("/integrations/drive/status"),
+    const [storageResponse, blueprintResponse, usersResponse] = await Promise.all([
+      authGet("/integrations/storage/status"),
       authGet("/system/blueprint"),
       authGet("/users"),
     ]);
-    setDriveStatus(driveResponse);
+    setStorageStatus(storageResponse);
     setBlueprint(blueprintResponse);
     setUsers(usersResponse);
   };
@@ -41,19 +40,6 @@ export default function SettingsPage() {
   useEffect(() => {
     loadSettings();
   }, []);
-
-  const connectDrive = async () => {
-    setConnecting(true);
-    try {
-      const response = await authGet("/integrations/drive/connect");
-      window.open(response.authorization_url, "_blank", "noopener,noreferrer");
-      toast.success("Google Drive connection window opened.");
-    } catch (error) {
-      toast.error(error?.response?.data?.detail || "Google Drive connection is not configured yet");
-    } finally {
-      setConnecting(false);
-    }
-  };
 
   const createUser = async (event) => {
     event.preventDefault();
@@ -80,7 +66,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (!driveStatus || !blueprint) {
+  if (!storageStatus || !blueprint) {
     return <div className="rounded-[28px] border border-border bg-white p-10 text-center text-[#243e36]" data-testid="settings-loading-state">Loading settings...</div>;
   }
 
@@ -91,24 +77,28 @@ export default function SettingsPage() {
           <CardContent className="p-8">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Google Drive sync</p>
-                <h2 className="mt-2 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Structured mirror for photos and review JSON</h2>
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Supabase storage</p>
+                <h2 className="mt-2 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Backend-managed image storage for every proof set</h2>
               </div>
               <HardDrive className="h-6 w-6 text-[#243e36]" />
             </div>
 
             <div className="mt-6 flex flex-wrap gap-2">
-              <Badge className="border-0 bg-[#edf0e7] px-3 py-1 text-[#243e36]" data-testid="settings-drive-configured-badge">Configured: {driveStatus.configured ? "Yes" : "No"}</Badge>
-              <Badge className="border-0 bg-[#edf0e7] px-3 py-1 text-[#243e36]" data-testid="settings-drive-connected-badge">Connected: {driveStatus.connected ? "Yes" : "No"}</Badge>
+              <Badge className="border-0 bg-[#edf0e7] px-3 py-1 text-[#243e36]" data-testid="settings-drive-configured-badge">Configured: {storageStatus.configured ? "Yes" : "No"}</Badge>
+              <Badge className="border-0 bg-[#edf0e7] px-3 py-1 text-[#243e36]" data-testid="settings-drive-connected-badge">Ready for uploads: {storageStatus.connected ? "Yes" : "No"}</Badge>
             </div>
 
             <div className="mt-6 rounded-[28px] border border-border bg-[#f6f6f2] p-5" data-testid="settings-drive-path-card">
-              <p className="text-sm font-semibold text-[#243e36]">Drive folder structure</p>
-              <p className="mt-2 text-sm text-[#5c6d64]" data-testid="settings-drive-folder-structure">/QA/{'{Year}'}/{'{Division}'}/{'{ServiceType}'}/{'{JobID}'}_{'{SubmissionID}'}/</p>
-              <p className="mt-4 text-sm text-[#5c6d64]">Required env values: {driveStatus.required_env.join(", ")}</p>
+              <p className="text-sm font-semibold text-[#243e36]">Storage path structure</p>
+              <p className="mt-2 text-sm text-[#5c6d64]" data-testid="settings-drive-folder-structure">{storageStatus.bucket || "qa-images"}/sarver-landscape/submissions/{'{SubmissionID}'}/{'{captures|issues}'}/{'{file}'}</p>
+              <p className="mt-4 text-sm text-[#5c6d64]">Project URL: {storageStatus.project_url || "Not configured"}</p>
+              <p className="mt-2 text-sm text-[#5c6d64]">Required env values: {storageStatus.required_env.join(", ")}</p>
             </div>
 
-            <Button onClick={connectDrive} disabled={connecting} className="mt-6 h-12 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="settings-drive-connect-button"><Link2 className="mr-2 h-4 w-4" />{connecting ? "Opening connection..." : "Connect Google Drive"}</Button>
+            <div className="mt-6 rounded-[28px] border border-[#d8e4da] bg-[#edf0e7] p-5" data-testid="settings-drive-connect-button">
+              <p className="text-sm font-semibold text-[#243e36]">Storage mode</p>
+              <p className="mt-2 text-sm text-[#5c6d64]">Uploads are handled only by the backend service role. Crew, admin, and owner screens keep using stable review-friendly image routes.</p>
+            </div>
           </CardContent>
         </Card>
 

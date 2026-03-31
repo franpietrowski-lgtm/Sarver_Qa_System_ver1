@@ -8,17 +8,22 @@ import { authDownload, authGet, authPost } from "@/lib/api";
 import { toast } from "sonner";
 
 
+const PAGE_SIZE = 10;
+
+
 export default function ExportsPage() {
   const [exportsList, setExportsList] = useState([]);
   const [running, setRunning] = useState("");
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, limit: PAGE_SIZE });
 
-  const loadExports = async () => {
-    const response = await authGet("/exports");
-    setExportsList(response);
+  const loadExports = async (nextPage = pagination.page) => {
+    const response = await authGet(`/exports?page=${nextPage}&limit=${PAGE_SIZE}`);
+    setExportsList(response.items || []);
+    setPagination(response.pagination || { page: nextPage, pages: 1, total: 0, limit: PAGE_SIZE });
   };
 
   useEffect(() => {
-    loadExports();
+    loadExports(1);
   }, []);
 
   const runExport = async (datasetType, exportFormat) => {
@@ -27,7 +32,7 @@ export default function ExportsPage() {
     try {
       await authPost("/exports/run", { dataset_type: datasetType, export_format: exportFormat });
       toast.success(`${datasetType} export created in ${exportFormat.toUpperCase()}.`);
-      await loadExports();
+      await loadExports(1);
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Export failed");
     } finally {
@@ -77,7 +82,15 @@ export default function ExportsPage() {
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Recent exports</p>
               <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Download history</h3>
             </div>
-            <Badge className="border-0 bg-[#edf0e7] px-3 py-1 text-[#243e36]" data-testid="exports-count-badge">{exportsList.length} exports</Badge>
+            <Badge className="border-0 bg-[#edf0e7] px-3 py-1 text-[#243e36]" data-testid="exports-count-badge">{pagination.total} exports</Badge>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm text-[#5c6d64]">
+            <p data-testid="exports-pagination-label">Page {pagination.page} of {pagination.pages}</p>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" disabled={!pagination.has_prev} onClick={() => loadExports(Math.max(pagination.page - 1, 1))} className="h-9 rounded-2xl" data-testid="exports-prev-button">Prev</Button>
+              <Button type="button" variant="outline" disabled={!pagination.has_next} onClick={() => loadExports(Math.min(pagination.page + 1, pagination.pages))} className="h-9 rounded-2xl" data-testid="exports-next-button">Next</Button>
+            </div>
           </div>
 
           <div className="mt-6 space-y-3">
@@ -90,6 +103,7 @@ export default function ExportsPage() {
                 <Button type="button" onClick={() => downloadExport(item)} className="h-11 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid={`exports-download-button-${item.id}`}><Download className="mr-2 h-4 w-4" />Download</Button>
               </div>
             ))}
+            {exportsList.length === 0 && <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4 text-sm text-[#5c6d64]" data-testid="exports-empty-state">No exports have been generated on this page yet.</div>}
           </div>
         </CardContent>
       </Card>

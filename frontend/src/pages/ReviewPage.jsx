@@ -10,6 +10,9 @@ import { authGet, authPost } from "@/lib/api";
 import { toast } from "sonner";
 
 
+const PAGE_SIZE = 10;
+
+
 export default function ReviewPage() {
   const [submissions, setSubmissions] = useState([]);
   const [rubrics, setRubrics] = useState([]);
@@ -24,23 +27,31 @@ export default function ReviewPage() {
   const [selectedJobId, setSelectedJobId] = useState("");
   const [selectedServiceType, setSelectedServiceType] = useState("");
   const [saving, setSaving] = useState(false);
+  const [queuePagination, setQueuePagination] = useState({ page: 1, pages: 1, total: 0, limit: PAGE_SIZE });
 
-  const loadPage = async (nextFilter = filterBy) => {
+  const loadPage = async (nextFilter = filterBy, nextPage = queuePagination.page, preserveSelection = true) => {
     const [submissionResponse, rubricResponse, jobsResponse] = await Promise.all([
-      authGet(`/submissions?scope=management&filter_by=${nextFilter}`),
+      authGet(`/submissions?scope=management&filter_by=${nextFilter}&page=${nextPage}&limit=${PAGE_SIZE}`),
       authGet("/rubrics"),
-      authGet("/jobs"),
+      authGet("/jobs?page=1&limit=100"),
     ]);
-    setSubmissions(submissionResponse);
+    const items = submissionResponse.items || [];
+    setSubmissions(items);
+    setQueuePagination(submissionResponse.pagination || { page: nextPage, pages: 1, total: items.length, limit: PAGE_SIZE });
     setRubrics(rubricResponse);
-    setJobs(jobsResponse);
-    if (!selectedId && submissionResponse[0]) {
-      setSelectedId(submissionResponse[0].id);
+    setJobs(jobsResponse.items || []);
+    const nextSelectedId = preserveSelection && items.some((item) => item.id === selectedId)
+      ? selectedId
+      : items[0]?.id || "";
+
+    setSelectedId(nextSelectedId);
+    if (!nextSelectedId) {
+      setDetail(null);
     }
   };
 
   useEffect(() => {
-    loadPage();
+    loadPage(filterBy, 1, false);
   }, []);
 
   useEffect(() => {
@@ -81,7 +92,7 @@ export default function ReviewPage() {
       });
       if (matchedJob?.service_type) setSelectedServiceType(matchedJob.service_type);
       toast.success("Job match updated.");
-      await loadPage(filterBy);
+      await loadPage(filterBy, queuePagination.page, true);
       const refreshed = await authGet(`/submissions/${detail.submission.id}`);
       setDetail(refreshed);
     } catch (error) {
@@ -104,7 +115,7 @@ export default function ReviewPage() {
         flagged_issues: flaggedIssues.split(",").map((item) => item.trim()).filter(Boolean),
       });
       toast.success("Management review saved.");
-      await loadPage(filterBy);
+      await loadPage(filterBy, queuePagination.page, true);
       const refreshed = await authGet(`/submissions/${detail.submission.id}`);
       setDetail(refreshed);
     } catch (error) {
@@ -126,12 +137,20 @@ export default function ReviewPage() {
             <ClipboardList className="h-6 w-6 text-[#243e36]" />
           </div>
 
-          <select value={filterBy} onChange={(event) => { setFilterBy(event.target.value); loadPage(event.target.value); }} className="mt-5 h-12 w-full rounded-2xl border border-transparent bg-[#edf0e7] px-4 text-sm" data-testid="review-filter-select">
+          <select value={filterBy} onChange={(event) => { setFilterBy(event.target.value); loadPage(event.target.value, 1, false); }} className="mt-5 h-12 w-full rounded-2xl border border-transparent bg-[#edf0e7] px-4 text-sm" data-testid="review-filter-select">
             <option value="all">All items</option>
             <option value="low_confidence">Low confidence match</option>
             <option value="incomplete_photo_sets">Incomplete photo sets</option>
             <option value="flagged">Flagged submissions</option>
           </select>
+
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm text-[#5c6d64]">
+            <p data-testid="review-queue-pagination-label">Page {queuePagination.page} of {queuePagination.pages} · {queuePagination.total} records</p>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" disabled={!queuePagination.has_prev} onClick={() => loadPage(filterBy, Math.max(queuePagination.page - 1, 1), false)} className="h-9 rounded-2xl" data-testid="review-queue-prev-button">Prev</Button>
+              <Button type="button" variant="outline" disabled={!queuePagination.has_next} onClick={() => loadPage(filterBy, Math.min(queuePagination.page + 1, queuePagination.pages), false)} className="h-9 rounded-2xl" data-testid="review-queue-next-button">Next</Button>
+            </div>
+          </div>
 
           <div className="mt-5 space-y-3">
             {submissions.map((submission) => (
@@ -145,6 +164,7 @@ export default function ReviewPage() {
                 </div>
               </button>
             ))}
+            {submissions.length === 0 && <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4 text-sm text-[#5c6d64]" data-testid="review-queue-empty-state">No management-review items match this page yet.</div>}
           </div>
         </CardContent>
       </Card>

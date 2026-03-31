@@ -1,3 +1,4 @@
+import asyncio
 import csv
 import io
 import json
@@ -12,7 +13,6 @@ from typing import Any
 from dotenv import load_dotenv
 from fastapi import (
     APIRouter,
-    BackgroundTasks,
     Depends,
     FastAPI,
     File,
@@ -22,22 +22,14 @@ from fastapi import (
     Request,
     UploadFile,
 )
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field
+from supabase import Client, create_client
 from starlette.middleware.cors import CORSMiddleware
 
 from auth_utils import create_access_token, decode_access_token, get_password_hash, verify_password
-from drive_sync import (
-    SCOPES,
-    build_oauth_flow,
-    credentials_to_document,
-    dump_json_bytes,
-    get_authorization_url,
-    is_drive_configured,
-    sync_submission_bundle,
-)
 
 
 ROOT_DIR = Path(__file__).parent
@@ -54,6 +46,14 @@ db = client[os.environ["DB_NAME"]]
 app = FastAPI(title="Field Quality Capture & Review System")
 api_router = APIRouter(prefix="/api")
 bearer_scheme = HTTPBearer(auto_error=False)
+supabase_client: Client | None = None
+ANALYTICS_PERIODS = {
+    "daily": {"days": 1, "label": "Daily"},
+    "weekly": {"days": 7, "label": "Weekly"},
+    "monthly": {"days": 30, "label": "Monthly"},
+    "quarterly": {"days": 90, "label": "Quarterly"},
+    "annual": {"days": 365, "label": "Annual"},
+}
 
 
 def utc_now() -> datetime:
@@ -66,6 +66,10 @@ def now_iso() -> str:
 
 def make_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
+
+
+def dump_json_bytes(payload: dict) -> bytes:
+    return json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
 
 
 def serialize(document: dict | None) -> dict | None:
@@ -85,6 +89,205 @@ def audit_entry(action: str, actor_id: str | None, note: str = "") -> dict:
 
 def normalize_key(value: str) -> str:
     return "".join(ch.lower() if ch.isalnum() else "_" for ch in value).strip("_")
+
+
+def normalize_page(page: int) -> int:
+    return max(page, 1)
+
+
+def normalize_limit(limit: int, default: int = 10, max_limit: int = 100) -> int:
+    if not limit:
+        return default
+    return max(1, min(limit, max_limit))
+
+
+def build_paginated_response(items: list[dict], page: int, limit: int, total: int) -> dict:
+    total_pages = max(math.ceil(total / max(limit, 1)), 1) if total else 1
+    return {
+        "items": items,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "pages": total_pages,
+            "has_next": page < total_pages,
+            "has_prev": page > 1,
+        },
+    }
+
+
+def parse_iso_datetime(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+
+
+def storage_is_configured() -> bool:
+    return all(
+        os.environ.get(key)
+        for key in ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "STORAGE_BUCKET_SUBMISSIONS"]
+    )
+
+
+def get_storage_bucket() -> str:
+    return os.environ["STORAGE_BUCKET_SUBMISSIONS"]
+
+
+def get_storage_status_payload() -> dict:
+    configured = storage_is_configured()
+    return {
+        "provider": "supabase",
+        "label": "Supabase Storage",
+        "configured": configured,
+        "connected": configured,
+        "bucket": os.environ.get("STORAGE_BUCKET_SUBMISSIONS"),
+        "project_url": os.environ.get("SUPABASE_URL"),
+        "required_env": ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "STORAGE_BUCKET_SUBMISSIONS"],
+        "mode": "backend-managed service role",
+    }
+
+
+def get_supabase_client() -> Client:
+    global supabase_client
+    if supabase_client is None:
+        supabase_client = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
+    return supabase_client
+
+
+async def upload_bytes_to_storage(path: str, content: bytes, content_type: str, bucket: str | None = None) -> None:
+    bucket_name = bucket or get_storage_bucket()
+
+    def _upload() -> None:
+        get_supabase_client().storage.from_(bucket_name).upload(
+            path,
+            content,
+            {"content-type": content_type, "upsert": "false"},
+        )
+
+    await asyncio.to_thread(_upload)
+
+
+async def download_bytes_from_storage(path: str, bucket: str | None = None) -> bytes:
+    bucket_name = bucket or get_storage_bucket()
+    return await asyncio.to_thread(lambda: get_supabase_client().storage.from_(bucket_name).download(path))
+
+
+def build_storage_path(submission_id: str, folder: str, filename: str) -> str:
+    return f"sarver-landscape/submissions/{submission_id}/{folder}/{filename}"
+
+
+def build_submission_file_response_url(submission_id: str, filename: str) -> tuple[str, str]:
+    relative_api_path = f"/api/submissions/files/{submission_id}/{filename}"
+    return relative_api_path, f"{os.environ['FRONTEND_URL']}{relative_api_path}"
+
+
+def hydrate_submission_media(submission: dict | None) -> dict | None:
+    if not submission:
+        return None
+    hydrated = {**submission}
+
+    def hydrate_file_entry(entry: dict) -> dict:
+        item = {**entry}
+        if item.get("source_type") in {"supabase", "local"} and item.get("filename"):
+            relative_api_path, media_url = build_submission_file_response_url(hydrated["id"], item["filename"])
+            item["relative_api_path"] = relative_api_path
+            item["media_url"] = media_url
+        return item
+
+    hydrated["photo_files"] = [hydrate_file_entry(item) for item in submission.get("photo_files", [])]
+    if submission.get("field_report"):
+        field_report = {**submission["field_report"]}
+        field_report["photo_files"] = [
+            hydrate_file_entry(item) for item in submission.get("field_report", {}).get("photo_files", [])
+        ]
+        hydrated["field_report"] = field_report
+    return hydrated
+
+
+def find_submission_file_entry(submission: dict, filename: str) -> dict | None:
+    for item in submission.get("photo_files", []):
+        if item.get("filename") == filename:
+            return item
+    for item in submission.get("field_report", {}).get("photo_files", []):
+        if item.get("filename") == filename:
+            return item
+    return None
+
+
+def get_submission_list_projection() -> dict:
+    return {
+        "_id": 0,
+        "id": 1,
+        "submission_code": 1,
+        "job_id": 1,
+        "job_name_input": 1,
+        "crew_label": 1,
+        "truck_number": 1,
+        "division": 1,
+        "service_type": 1,
+        "status": 1,
+        "match_status": 1,
+        "match_confidence": 1,
+        "created_at": 1,
+    }
+
+
+def get_jobs_projection() -> dict:
+    return {
+        "_id": 0,
+        "id": 1,
+        "job_id": 1,
+        "job_name": 1,
+        "property_name": 1,
+        "address": 1,
+        "service_type": 1,
+        "scheduled_date": 1,
+        "division": 1,
+        "truck_number": 1,
+        "route": 1,
+    }
+
+
+def get_crew_link_projection() -> dict:
+    return {
+        "_id": 0,
+        "id": 1,
+        "code": 1,
+        "crew_member_id": 1,
+        "label": 1,
+        "truck_number": 1,
+        "division": 1,
+        "enabled": 1,
+        "created_at": 1,
+        "updated_at": 1,
+    }
+
+
+def get_period_cutoff(period: str) -> datetime:
+    config = ANALYTICS_PERIODS.get(period, ANALYTICS_PERIODS["monthly"])
+    return utc_now() - timedelta(days=config["days"])
+
+
+def get_period_bucket(dt: datetime, period: str) -> tuple[datetime, str]:
+    if period == "daily":
+        bucket_start = dt.replace(minute=0, second=0, microsecond=0)
+        label = bucket_start.strftime("%H:%M")
+    elif period == "weekly":
+        bucket_start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        label = bucket_start.strftime("%b %d")
+    elif period == "monthly":
+        bucket_start = (dt - timedelta(days=dt.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+        label = f"Week of {bucket_start.strftime('%b %d')}"
+    else:
+        bucket_start = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        label = bucket_start.strftime("%b %Y")
+    return bucket_start, label
 
 
 def haversine_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -234,11 +437,11 @@ SYSTEM_BLUEPRINT = {
         "backend": [
             "FastAPI API with JWT auth, job alignment import, submissions, issue intake, reviews, exports, analytics",
             "MongoDB collections using string IDs for AI-ready relational linking",
-            "Google Drive sync service with OAuth connection and structured folders",
+            "Supabase Storage service layer for proof images and review-ready asset retrieval",
         ],
         "storage": [
-            "Local file cache for uploaded photos and JSON artifacts",
-            "Google Drive mirror using /QA/{Year}/{Division}/{ServiceType}/{JobID}_{SubmissionID}",
+            "Supabase bucket-backed image storage managed by the backend service role",
+            "Stable backend-served image routes for admin and owner review screens",
             "Export bundle generation for JSONL and CSV",
         ],
     },
@@ -277,7 +480,7 @@ SYSTEM_BLUEPRINT = {
     ],
     "suggested_stack": {
         "frontend": "React 19 + Tailwind + shadcn/ui + Framer Motion",
-        "backend": "FastAPI + Motor + JWT auth + Google Drive API",
+        "backend": "FastAPI + Motor + JWT auth + Supabase Storage",
         "database": "MongoDB with collection-per-module structure",
     },
     "implementation_plan": [
@@ -285,7 +488,7 @@ SYSTEM_BLUEPRINT = {
         "CSV job import and auto-match scoring",
         "Management rubric review flow",
         "Owner calibration and training inclusion",
-        "Analytics, exports, and Google Drive sync",
+        "Analytics, exports, and Supabase-backed photo retrieval",
     ],
 }
 
@@ -369,7 +572,7 @@ async def create_submission_snapshot(submission_id: str) -> dict:
             {"service_type": submission["service_type"].lower(), "is_active": True}, {"_id": 0}, sort=[("version", -1)]
         )
     return {
-        "submission": submission,
+        "submission": hydrate_submission_media(submission),
         "management_review": management_review,
         "owner_review": owner_review,
         "job": job,
@@ -617,7 +820,7 @@ async def seed_defaults() -> None:
                             "media_url": "https://images.pexels.com/photos/6728925/pexels-photo-6728925.jpeg?auto=compress&cs=tinysrgb&w=1200",
                         }
                     ],
-                    "drive_sync_status": "pending_configuration",
+                    "storage_status": "seed_remote",
                     "created_at": now_iso(),
                     "updated_at": now_iso(),
                     "audit_history": [audit_entry("seeded", "system", "Sample submission created")],
@@ -651,7 +854,7 @@ async def seed_defaults() -> None:
                             "media_url": "https://images.unsplash.com/photo-1696663118264-55a63c75409b?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
                         }
                     ],
-                    "drive_sync_status": "pending_configuration",
+                    "storage_status": "seed_remote",
                     "created_at": now_iso(),
                     "updated_at": now_iso(),
                     "audit_history": [audit_entry("seeded", "system", "Sample submission created")],
@@ -685,7 +888,7 @@ async def seed_defaults() -> None:
                             "media_url": "https://images.unsplash.com/photo-1605117882932-f9e32b03fea9?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
                         }
                     ],
-                    "drive_sync_status": "pending_configuration",
+                    "storage_status": "seed_remote",
                     "created_at": now_iso(),
                     "updated_at": now_iso(),
                     "audit_history": [audit_entry("seeded", "system", "Sample submission created")],
@@ -750,6 +953,12 @@ async def seed_defaults() -> None:
 @app.on_event("startup")
 async def startup_event():
     await seed_defaults()
+    if storage_is_configured():
+        try:
+            get_supabase_client()
+            logger.info("Supabase storage client initialized")
+        except Exception as exc:
+            logger.error("Supabase storage initialization failed: %s", exc)
 
 
 @api_router.get("/")
@@ -825,7 +1034,6 @@ async def get_public_jobs(search: str = "", access_code: str | None = None):
 
 @api_router.post("/public/submissions")
 async def create_submission(
-    background_tasks: BackgroundTasks,
     request: Request,
     access_code: str = Form(...),
     job_id: str = Form(""),
@@ -880,8 +1088,9 @@ async def create_submission(
         content = await photo.read()
         suffix = Path(photo.filename or f"capture-{index}.jpg").suffix or ".jpg"
         filename = f"{index:02d}_{uuid.uuid4().hex[:6]}{suffix}"
-        file_path = local_folder / filename
-        file_path.write_bytes(content)
+        relative_api_path, media_url = build_submission_file_response_url(submission_id, filename)
+        storage_path = build_storage_path(submission_id, "captures", filename)
+        await upload_bytes_to_storage(storage_path, content, photo.content_type or "application/octet-stream")
         photo_files.append(
             {
                 "id": make_id("file"),
@@ -890,10 +1099,11 @@ async def create_submission(
                 "mime_type": photo.content_type or "application/octet-stream",
                 "sequence": index,
                 "size_bytes": len(content),
-                "local_path": str(file_path),
-                "relative_api_path": f"/api/submissions/files/{submission_id}/{filename}",
-                "media_url": f"{os.environ['FRONTEND_URL']}/api/submissions/files/{submission_id}/{filename}",
-                "source_type": "local",
+                "bucket": get_storage_bucket(),
+                "storage_path": storage_path,
+                "relative_api_path": relative_api_path,
+                "media_url": media_url,
+                "source_type": "supabase",
             }
         )
 
@@ -902,8 +1112,9 @@ async def create_submission(
         content = await issue_photo.read()
         suffix = Path(issue_photo.filename or f"issue-{index}.jpg").suffix or ".jpg"
         filename = f"issue_{index:02d}_{uuid.uuid4().hex[:6]}{suffix}"
-        file_path = local_folder / filename
-        file_path.write_bytes(content)
+        relative_api_path, media_url = build_submission_file_response_url(submission_id, filename)
+        storage_path = build_storage_path(submission_id, "issues", filename)
+        await upload_bytes_to_storage(storage_path, content, issue_photo.content_type or "application/octet-stream")
         field_report_photo_files.append(
             {
                 "id": make_id("issuefile"),
@@ -911,10 +1122,12 @@ async def create_submission(
                 "original_name": issue_photo.filename,
                 "mime_type": issue_photo.content_type or "application/octet-stream",
                 "sequence": index,
-                "local_path": str(file_path),
-                "relative_api_path": f"/api/submissions/files/{submission_id}/{filename}",
-                "media_url": f"{os.environ['FRONTEND_URL']}/api/submissions/files/{submission_id}/{filename}",
-                "source_type": "local",
+                "size_bytes": len(content),
+                "bucket": get_storage_bucket(),
+                "storage_path": storage_path,
+                "relative_api_path": relative_api_path,
+                "media_url": media_url,
+                "source_type": "supabase",
             }
         )
 
@@ -951,7 +1164,7 @@ async def create_submission(
         "photo_files": photo_files,
         "local_folder_path": str(local_folder),
         "device_metadata": {"user_agent": request.headers.get("user-agent", "unknown")},
-        "drive_sync_status": "pending_configuration",
+        "storage_status": "stored",
         "created_at": now_iso(),
         "updated_at": now_iso(),
         "audit_history": [
@@ -992,31 +1205,48 @@ async def create_submission(
             related_job_id=job_key,
             notification_type="field_issue",
         )
-    background_tasks.add_task(sync_submission_bundle, db, submission)
-    return {"submission": submission}
+    return {"submission": hydrate_submission_media(submission)}
 
 
 @api_router.get("/submissions/files/{submission_id}/{filename}")
 async def get_submission_file(submission_id: str, filename: str):
-    file_path = SUBMISSIONS_DIR / submission_id / filename
-    if not file_path.exists():
+    submission = await db.submissions.find_one(
+        {"id": submission_id},
+        {"_id": 0, "id": 1, "photo_files": 1, "field_report": 1},
+    )
+    if not submission:
+        raise HTTPException(status_code=404, detail="Submission not found")
+    file_entry = find_submission_file_entry(submission, filename)
+    if not file_entry:
         raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(file_path)
+    if file_entry.get("source_type") == "supabase" and file_entry.get("storage_path"):
+        content = await download_bytes_from_storage(
+            file_entry["storage_path"],
+            file_entry.get("bucket") or get_storage_bucket(),
+        )
+        return Response(content=content, media_type=file_entry.get("mime_type", "application/octet-stream"))
+
+    local_path = file_entry.get("local_path")
+    if local_path and Path(local_path).exists():
+        return FileResponse(local_path, media_type=file_entry.get("mime_type", "application/octet-stream"))
+
+    raise HTTPException(status_code=404, detail="File payload not available")
 
 
 @api_router.get("/dashboard/overview")
 async def get_dashboard_overview(user: dict = Depends(require_roles("management", "owner"))):
-    submissions = await db.submissions.find({}, {"_id": 0}).to_list(1000)
+    submissions_count = await db.submissions.count_documents({})
     jobs_count = await db.jobs.count_documents({})
     rubrics_count = await db.rubric_definitions.count_documents({})
     export_count = await db.export_records.count_documents({})
-    management_queue = len([item for item in submissions if item["status"] in {"Pending Match", "Ready for Review"}])
-    owner_queue = len([item for item in submissions if item["status"] in {"Management Reviewed", "Owner Reviewed"}])
-    export_ready = len([item for item in submissions if item["status"] == "Export Ready"])
-    review_velocity = round((management_queue + owner_queue + export_ready) / max(len(submissions), 1) * 100, 1)
+    management_queue = await db.submissions.count_documents({"status": {"$in": ["Pending Match", "Ready for Review"]}})
+    owner_queue = await db.submissions.count_documents({"status": {"$in": ["Management Reviewed", "Owner Reviewed"]}})
+    export_ready = await db.submissions.count_documents({"status": "Export Ready"})
+    review_velocity = round((management_queue + owner_queue + export_ready) / max(submissions_count, 1) * 100, 1)
+    storage = get_storage_status_payload()
     return {
         "totals": {
-            "submissions": len(submissions),
+            "submissions": submissions_count,
             "jobs": jobs_count,
             "rubrics": rubrics_count,
             "exports": export_count,
@@ -1026,11 +1256,8 @@ async def get_dashboard_overview(user: dict = Depends(require_roles("management"
             "owner": owner_queue,
             "export_ready": export_ready,
         },
-        "drive": {
-            "configured": is_drive_configured(),
-            "connected": await db.drive_credentials.count_documents({}) > 0,
-            "scope": SCOPES,
-        },
+        "storage": storage,
+        "drive": {"configured": storage["configured"], "connected": storage["connected"], "scope": [storage["bucket"]]},
         "workflow_health": {
             "review_velocity_percent": review_velocity,
             "duplicate_guard_window_minutes": 15,
@@ -1039,12 +1266,26 @@ async def get_dashboard_overview(user: dict = Depends(require_roles("management"
 
 
 @api_router.get("/jobs")
-async def get_jobs(user: dict = Depends(require_roles("management", "owner")), search: str = ""):
+async def get_jobs(
+    user: dict = Depends(require_roles("management", "owner")),
+    search: str = "",
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+):
     query: dict[str, Any] = {}
     if search:
         query["search_text"] = {"$regex": search.lower()}
-    jobs = await db.jobs.find(query, {"_id": 0}).sort("scheduled_date", -1).to_list(500)
-    return jobs
+    page = normalize_page(page)
+    limit = normalize_limit(limit, default=10, max_limit=100)
+    total = await db.jobs.count_documents(query)
+    jobs = (
+        await db.jobs.find(query, get_jobs_projection())
+        .sort("scheduled_date", -1)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .to_list(limit)
+    )
+    return build_paginated_response(jobs, page, limit, total)
 
 
 @api_router.post("/jobs/import-csv")
@@ -1120,9 +1361,28 @@ async def import_jobs_csv(
 
 
 @api_router.get("/crew-access-links")
-async def get_crew_access_links(user: dict = Depends(require_roles("management", "owner"))):
-    crew_links = await db.crew_access_links.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
-    return [present_crew_link(link) for link in crew_links]
+async def get_crew_access_links(
+    user: dict = Depends(require_roles("management", "owner")),
+    status: str = Query("all"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=50),
+):
+    query: dict[str, Any] = {}
+    if status == "active":
+        query["enabled"] = True
+    elif status == "inactive":
+        query["enabled"] = False
+    page = normalize_page(page)
+    limit = normalize_limit(limit, default=10, max_limit=50)
+    total = await db.crew_access_links.count_documents(query)
+    crew_links = (
+        await db.crew_access_links.find(query, get_crew_link_projection())
+        .sort("created_at", -1)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .to_list(limit)
+    )
+    return build_paginated_response([present_crew_link(link) for link in crew_links], page, limit, total)
 
 
 @api_router.post("/crew-access-links")
@@ -1251,21 +1511,34 @@ async def get_submissions(
     user: dict = Depends(require_roles("management", "owner")),
     scope: str = Query("all"),
     filter_by: str = Query("all"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
 ):
-    submissions = await db.submissions.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    query: dict[str, Any] = {}
     if scope == "management":
-        submissions = [item for item in submissions if item["status"] in {"Pending Match", "Ready for Review", "Management Reviewed"}]
+        query["status"] = {"$in": ["Pending Match", "Ready for Review", "Management Reviewed"]}
     elif scope == "owner":
-        submissions = [item for item in submissions if item["status"] in {"Management Reviewed", "Owner Reviewed", "Export Ready"}]
+        query["status"] = {"$in": ["Management Reviewed", "Owner Reviewed", "Export Ready"]}
 
     if filter_by == "low_confidence":
-        submissions = [item for item in submissions if item.get("match_confidence", 0) < 0.8]
+        query["match_confidence"] = {"$lt": 0.8}
     elif filter_by == "incomplete_photo_sets":
-        submissions = [item for item in submissions if item.get("photo_count", 0) < item.get("required_photo_count", 0)]
+        query["$expr"] = {"$lt": ["$photo_count", "$required_photo_count"]}
     elif filter_by == "flagged":
-        flagged_ids = [item["submission_id"] for item in await db.management_reviews.find({"flagged_issues": {"$ne": []}}, {"_id": 0, "submission_id": 1}).to_list(1000)]
-        submissions = [item for item in submissions if item["id"] in flagged_ids]
-    return submissions
+        flagged_ids = await db.management_reviews.distinct("submission_id", {"flagged_issues": {"$ne": []}})
+        query["id"] = {"$in": flagged_ids or ["__none__"]}
+
+    page = normalize_page(page)
+    limit = normalize_limit(limit, default=10, max_limit=100)
+    total = await db.submissions.count_documents(query)
+    submissions = (
+        await db.submissions.find(query, get_submission_list_projection())
+        .sort("created_at", -1)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .to_list(limit)
+    )
+    return build_paginated_response(submissions, page, limit, total)
 
 
 @api_router.get("/submissions/{submission_id}")
@@ -1277,7 +1550,6 @@ async def get_submission_detail(submission_id: str, user: dict = Depends(require
 async def override_submission_match(
     submission_id: str,
     payload: MatchOverrideRequest,
-    background_tasks: BackgroundTasks,
     user: dict = Depends(require_roles("management", "owner")),
 ):
     submission = await db.submissions.find_one({"id": submission_id}, {"_id": 0})
@@ -1304,14 +1576,12 @@ async def override_submission_match(
     )
     snapshot = await create_submission_snapshot(submission_id)
     write_json_artifact(snapshot["submission"].get("local_folder_path"), "metadata.json", snapshot["submission"])
-    background_tasks.add_task(sync_submission_bundle, db, snapshot["submission"])
     return snapshot
 
 
 @api_router.post("/reviews/management")
 async def create_management_review(
     payload: ManagementReviewRequest,
-    background_tasks: BackgroundTasks,
     user: dict = Depends(require_roles("management", "owner")),
 ):
     submission = await db.submissions.find_one({"id": payload.submission_id}, {"_id": 0})
@@ -1372,14 +1642,12 @@ async def create_management_review(
         )
     write_json_artifact(submission.get("local_folder_path"), "management_review.json", review)
     updated_submission = await db.submissions.find_one({"id": payload.submission_id}, {"_id": 0})
-    background_tasks.add_task(sync_submission_bundle, db, updated_submission)
     return {"review": review, "submission": updated_submission}
 
 
 @api_router.post("/reviews/owner")
 async def create_owner_review(
     payload: OwnerReviewRequest,
-    background_tasks: BackgroundTasks,
     user: dict = Depends(require_roles("owner")),
 ):
     submission = await db.submissions.find_one({"id": payload.submission_id}, {"_id": 0})
@@ -1436,24 +1704,34 @@ async def create_owner_review(
         )
     write_json_artifact(submission.get("local_folder_path"), "owner_review.json", review)
     updated_submission = await db.submissions.find_one({"id": payload.submission_id}, {"_id": 0})
-    background_tasks.add_task(sync_submission_bundle, db, updated_submission)
     return {"review": review, "submission": updated_submission}
 
 
 @api_router.get("/analytics/summary")
-async def get_analytics_summary(user: dict = Depends(require_roles("management", "owner"))):
-    submissions = await db.submissions.find({}, {"_id": 0}).to_list(2000)
-    management_reviews = await db.management_reviews.find({}, {"_id": 0}).to_list(2000)
-    owner_reviews = await db.owner_reviews.find({}, {"_id": 0}).to_list(2000)
+async def get_analytics_summary(
+    user: dict = Depends(require_roles("management", "owner")),
+    period: str = Query("monthly"),
+):
+    period = period if period in ANALYTICS_PERIODS else "monthly"
+    cutoff = get_period_cutoff(period).isoformat()
+    submissions = await db.submissions.find({"created_at": {"$gte": cutoff}}, {"_id": 0}).to_list(2000)
+    submission_ids = [item["id"] for item in submissions]
+    review_query = {"submission_id": {"$in": submission_ids or ["__none__"]}}
+    management_reviews = await db.management_reviews.find(review_query, {"_id": 0}).to_list(2000)
+    owner_reviews = await db.owner_reviews.find(review_query, {"_id": 0}).to_list(2000)
 
     crew_scores: dict[str, list[float]] = {}
     variance_points = []
     fail_reasons: dict[str, int] = {}
-    volume_by_day: dict[str, int] = {}
+    volume_by_bucket: dict[datetime, dict[str, Any]] = {}
 
     for submission in submissions:
-        day_key = submission["created_at"][:10]
-        volume_by_day[day_key] = volume_by_day.get(day_key, 0) + 1
+        captured_at = parse_iso_datetime(submission.get("created_at"))
+        if not captured_at:
+            continue
+        bucket_start, bucket_label = get_period_bucket(captured_at, period)
+        bucket_entry = volume_by_bucket.setdefault(bucket_start, {"label": bucket_label, "count": 0})
+        bucket_entry["count"] += 1
 
     mgmt_lookup = {review["submission_id"]: review for review in management_reviews}
     owner_lookup = {review["submission_id"]: review for review in owner_reviews}
@@ -1481,6 +1759,8 @@ async def get_analytics_summary(user: dict = Depends(require_roles("management",
     ]
     average_by_crew.sort(key=lambda item: item["average_score"], reverse=True)
     variance_avg = round(sum(point["variance"] for point in variance_points) / max(len(variance_points), 1), 1)
+    fail_reason_rows = [{"reason": key, "count": value} for key, value in fail_reasons.items()]
+    fail_reason_rows.sort(key=lambda item: item["count"], reverse=True)
 
     heatmap_tracker: dict[tuple[str, str], dict] = {}
     for submission in submissions:
@@ -1518,12 +1798,18 @@ async def get_analytics_summary(user: dict = Depends(require_roles("management",
                 "sample_count": max(len(entry["management_scores"]), len(entry["owner_scores"])),
             }
         )
+    calibration_heatmap.sort(key=lambda item: (item["crew"], item["service_type"]))
 
     return {
+        "period": period,
+        "period_label": ANALYTICS_PERIODS[period]["label"],
         "average_score_by_crew": average_by_crew,
         "score_variance_average": variance_avg,
-        "fail_reason_frequency": [{"reason": key, "count": value} for key, value in fail_reasons.items()],
-        "submission_volume_trends": [{"day": key, "count": value} for key, value in sorted(volume_by_day.items())],
+        "fail_reason_frequency": fail_reason_rows,
+        "submission_volume_trends": [
+            {"day": entry["label"], "count": entry["count"]}
+            for _, entry in sorted(volume_by_bucket.items(), key=lambda item: item[0])
+        ],
         "training_approved_count": len([review for review in owner_reviews if review["training_inclusion"] == "approved"]),
         "calibration_heatmap": calibration_heatmap,
     }
@@ -1614,8 +1900,22 @@ async def run_export(payload: ExportRunRequest, user: dict = Depends(require_rol
 
 
 @api_router.get("/exports")
-async def get_exports(user: dict = Depends(require_roles("management", "owner"))):
-    return await db.export_records.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+async def get_exports(
+    user: dict = Depends(require_roles("management", "owner")),
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=50),
+):
+    page = normalize_page(page)
+    limit = normalize_limit(limit, default=10, max_limit=50)
+    total = await db.export_records.count_documents({})
+    items = (
+        await db.export_records.find({}, {"_id": 0})
+        .sort("created_at", -1)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .to_list(limit)
+    )
+    return build_paginated_response(items, page, limit, total)
 
 
 @api_router.get("/exports/{export_id}/download")
@@ -1626,38 +1926,28 @@ async def download_export(export_id: str, user: dict = Depends(require_roles("ma
     return FileResponse(export_record["file_path"], filename=Path(export_record["file_path"]).name)
 
 
+@api_router.get("/integrations/storage/status")
+async def storage_status(user: dict = Depends(require_roles("management", "owner"))):
+    return get_storage_status_payload()
+
+
 @api_router.get("/integrations/drive/status")
 async def drive_status(user: dict = Depends(require_roles("management", "owner"))):
-    credentials_count = await db.drive_credentials.count_documents({})
+    storage = get_storage_status_payload()
     return {
-        "configured": is_drive_configured(),
-        "connected": credentials_count > 0,
-        "required_env": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_DRIVE_REDIRECT_URI"],
-        "scope": SCOPES,
+        **storage,
+        "scope": [storage["bucket"]],
     }
 
 
 @api_router.get("/integrations/drive/connect")
 async def connect_drive(user: dict = Depends(require_roles("management", "owner"))):
-    if not is_drive_configured():
-        raise HTTPException(status_code=400, detail="Google Drive env configuration is missing")
-    return {"authorization_url": get_authorization_url(user["id"]) }
+    raise HTTPException(status_code=410, detail="Google Drive sync has been retired. Supabase Storage is active.")
 
 
 @api_router.get("/oauth/drive/callback")
 async def drive_callback(code: str, state: str):
-    if not is_drive_configured():
-        raise HTTPException(status_code=400, detail="Google Drive env configuration is missing")
-    flow = build_oauth_flow(state)
-    flow.fetch_token(code=code)
-    credentials = flow.credentials
-    granted_scopes = set(credentials.scopes or [])
-    if not set(SCOPES).issubset(granted_scopes):
-        raise HTTPException(status_code=400, detail="Missing required Google Drive scope")
-    document = credentials_to_document(credentials, state)
-    await db.drive_credentials.update_many({}, {"$set": {"is_active": False}})
-    await db.drive_credentials.update_one({"user_id": state}, {"$set": document}, upsert=True)
-    return {"redirect": f"{os.environ['FRONTEND_URL']}/settings?drive_connected=true"}
+    raise HTTPException(status_code=410, detail="Google Drive callback is no longer used. Supabase Storage is active.")
 
 
 app.include_router(api_router)
