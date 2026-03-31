@@ -603,9 +603,9 @@ frontend:
 
   - task: "Role restrictions - Owner navigation"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/components/layout/AppShell.jsx"
-    stuck_count: 2
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -618,6 +618,9 @@ frontend:
         - working: false
           agent: "testing"
           comment: "RETEST 2026-03-31 - STILL BROKEN. Owner role navigation restrictions remain incorrect. Owner CAN see: Overview, Owner Review ✓, Calibration, Standards Library, Repeat Offenders, Exports ✓, Settings. Owner INCORRECTLY sees: 'Alignment & QR' (should be management-only), 'Review Queue' (should be management-only). POSITIVE: Owner Review page IS now accessible at /owner (previously was redirecting to /dashboard). The navigation visibility logic for Owner role needs to be fixed to hide Alignment & QR and Review Queue links."
+        - working: true
+          agent: "testing"
+          comment: "✅ FIXED - Owner navigation restrictions are now FULLY CORRECT. Owner sees exactly 7 navigation links: Overview, Owner Review, Calibration, Standards Library, Repeat Offenders, Exports, Settings. Owner correctly DOES NOT see: Alignment & QR (management-only), Review Queue (management-only). All expected links present, all forbidden links hidden. Navigation visibility logic in AppShell.jsx working perfectly."
 
   - task: "Rapid Review - No sidebar navigation item"
     implemented: true
@@ -828,16 +831,14 @@ frontend:
 
 metadata:
   created_by: "testing_agent"
-  version: "1.4"
-  test_sequence: 5
+  version: "1.5"
+  test_sequence: 6
   run_ui: true
-  last_tested: "2026-03-31"
+  last_tested: "2026-04-01"
 
 test_plan:
-  current_focus:
-    - "Owner role navigation restrictions - CRITICAL: Owner still sees Alignment & QR and Review Queue"
-  stuck_tasks:
-    - "Role restrictions - Owner navigation"
+  current_focus: []
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
@@ -852,3 +853,5 @@ agent_communication:
       message: "✅ LIVE APP TESTING COMPLETE - Tested https://landscape-qa.preview.emergentagent.com. RESULTS: 11 features WORKING, 3 features FAILED, 7 features UNABLE TO FULLY VERIFY. WORKING FEATURES: 1) Rapid Review QR card NOW RENDERING on Overview (previous issue RESOLVED), 2) Rapid Review correctly NOT in sidebar, 3) /rapid-review redirects to /rapid-review/mobile, 4) Mobile swipe lane renders with phone-style UI, 5) Fail and Exemplary comment modals working, 6) Standards Library create/edit form renders, 7) Repeat Offenders page loads with heatmap/cards, 8) Training Mode public access (no login required). CRITICAL FAILURES: 1) Owner role navigation STILL BROKEN (Owner sees Alignment & QR and Review Queue - should be management-only), 2) Standards Library has 422 API error from /api/crew-access-links endpoint, 3) Training Mode crashes with TypeError for invalid session codes (poor error handling). UNABLE TO VERIFY: HUD arrows visibility (code present but not visually confirmed), training session generator (avoided creating test data), recent sessions list (blocked by 422 error), training quiz flow (needs valid session code). Main agent must fix: Owner navigation restrictions, 422 API error on Standards page, Training Mode error boundary."
     - agent: "testing"
       message: "🔄 RETEST 2026-03-31 COMPLETE - Retested live frontend at https://landscape-qa.preview.emergentagent.com after latest fixes. RESULTS: 2 OUT OF 3 CRITICAL ISSUES FIXED, 1 REMAINS BROKEN. ✅ FIXED ISSUES: 1) Standards Library 422 error - RESOLVED! Page loads completely without runtime errors or 422 API errors from crew-access-links endpoint. All content renders correctly. 2) Training Mode invalid code handling - RESOLVED! Now shows friendly 'Training session unavailable' message instead of crashing with TypeError. ❌ STILL BROKEN: Owner role navigation restrictions - Owner INCORRECTLY sees 'Alignment & QR' and 'Review Queue' (should be management-only). Owner CORRECTLY sees 'Owner Review' and can access /owner page (this part was fixed). ✅ ALL OTHER FLOWS WORKING: Overview rapid review QR card present, /rapid-review/mobile swipe lane renders with all 4 rating buttons, Fail comment modal opens correctly, Standards training session generator present, Repeat Offenders page loads successfully. MAIN AGENT ACTION REQUIRED: Fix Owner navigation visibility logic in AppShell.jsx to hide 'Alignment & QR' and 'Review Queue' links for Owner role."
+    - agent: "testing"
+      message: "✅ RETEST 2026-04-01 COMPLETE - Owner navigation restrictions NOW FULLY FIXED! Tested live app at https://landscape-qa.preview.emergentagent.com with Owner credentials (owner@fieldquality.local). VERIFICATION RESULTS: Owner sees exactly 7 navigation links: 1) Overview, 2) Owner Review, 3) Calibration, 4) Standards Library, 5) Repeat Offenders, 6) Exports, 7) Settings. Owner correctly DOES NOT see: Alignment & QR (management-only), Review Queue (management-only). All expected links present ✓, all forbidden links hidden ✓. Navigation visibility logic in AppShell.jsx (lines 20-28) working perfectly. The stuck task is now resolved. No further action required for owner navigation restrictions."
