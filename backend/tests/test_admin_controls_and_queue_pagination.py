@@ -233,12 +233,14 @@ def test_owner_queue_dataset_supports_pagination_over_eight_entries(api_client, 
     owner_token = logins["Owner"]["token"]
 
     owner_before = api_client.get(
-        f"{base_url}/api/submissions?scope=owner&filter_by=all",
+        f"{base_url}/api/submissions?scope=owner&filter_by=all&page=1&limit=100",
         headers=_auth_headers(owner_token),
         timeout=30,
     )
     assert owner_before.status_code == 200
-    initial_owner_queue = owner_before.json()
+    owner_before_data = owner_before.json()
+    # Handle paginated response format
+    initial_owner_queue = owner_before_data.get("items", owner_before_data) if isinstance(owner_before_data, dict) else owner_before_data
 
     target_count = 9
     missing = max(target_count - len(initial_owner_queue), 0)
@@ -255,7 +257,9 @@ def test_owner_queue_dataset_supports_pagination_over_eight_entries(api_client, 
             timeout=30,
         )
         assert jobs_response.status_code == 200
-        jobs = jobs_response.json()
+        jobs_data = jobs_response.json()
+        # Handle paginated response format
+        jobs = jobs_data.get("items", jobs_data) if isinstance(jobs_data, dict) else jobs_data
         assert jobs
         job = jobs[0]
 
@@ -298,11 +302,13 @@ def test_owner_queue_dataset_supports_pagination_over_eight_entries(api_client, 
             assert review_response.json()["submission"]["status"] == "Management Reviewed"
 
     owner_after = api_client.get(
-        f"{base_url}/api/submissions?scope=owner&filter_by=all",
+        f"{base_url}/api/submissions?scope=owner&filter_by=all&page=1&limit=100",
         headers=_auth_headers(owner_token),
         timeout=30,
     )
     assert owner_after.status_code == 200
-    owner_queue = owner_after.json()
+    owner_after_data = owner_after.json()
+    # Handle paginated response format
+    owner_queue = owner_after_data.get("items", owner_after_data) if isinstance(owner_after_data, dict) else owner_after_data
     assert len(owner_queue) >= 9
     assert all(item["status"] in {"Management Reviewed", "Owner Reviewed", "Export Ready"} for item in owner_queue[:9])

@@ -1,0 +1,29 @@
+{
+  "id": "mgr_dbb3bc228dfe",
+  "submission_id": "sub_22bad6bd7a0b",
+  "reviewer_id": "user_ae5085da3091",
+  "rubric_id": "rubric_spring_cleanup_v1",
+  "rubric_version": 1,
+  "service_type": "spring cleanup",
+  "category_scores": {
+    "coverage": 4.0,
+    "cleanliness": 4.0,
+    "bed_definition": 4.0,
+    "turf_finish": 4.0,
+    "curb_appeal": 4.0
+  },
+  "total_score": 80.0,
+  "comments": "TEST pagination owner queue setup",
+  "disposition": "pass with notes",
+  "flagged_issues": [],
+  "created_at": "2026-03-31T02:07:12.862813+00:00",
+  "updated_at": "2026-03-31T02:07:12.862819+00:00",
+  "audit_history": [
+    {
+      "timestamp": "2026-03-31T02:07:12.862821+00:00",
+      "action": "created",
+      "actor_id": "user_ae5085da3091",
+      "note": "Management review submitted"
+    }
+  ]
+}
