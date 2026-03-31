@@ -19,10 +19,10 @@ function VerticalBars({ data, valueKey, labelKey, testId }) {
 
   return (
     <div className="grid h-[320px] grid-cols-3 items-end gap-4" data-testid={testId}>
-      {data.map((item) => {
+      {data.map((item, index) => {
         const height = `${Math.max(((item[valueKey] || 0) / maxValue) * 100, 6)}%`;
         return (
-          <div key={item[labelKey]} className="flex h-full flex-col justify-end gap-3">
+          <div key={`${item[labelKey] || 'bar'}-${index}`} className="flex h-full flex-col justify-end gap-3">
             <div className="flex-1 rounded-[24px] bg-[#f6f6f2] p-3">
               <div className="flex h-full items-end justify-center rounded-[20px] bg-[#edf0e7] px-3 pb-3">
                 <div className="w-full rounded-[18px] bg-[#243e36]" style={{ height }} />
@@ -45,10 +45,10 @@ function TrendBars({ data, testId }) {
 
   return (
     <div className="flex h-[320px] items-end gap-4" data-testid={testId}>
-      {data.map((item) => {
+      {data.map((item, index) => {
         const height = `${Math.max(((item.count || 0) / maxValue) * 100, 8)}%`;
         return (
-          <div key={item.day} className="flex h-full flex-1 flex-col justify-end gap-3">
+          <div key={`${item.day}-${index}`} className="flex h-full flex-1 flex-col justify-end gap-3">
             <div className="flex-1 rounded-[24px] bg-[#f6f6f2] p-3">
               <div className="flex h-full items-end rounded-[20px] bg-[#edf0e7] px-3 pb-3">
                 <div className="w-full rounded-[18px] bg-[#7ca982]" style={{ height }} />
@@ -71,8 +71,8 @@ function HorizontalBars({ data, testId }) {
 
   return (
     <div className="space-y-3" data-testid={testId}>
-      {data.map((item) => (
-        <div key={item.reason} className="rounded-[22px] bg-[#f6f6f2] p-4">
+      {data.map((item, index) => (
+        <div key={`${item.reason}-${index}`} className="rounded-[22px] bg-[#f6f6f2] p-4">
           <div className="mb-2 flex items-center justify-between gap-3">
             <p className="text-sm font-semibold text-[#243e36]">{item.reason}</p>
             <p className="text-xs text-[#5c6d64]">{item.count}</p>
@@ -211,18 +211,18 @@ export default function AnalyticsPage() {
           <div className="mt-6 overflow-x-auto">
             <div className="grid min-w-[720px] gap-3" style={{ gridTemplateColumns: `180px repeat(${Math.max(heatmapColumns.length, 1)}, minmax(140px, 1fr))` }} data-testid="analytics-heatmap-grid">
               <div />
-              {heatmapColumns.map((column) => (
-                <div key={column} className="rounded-2xl bg-[#edf0e7] px-3 py-2 text-sm font-semibold text-[#243e36]" data-testid={`analytics-heatmap-column-${column.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}>{column}</div>
+              {heatmapColumns.map((column, columnIndex) => (
+                <div key={`${column}-${columnIndex}`} className="rounded-2xl bg-[#edf0e7] px-3 py-2 text-sm font-semibold text-[#243e36]" data-testid={`analytics-heatmap-column-${column.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}>{column}</div>
               ))}
-              {heatmapRows.map((crew) => (
-                <div key={crew} className="contents">
+              {heatmapRows.map((crew, crewIndex) => (
+                <div key={`${crew}-${crewIndex}`} className="contents">
                   <div className="rounded-2xl bg-[#243e36] px-3 py-3 text-sm font-semibold text-white" data-testid={`analytics-heatmap-row-${crew.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}>{crew}</div>
-                  {heatmapColumns.map((column) => {
+                  {heatmapColumns.map((column, columnIndex) => {
                     const cell = getHeatCell(crew, column);
                     const intensity = cell ? Math.min((cell.variance_average || 0) / maxVariance, 1) : 0;
                     const background = cell ? `rgba(224, 122, 95, ${0.12 + intensity * 0.6})` : "#f6f6f2";
                     return (
-                      <div key={`${crew}-${column}`} className="rounded-2xl border border-border px-3 py-4 text-sm" style={{ background }} data-testid={`analytics-heatmap-cell-${crew.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${column.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}>
+                      <div key={`${crew}-${column}-${columnIndex}`} className="rounded-2xl border border-border px-3 py-4 text-sm" style={{ background }} data-testid={`analytics-heatmap-cell-${crew.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${column.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}>
                         {cell ? (
                           <>
                             <p className="font-semibold text-[#243e36]">Δ {cell.variance_average}</p>

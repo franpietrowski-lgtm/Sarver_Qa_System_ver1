@@ -1,14 +1,14 @@
 # PRD — Field Quality Capture & Review System
 
-_Date updated: 2026-03-30_
+_Date updated: 2026-03-31_
 
 ## Original Problem Statement
-Build a lightweight, scalable internal application for a landscaping company that captures field work via structured photo submissions, links submissions to imported LMN job data, lets management review and score work with service rubrics, lets the owner finalize and calibrate scores, and outputs structured datasets for AI training and analytics. The system must support: no-login crew capture, management and owner dashboards, CSV/API-ready job import, auto-match suggestions, rubric versioning, Google Drive folder sync, JSONL/CSV exports, analytics, audit history, and workflow states from Draft through Exported.
+Build a lightweight, scalable internal application for a landscaping company that captures field work via structured photo submissions, links submissions to imported LMN job data, lets management review and score work with service rubrics, lets the owner finalize and calibrate scores, and outputs structured datasets for AI training and analytics. The system must support: no-login crew capture, management and owner dashboards, CSV/API-ready job import, auto-match suggestions, rubric versioning, Supabase-backed image storage, JSONL/CSV exports, analytics, audit history, and workflow states from Draft through Exported.
 
 ## User Choices
 - Authentication: email/password now, Google later
 - Job import: CSV first, API-ready structure
-- Photo storage: app storage + Google Drive sync architecture now
+- Photo storage: Supabase Storage via backend-managed service role
 - Crew access: unique user QR code
 - Scope priority: as much of the full spec as possible
 - Admin account titles: GM, Account Manager, Production Manager, Supervisor (same review access)
@@ -21,7 +21,7 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Frontend: React 19 + React Router + Tailwind + shadcn/ui + Framer Motion
 - Backend: FastAPI + Motor + JWT auth + multipart upload handling
 - Database: MongoDB collections with app-managed string IDs (avoids ObjectId leakage in API responses)
-- Storage: local upload cache for fast proof capture, export files on server, Google Drive OAuth sync service layer prepared
+- Storage: Supabase Storage for proof images, backend-served image routes, local export files on server
 - Access model: public QR crew routes, protected management/owner routes with role-aware navigation
 - Review model: versioned rubric definitions stored in DB and applied by service type
 - Job alignment model: crews submit only the job name they were given; admin users align records to imported job data separately
@@ -52,8 +52,8 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Built owner calibration page with variance-aware scoring, final disposition, and training inclusion controls
 - Built exports workspace supporting full dataset and owner-gold dataset generation in JSONL/CSV
 - Built analytics dashboard for score-by-crew, variance, fail reasons, and submission volume trends
-- Built system settings/blueprint page showing architecture, schema, workflow, stack, and Google Drive integration status
-- Added backend support for local file persistence, JSON review artifacts, export records, audit history, and Google Drive OAuth sync scaffolding
+- Built system settings/blueprint page showing architecture, schema, workflow, stack, and storage/integration status
+- Added backend support for file persistence, JSON review artifacts, export records, and audit history
 - Fixed auth validation issue for seeded demo accounts and fixed Mongo ObjectId response leakage
 - Fixed export workflow regression so dataset generation no longer empties active review queues
 - Fixed authenticated export downloads in the frontend
@@ -73,12 +73,27 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Added owner queue pagination and a visible calibration heatmap legend
 - Updated alignment views to hide truck display and reflect Sarver division structure: Maintenance, Install, PHC - Plant Healthcare, and Sarver Tree
 
+### 2026-03-31
+- Replaced the in-progress Google Drive migration path with Supabase Storage-backed upload and retrieval for submission photos and issue photos
+- Updated backend submission file metadata to store Supabase bucket/path references while preserving stable `/api/submissions/files/...` review URLs
+- Cleaned backend env/storage status so Google Drive redirect config is retired and Supabase storage status is surfaced in the app
+- Optimized production-sensitive list and overview endpoints to use paginated queries, projections, counts, and server-side filtering instead of loading full collections into memory
+- Added paginated API contracts for submissions, jobs, crew access links, and exports with `{ items, pagination }` responses
+- Added frontend pagination at 10 items/page for owner queue, archived crew links, export history, active crew links, review queue, and imported jobs table
+- Added analytics period tabs (daily, weekly, monthly, quarterly, annual) with filtered backend summaries
+- Polished the crew portal copy to remove technical/no-login language and replaced the raw crew ID display with a cleaner “Crew pass active” label
+- Updated settings and overview messaging from Google Drive wording to Supabase storage wording
+- Fixed the analytics chart key warning found during testing after period-tab switching
+
 ## Prioritized Backlog
 ### P0
-- Activate live Google Drive OAuth connection with user-provided Google client credentials
-- Optionally add owner-specific live retest after real Google Drive credentials are connected
+- Re-run deployment health review now that Supabase storage and paginated DB queries are in place
+- Monitor large-data performance with real production-scale submissions after deployment review
 
 ### P1
+- Break `backend/server.py` into focused modules (auth, submissions, reviews, analytics, exports, integrations)
+- Add richer analytics drilldowns by reviewer/service type within the new time windows
+- Add search-assisted job matching UX for large imported job libraries
 - Add LMN direct API sync after CSV-first workflow is validated
 - Add richer job auto-match using imported coordinates and better route/time proximity rules
 - Add rubric version management UI (create new versions, activate/deactivate, threshold editing)
@@ -92,9 +107,9 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Add Google social login as a second admin auth method
 
 ## Next Tasks List
-- Connect live Google Drive credentials and validate folder/file sync end-to-end
-- Expand seeded/sample data or import a real CSV to mirror production routing
-- Add deeper calibration analytics by reviewer and service type
+- Run deployment readiness / health review again against the updated Supabase + paginated-query build
+- Expand seeded/sample data or import a real CSV to mirror production routing and validate multi-page queues further
+- Add deeper calibration analytics by reviewer and service type inside the new daily/weekly/monthly/quarterly/annual filters
 - Add editable admin settings for rubric thresholds and hard-fail conditions
 - Plan the first AI grading assistant phase using the stored gold dataset + variance history
 - Add staff password reset / invite flows for smoother production rollout
