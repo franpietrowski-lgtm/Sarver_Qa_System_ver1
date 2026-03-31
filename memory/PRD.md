@@ -16,6 +16,11 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Crew data entry: free-text Job Name only for field input; align to imported job data later
 - Crew field reporting: issues, damages, and notes with photo attachments
 - Issue notifications: notify Production Managers + Account Managers first
+- V1.1 phase order: start with rapid review, role restrictions, theme toggle, login UX
+- Training access target: no-login unique crew/session links
+- Crew portal: standards highlights should be openable by crews; incident/damage entry should sit behind a toggle
+- Repeat offender thresholds: customizable later rather than fixed now
+- Login UX: branded start screen with standard user/pass flow, forgot user/pass link, grass-motion visuals, and role-aware post-login workflow
 
 ## Architecture Decisions
 - Frontend: React 19 + React Router + Tailwind + shadcn/ui + Framer Motion
@@ -84,6 +89,12 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Polished the crew portal copy to remove technical/no-login language and replaced the raw crew ID display with a cleaner “Crew pass active” label
 - Updated settings and overview messaging from Google Drive wording to Supabase storage wording
 - Fixed the analytics chart key warning found during testing after period-tab switching
+- Added Phase 1 V1.1 login/start screen redesign with Sarver branding, wobbling vector grass backdrop, role preset chips, forgot user/pass helper, and remembered last-role hint
+- Added authenticated workspace theme toggle with persistent default/dark modes while keeping the login screen on its own fixed brand presentation
+- Enforced role-based navigation and route restrictions so owners no longer see Alignment & QR or Review Queue, and non-owners no longer see Exports
+- Added full-screen Rapid Review mode for owner/management with queue strip, bulk pass/fail controls, pass/fail/flag/skip actions, keyboard shortcuts, swipe-capable cards, issue tagging, and inline annotation drawing
+- Added a crew-facing Standards Highlights tab and moved incident/damage reporting behind an explicit toggle to reduce accidental field entry
+- Added a safe image placeholder fallback for missing storage files so rapid review no longer throws server errors for broken image payloads
 
 ## Prioritized Backlog
 ### P0
@@ -92,6 +103,10 @@ Build a lightweight, scalable internal application for a landscaping company tha
 
 ### P1
 - Break `backend/server.py` into focused modules (auth, submissions, reviews, analytics, exports, integrations)
+- Build the full standards library management system for owner/admin with searchable categories, crew highlights authoring, and training-set assignment
+- Build repeat offender tracking with configurable thresholds, escalation states, and linked submission drilldowns
+- Build the full crew training mode with unique monthly sessions, quiz batches, answer tracking, and historical performance
+- Add dynamic QR metadata editing for vehicle/division/assignment while preserving historical records
 - Add richer analytics drilldowns by reviewer/service type within the new time windows
 - Add search-assisted job matching UX for large imported job libraries
 - Add LMN direct API sync after CSV-first workflow is validated
@@ -108,6 +123,9 @@ Build a lightweight, scalable internal application for a landscaping company tha
 
 ## Next Tasks List
 - Run deployment readiness / health review again against the updated Supabase + paginated-query build
+- Expand Rapid Review from Phase 1 into deeper scoring automation, stronger annotation persistence, and cleaner queue controls
+- Build owner/admin Standards Library authoring plus crew-targeted publishing controls
+- Build repeat offender heatmaps, escalation logic, and links into future training assignments
 - Expand seeded/sample data or import a real CSV to mirror production routing and validate multi-page queues further
 - Add deeper calibration analytics by reviewer and service type inside the new daily/weekly/monthly/quarterly/annual filters
 - Add editable admin settings for rubric thresholds and hard-fail conditions

@@ -1,5 +1,6 @@
 import asyncio
 import csv
+import html
 import io
 import json
 import logging
@@ -185,6 +186,19 @@ def build_storage_path(submission_id: str, folder: str, filename: str) -> str:
 def build_submission_file_response_url(submission_id: str, filename: str) -> tuple[str, str]:
     relative_api_path = f"/api/submissions/files/{submission_id}/{filename}"
     return relative_api_path, f"{os.environ['FRONTEND_URL']}{relative_api_path}"
+
+
+def build_missing_image_placeholder(filename: str) -> bytes:
+    safe_name = html.escape(filename)
+    svg = f"""
+    <svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800'>
+      <rect width='1200' height='800' fill='#edf0e7'/>
+      <rect x='70' y='70' width='1060' height='660' rx='36' fill='#d8e4da' stroke='#b8c5ba' stroke-width='4'/>
+      <text x='600' y='350' text-anchor='middle' font-size='42' fill='#243e36' font-family='Arial, sans-serif'>Image temporarily unavailable</text>
+      <text x='600' y='410' text-anchor='middle' font-size='24' fill='#5c6d64' font-family='Arial, sans-serif'>{safe_name}</text>
+    </svg>
+    """.strip()
+    return svg.encode("utf-8")
 
 
 def hydrate_submission_media(submission: dict | None) -> dict | None:
@@ -1220,17 +1234,21 @@ async def get_submission_file(submission_id: str, filename: str):
     if not file_entry:
         raise HTTPException(status_code=404, detail="File not found")
     if file_entry.get("source_type") == "supabase" and file_entry.get("storage_path"):
-        content = await download_bytes_from_storage(
-            file_entry["storage_path"],
-            file_entry.get("bucket") or get_storage_bucket(),
-        )
-        return Response(content=content, media_type=file_entry.get("mime_type", "application/octet-stream"))
+        try:
+            content = await download_bytes_from_storage(
+                file_entry["storage_path"],
+                file_entry.get("bucket") or get_storage_bucket(),
+            )
+            return Response(content=content, media_type=file_entry.get("mime_type", "application/octet-stream"))
+        except Exception as exc:
+            logger.warning("Storage file unavailable for %s/%s: %s", submission_id, filename, exc)
+            return Response(content=build_missing_image_placeholder(filename), media_type="image/svg+xml")
 
     local_path = file_entry.get("local_path")
     if local_path and Path(local_path).exists():
         return FileResponse(local_path, media_type=file_entry.get("mime_type", "application/octet-stream"))
 
-    raise HTTPException(status_code=404, detail="File payload not available")
+    return Response(content=build_missing_image_placeholder(filename), media_type="image/svg+xml")
 
 
 @api_router.get("/dashboard/overview")
