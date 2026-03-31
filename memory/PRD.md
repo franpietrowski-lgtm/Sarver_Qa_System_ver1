@@ -23,6 +23,9 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Login UX: branded start screen with standard user/pass flow, forgot user/pass link, grass-motion visuals, and role-aware post-login workflow
 - Rapid Review: admin-only feature for Supervisor, Production Manager, Account Manager, GM, and Owner; must support both desktop/admin lane and mobile-link lane
 - Rapid Review scoring: 4 states (Fail, Concern, Standard, Exemplary); Fail/Exemplary require reviewer comments before commit; one swipe sets an overall rating first and detailed rubric categories can be edited later
+- Rapid Review refinement: mobile-only in practice, launched by QR/mobile link from admin dashboards rather than a desktop nav workspace
+- Standards Library: start with universal categories (edging, mulch, cleanup, pruning, damage prevention) and allow division-specific omissions/bundles
+- Training Mode phase choice: build session + swipe/quiz flow first, then add deeper history later
 
 ## Architecture Decisions
 - Frontend: React 19 + React Router + Tailwind + shadcn/ui + Framer Motion
@@ -99,6 +102,11 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Added a safe image placeholder fallback for missing storage files so rapid review no longer throws server errors for broken image payloads
 - Refined Rapid Review into an admin-only summary-rating lane with dedicated desktop and mobile-link routes, 4 rating states (Fail, Concern, Standard, Exemplary), standardized rubric sums, and required comment modal for Fail/Exemplary actions
 - Added backend `rapid_reviews` summary records and queue exclusion so already-qualified items drop out of the swipe lane while still exposing summary cards in standard Review and Owner Review detail screens
+- Shifted Rapid Review to a mobile-only launch pattern: no desktop sidebar entry, QR launch card on Overview, `/rapid-review` redirect to `/rapid-review/mobile`, and translucent directional HUD arrows so swipe meaning is immediately visible on phone
+- Built Standards Library authoring with search/filter, universal categories, division targets, training-ready question authoring, edit support, and recent training session history
+- Built Repeat Offender tracking with a backend aggregation endpoint, crew/issue heatmap, escalation levels, related-submission lists, and one-click training session generation
+- Built first-pass Crew Training Mode with unique no-login session links, image-first flow, swipe/tap into quiz, multiple-choice/free-text support, completion summary, and invalid/completed-session error states
+- Improved backend API contracts for this phase: create endpoints now return 201 where appropriate, and standards updates support partial PATCH payloads
 
 ## Prioritized Backlog
 ### P0
@@ -107,9 +115,9 @@ Build a lightweight, scalable internal application for a landscaping company tha
 
 ### P1
 - Break `backend/server.py` into focused modules (auth, submissions, reviews, analytics, exports, integrations)
-- Build the full standards library management system for owner/admin with searchable categories, crew highlights authoring, and training-set assignment
-- Build repeat offender tracking with configurable thresholds, escalation states, and linked submission drilldowns
-- Build the full crew training mode with unique monthly sessions, quiz batches, answer tracking, and historical performance
+- Expand Standards Library with richer media editing, searchable internal/crew splits, and assignment controls directly from offender/calibration views
+- Expand Repeat Offender tracking with configurable thresholds UI, deeper drilldowns, and stronger links into Training Mode history
+- Expand Crew Training Mode with historical performance dashboards, monthly auto-session generation, and richer answer analytics
 - Add dynamic QR metadata editing for vehicle/division/assignment while preserving historical records
 - Add richer analytics drilldowns by reviewer/service type within the new time windows
 - Add search-assisted job matching UX for large imported job libraries
@@ -129,8 +137,7 @@ Build a lightweight, scalable internal application for a landscaping company tha
 ## Next Tasks List
 - Run deployment readiness / health review again against the updated Supabase + paginated-query build
 - Expand Rapid Review from Phase 1 into stronger queue filters, persistent annotations, and optional revisit/edit flows for summary ratings
-- Build owner/admin Standards Library authoring plus crew-targeted publishing controls
-- Build repeat offender heatmaps, escalation logic, and links into future training assignments
+- Add stronger admin workflow links between Standards Library, Repeat Offenders, and Training Mode (assign/reassign, archive, reopen session)
 - Expand seeded/sample data or import a real CSV to mirror production routing and validate multi-page queues further
 - Add deeper calibration analytics by reviewer and service type inside the new daily/weekly/monthly/quarterly/annual filters
 - Add editable admin settings for rubric thresholds and hard-fail conditions

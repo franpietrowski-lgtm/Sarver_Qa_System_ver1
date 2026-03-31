@@ -422,6 +422,24 @@ class StandardItemRequest(BaseModel):
     is_active: bool = True
 
 
+class StandardItemUpdateRequest(BaseModel):
+    title: str | None = None
+    category: str | None = None
+    audience: str | None = None
+    division_targets: list[str] | None = None
+    checklist: list[str] | None = None
+    notes: str | None = None
+    owner_notes: str | None = None
+    shoutout: str | None = None
+    image_url: str | None = None
+    training_enabled: bool | None = None
+    question_type: str | None = None
+    question_prompt: str | None = None
+    choice_options: list[str] | None = None
+    correct_answer: str | None = None
+    is_active: bool | None = None
+
+
 class TrainingSessionCreateRequest(BaseModel):
     access_code: str
     division: str = ""
@@ -1862,7 +1880,7 @@ async def get_standards(
     return build_paginated_response(items, page, limit, total)
 
 
-@api_router.post("/standards")
+@api_router.post("/standards", status_code=201)
 async def create_standard_item(payload: StandardItemRequest, user: dict = Depends(require_roles("management", "owner"))):
     document = {
         "id": make_id("std"),
@@ -1899,38 +1917,28 @@ async def create_standard_item(payload: StandardItemRequest, user: dict = Depend
 @api_router.patch("/standards/{standard_id}")
 async def update_standard_item(
     standard_id: str,
-    payload: StandardItemRequest,
+    payload: StandardItemUpdateRequest,
     user: dict = Depends(require_roles("management", "owner")),
 ):
+    current = await db.standards_library.find_one({"id": standard_id}, {"_id": 0})
+    if not current:
+        raise HTTPException(status_code=404, detail="Standard item not found")
+
+    patch_values = payload.model_dump(exclude_none=True)
+    merged = {**current, **patch_values}
     update = {
-        "title": payload.title,
-        "category": payload.category,
-        "audience": payload.audience,
-        "division_targets": payload.division_targets,
-        "checklist": payload.checklist,
-        "notes": payload.notes,
-        "owner_notes": payload.owner_notes,
-        "shoutout": payload.shoutout,
-        "image_url": payload.image_url,
-        "training_enabled": payload.training_enabled,
-        "question_type": payload.question_type,
-        "question_prompt": payload.question_prompt,
-        "choice_options": payload.choice_options,
-        "correct_answer": payload.correct_answer,
-        "is_active": payload.is_active,
+        **patch_values,
         "search_text": " ".join([
-            payload.title.lower(),
-            payload.category.lower(),
-            payload.notes.lower(),
-            " ".join(item.lower() for item in payload.division_targets),
+            merged["title"].lower(),
+            merged["category"].lower(),
+            merged.get("notes", "").lower(),
+            " ".join(item.lower() for item in merged.get("division_targets", [])),
         ]),
         "updated_at": now_iso(),
         "updated_by": user["id"],
     }
     await db.standards_library.update_one({"id": standard_id}, {"$set": update})
     standard = await db.standards_library.find_one({"id": standard_id}, {"_id": 0})
-    if not standard:
-        raise HTTPException(status_code=404, detail="Standard item not found")
     return standard
 
 
@@ -1956,7 +1964,7 @@ async def get_training_sessions(
     return await get_recent_training_sessions(page, limit)
 
 
-@api_router.post("/training-sessions")
+@api_router.post("/training-sessions", status_code=201)
 async def create_training_session(
     payload: TrainingSessionCreateRequest,
     user: dict = Depends(require_roles("management", "owner")),
