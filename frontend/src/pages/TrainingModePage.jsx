@@ -19,6 +19,7 @@ export default function TrainingModePage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [summary, setSummary] = useState(null);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -27,7 +28,9 @@ export default function TrainingModePage() {
         setSessionData(response);
         setTimers({ [response.items[0]?.id]: Date.now() });
       } catch (error) {
-        toast.error(error?.response?.data?.detail || "Training session unavailable");
+        const message = error?.response?.data?.detail || "Training session unavailable";
+        setLoadError(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -98,6 +101,17 @@ export default function TrainingModePage() {
           <p className="mt-4 text-sm text-[#5c6d64]">Accuracy: {summary.score_percent}% · Completion: {summary.completion_rate}% · Avg time: {summary.average_time_seconds}s</p>
           <p className="mt-4 text-sm text-[#41534a]">{summary.owner_message}</p>
           <p className="mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-[#5f7464]">Close this screen when you’re ready.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!sessionData) {
+    return (
+      <div className="min-h-screen bg-[linear-gradient(180deg,_#edf0e7_0%,_#f7f8f6_100%)] px-4 py-8" data-testid="training-mode-error-state">
+        <div className="mx-auto max-w-xl rounded-[36px] border border-border bg-white p-8 text-center shadow-sm">
+          <h1 className="font-[Outfit] text-4xl font-semibold text-[#111815]">Training session unavailable</h1>
+          <p className="mt-4 text-sm text-[#5c6d64]">{loadError || "This link is invalid or the session has already been completed."}</p>
         </div>
       </div>
     );

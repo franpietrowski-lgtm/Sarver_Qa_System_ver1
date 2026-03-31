@@ -30,7 +30,8 @@ const navigationByRole = {
 
 
 export default function AppShell({ user, onLogout, children }) {
-  const navItems = navigationByRole[user?.role] || navigationByRole.management;
+  const roleKey = (user?.role || "management").trim().toLowerCase();
+  const navItems = navigationByRole[roleKey] || navigationByRole.management;
   const logoUrl = "https://sarverlandscape.com/wp-content/uploads/2024/10/sarver-logo.png";
   const { isDark, toggleTheme } = useTheme();
 

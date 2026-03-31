@@ -52,7 +52,7 @@ export default function StandardsLibraryPage() {
   const loadPage = async () => {
     const [standardsResponse, crewResponse, sessionsResponse] = await Promise.all([
       authGet(`/standards?search=${encodeURIComponent(search)}&category=${category}&division=${division}&audience=all&page=1&limit=12`),
-      authGet("/crew-access-links?status=active&page=1&limit=100"),
+      authGet("/crew-access-links?status=active&page=1&limit=50"),
       authGet("/training-sessions?page=1&limit=8"),
     ]);
     setItems(standardsResponse.items || []);
