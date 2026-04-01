@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChartColumn, ClipboardCheck, FileOutput, FolderInput, LayoutDashboard, MoonStar, Radar, Settings, ShieldCheck, SunMedium } from "lucide-react";
+import { ChartColumn, ClipboardCheck, FileOutput, FolderInput, Grid3X3, LayoutDashboard, MoonStar, Radar, Settings, ShieldCheck, SunMedium } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ const navigationByRole = {
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { to: "/jobs", label: "Alignment & QR", icon: FolderInput },
     { to: "/review", label: "Review Queue", icon: ClipboardCheck },
+    { to: "/rubric-editor", label: "Rubric Matrices", icon: Grid3X3 },
     { to: "/standards", label: "Standards Library", icon: ShieldCheck },
     { to: "/repeat-offenders", label: "Repeat Offenders", icon: Radar },
     { to: "/settings", label: "Settings", icon: Settings },
@@ -21,6 +22,7 @@ const navigationByRole = {
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { to: "/owner", label: "Owner Review", icon: ShieldCheck },
     { to: "/analytics", label: "Calibration", icon: ChartColumn },
+    { to: "/rubric-editor", label: "Rubric Matrices", icon: Grid3X3 },
     { to: "/standards", label: "Standards Library", icon: ShieldCheck },
     { to: "/repeat-offenders", label: "Repeat Offenders", icon: Radar },
     { to: "/exports", label: "Exports", icon: FileOutput },

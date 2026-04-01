@@ -16,6 +16,7 @@ import OwnerPage from "@/pages/OwnerPage";
 import RapidReviewPage from "@/pages/RapidReviewPage";
 import RepeatOffendersPage from "@/pages/RepeatOffendersPage";
 import ReviewPage from "@/pages/ReviewPage";
+import RubricEditorPage from "@/pages/RubricEditorPage";
 import SettingsPage from "@/pages/SettingsPage";
 import StandardsLibraryPage from "@/pages/StandardsLibraryPage";
 import TrainingModePage from "@/pages/TrainingModePage";
@@ -98,6 +99,7 @@ function App() {
             <Route path="/standards" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><StandardsLibraryPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/repeat-offenders" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><RepeatOffendersPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/exports" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><ExportsPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/rubric-editor" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management", "owner"]}><RubricEditorPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><SettingsPage {...pageProps} /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>

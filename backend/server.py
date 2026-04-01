@@ -28,6 +28,30 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field
 from supabase import Client, create_client
+
+from shared.models import (
+    CrewAccessCreate,
+    CrewAccessUpdate,
+    CrewLinkStatusUpdateRequest,
+    ExportRunRequest,
+    LoginRequest,
+    ManagementReviewRequest,
+    MatchOverrideRequest,
+    OwnerReviewRequest,
+    RapidReviewRequest,
+    RapidReviewSessionEnd,
+    RapidReviewSessionStart,
+    RubricCategoryInput,
+    RubricMatrixCreate,
+    RubricMatrixUpdate,
+    StandardItemRequest,
+    StandardItemUpdateRequest,
+    TrainingAnswerSubmission,
+    TrainingSessionCreateRequest,
+    TrainingSessionSubmitRequest,
+    UserCreateRequest,
+    UserStatusUpdateRequest,
+)
 from starlette.middleware.cors import CORSMiddleware
 
 from auth_utils import create_access_token, decode_access_token, get_password_hash, verify_password
@@ -345,130 +369,6 @@ def present_crew_link(crew_link: dict) -> dict:
     }
 
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-
-class CrewAccessCreate(BaseModel):
-    label: str
-    truck_number: str
-    division: str
-    assignment: str = ""
-
-
-class CrewAccessUpdate(BaseModel):
-    label: str
-    truck_number: str
-    division: str
-    assignment: str = ""
-
-
-class MatchOverrideRequest(BaseModel):
-    job_id: str
-    service_type: str | None = None
-
-
-class ManagementReviewRequest(BaseModel):
-    submission_id: str
-    job_id: str | None = None
-    service_type: str
-    category_scores: dict[str, float]
-    comments: str = ""
-    disposition: str
-    flagged_issues: list[str] = Field(default_factory=list)
-
-
-class OwnerReviewRequest(BaseModel):
-    submission_id: str
-    category_scores: dict[str, float]
-    comments: str = ""
-    final_disposition: str
-    training_inclusion: str
-    exclusion_reason: str = ""
-
-
-class ExportRunRequest(BaseModel):
-    dataset_type: str
-    export_format: str
-
-
-class UserCreateRequest(BaseModel):
-    name: str
-    email: str
-    role: str = "management"
-    title: str
-    password: str
-    is_active: bool = True
-
-
-class UserStatusUpdateRequest(BaseModel):
-    is_active: bool
-
-
-class CrewLinkStatusUpdateRequest(BaseModel):
-    enabled: bool
-
-
-class RapidReviewRequest(BaseModel):
-    submission_id: str
-    overall_rating: str
-    comment: str = ""
-    issue_tag: str = ""
-    annotation_count: int = 0
-    entry_mode: str = "desktop"
-
-
-class StandardItemRequest(BaseModel):
-    title: str
-    category: str
-    audience: str = "crew"
-    division_targets: list[str] = Field(default_factory=list)
-    checklist: list[str] = Field(default_factory=list)
-    notes: str = ""
-    owner_notes: str = ""
-    shoutout: str = ""
-    image_url: str
-    training_enabled: bool = True
-    question_type: str = "multiple_choice"
-    question_prompt: str = ""
-    choice_options: list[str] = Field(default_factory=list)
-    correct_answer: str = ""
-    is_active: bool = True
-
-
-class StandardItemUpdateRequest(BaseModel):
-    title: str | None = None
-    category: str | None = None
-    audience: str | None = None
-    division_targets: list[str] | None = None
-    checklist: list[str] | None = None
-    notes: str | None = None
-    owner_notes: str | None = None
-    shoutout: str | None = None
-    image_url: str | None = None
-    training_enabled: bool | None = None
-    question_type: str | None = None
-    question_prompt: str | None = None
-    choice_options: list[str] | None = None
-    correct_answer: str | None = None
-    is_active: bool | None = None
-
-
-class TrainingSessionCreateRequest(BaseModel):
-    access_code: str
-    division: str = ""
-    item_count: int = 5
-
-
-class TrainingAnswerSubmission(BaseModel):
-    item_id: str
-    response: str
-    time_seconds: float = 0
-
-
-class TrainingSessionSubmitRequest(BaseModel):
-    answers: list[TrainingAnswerSubmission]
 
 
 RUBRIC_LIBRARY = [
@@ -1579,6 +1479,8 @@ async def seed_defaults() -> None:
 async def startup_event():
     await seed_defaults()
     await db.rapid_reviews.create_index("submission_id", unique=True)
+    await db.rapid_review_sessions.create_index("reviewer_id")
+    await db.rapid_review_sessions.create_index("created_at")
     await db.standards_library.create_index("id", unique=True)
     await db.training_sessions.create_index("code", unique=True)
     if storage_is_configured():
@@ -2313,33 +2215,6 @@ async def get_rubric_matrices(
     return rubrics
 
 
-class RubricCategoryInput(BaseModel):
-    key: str
-    label: str
-    weight: float = Field(ge=0, le=1)
-    max_score: int = Field(default=5, ge=1, le=10)
-
-
-class RubricMatrixCreate(BaseModel):
-    service_type: str
-    division: str
-    title: str
-    min_photos: int = Field(default=3, ge=1, le=20)
-    pass_threshold: int = Field(default=80, ge=1, le=100)
-    hard_fail_conditions: list[str] = []
-    categories: list[RubricCategoryInput] = Field(min_length=1, max_length=10)
-
-
-class RubricMatrixUpdate(BaseModel):
-    title: str | None = None
-    division: str | None = None
-    min_photos: int | None = None
-    pass_threshold: int | None = None
-    hard_fail_conditions: list[str] | None = None
-    categories: list[RubricCategoryInput] | None = None
-    is_active: bool | None = None
-
-
 @api_router.post("/rubric-matrices", status_code=201)
 async def create_rubric_matrix(
     payload: RubricMatrixCreate,
@@ -2914,6 +2789,10 @@ async def create_rapid_review(
         "issue_tag": payload.issue_tag.strip(),
         "annotation_count": max(payload.annotation_count, 0),
         "entry_mode": payload.entry_mode,
+        "swipe_duration_ms": max(payload.swipe_duration_ms, 0),
+        "flagged_fast": payload.swipe_duration_ms < 4000 and payload.overall_rating in {"standard", "exemplary"},
+        "flagged_concern": payload.overall_rating == "concern",
+        "needs_manual_rescore": payload.overall_rating == "concern",
         "created_at": now_iso(),
         "updated_at": now_iso(),
         "audit_history": [audit_entry("rapid_reviewed", user["id"], f"Rapid review marked {payload.overall_rating}")],
@@ -2930,7 +2809,149 @@ async def create_rapid_review(
             "$push": {"audit_history": audit_entry("rapid_reviewed", user["id"], f"Rapid review marked {payload.overall_rating}")},
         },
     )
+    if payload.session_id:
+        swipe_log = {
+            "submission_id": payload.submission_id,
+            "rating": payload.overall_rating,
+            "duration_ms": max(payload.swipe_duration_ms, 0),
+            "flagged_fast": review["flagged_fast"],
+            "timestamp": now_iso(),
+        }
+        await db.rapid_review_sessions.update_one(
+            {"id": payload.session_id},
+            {
+                "$push": {"per_image_logs": swipe_log},
+                "$inc": {"images_reviewed": 1, "speed_violations": 1 if review["flagged_fast"] else 0},
+                "$set": {"updated_at": now_iso()},
+            },
+        )
     return {"rapid_review": review}
+
+
+@api_router.post("/rapid-review-sessions", status_code=201)
+async def start_rapid_review_session(
+    payload: RapidReviewSessionStart,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    session = {
+        "id": make_id("rrs"),
+        "reviewer_id": user["id"],
+        "reviewer_name": user.get("name", user.get("email", "")),
+        "reviewer_title": user.get("title", ""),
+        "started_at": now_iso(),
+        "ended_at": None,
+        "total_queue_size": payload.total_queue_size,
+        "images_reviewed": 0,
+        "speed_violations": 0,
+        "per_image_logs": [],
+        "session_status": "active",
+        "entry_mode": payload.entry_mode,
+        "exit_reason": None,
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+    }
+    await db.rapid_review_sessions.insert_one({**session})
+    return {"session": session}
+
+
+@api_router.post("/rapid-review-sessions/{session_id}/complete")
+async def end_rapid_review_session(
+    session_id: str,
+    payload: RapidReviewSessionEnd,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    session = await db.rapid_review_sessions.find_one({"id": session_id}, {"_id": 0})
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    logs = session.get("per_image_logs", [])
+    durations = [log["duration_ms"] for log in logs if log.get("duration_ms", 0) > 0]
+    avg_ms = round(sum(durations) / len(durations)) if durations else 0
+    speed_violations = session.get("speed_violations", 0)
+    images_reviewed = session.get("images_reviewed", 0)
+    violation_ratio = speed_violations / images_reviewed if images_reviewed > 0 else 0
+    updates = {
+        "ended_at": now_iso(),
+        "session_status": "completed" if payload.exit_reason == "completed" else "exited",
+        "exit_reason": payload.exit_reason,
+        "average_swipe_ms": avg_ms,
+        "updated_at": now_iso(),
+    }
+    await db.rapid_review_sessions.update_one({"id": session_id}, {"$set": updates})
+    if speed_violations >= 3 or (violation_ratio > 0.3 and images_reviewed >= 5):
+        await create_notification(
+            title="Rapid review speed alert",
+            message=f"{session.get('reviewer_name', 'Reviewer')} ({session.get('reviewer_title', '')}) completed a rapid review session with {speed_violations} fast-graded images ({images_reviewed} total, avg {round(avg_ms / 1000, 1)}s/image). Review may lack accuracy.",
+            audience="admin",
+            target_titles=["Owner"],
+            notification_type="speed_alert",
+        )
+    return {"ok": True, "session_id": session_id, "images_reviewed": images_reviewed, "average_swipe_ms": avg_ms, "speed_violations": speed_violations}
+
+
+@api_router.get("/rapid-review-sessions")
+async def get_rapid_review_sessions(
+    user: dict = Depends(require_roles("management", "owner")),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=50),
+):
+    page = normalize_page(page)
+    limit = normalize_limit(limit, default=20, max_limit=50)
+    total = await db.rapid_review_sessions.count_documents({})
+    items = await db.rapid_review_sessions.find({}, {"_id": 0}).sort("created_at", -1).skip((page - 1) * limit).limit(limit).to_list(limit)
+    return build_paginated_response(items, page, limit, total)
+
+
+@api_router.get("/rapid-reviews/flagged")
+async def get_flagged_rapid_reviews(
+    user: dict = Depends(require_roles("management", "owner")),
+    flag_type: str = Query("concern"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=50),
+):
+    page = normalize_page(page)
+    limit = normalize_limit(limit, default=20, max_limit=50)
+    query: dict[str, Any] = {}
+    if flag_type == "concern":
+        query["needs_manual_rescore"] = True
+    elif flag_type == "fast":
+        query["flagged_fast"] = True
+    else:
+        query["$or"] = [{"needs_manual_rescore": True}, {"flagged_fast": True}]
+    total = await db.rapid_reviews.count_documents(query)
+    items = await db.rapid_reviews.find(query, {"_id": 0}).sort("created_at", -1).skip((page - 1) * limit).limit(limit).to_list(limit)
+    return build_paginated_response(items, page, limit, total)
+
+
+@api_router.patch("/rapid-reviews/{review_id}/rescore")
+async def rescore_rapid_review(
+    review_id: str,
+    payload: RapidReviewRequest,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    existing = await db.rapid_reviews.find_one({"id": review_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Rapid review not found")
+    snapshot = await create_submission_snapshot(existing["submission_id"])
+    rubric = snapshot.get("rubric")
+    if not rubric:
+        raise HTTPException(status_code=400, detail="Rubric not found for rescore")
+    score_summary = calculate_rapid_review_score_summary(rubric, payload.overall_rating)
+    updates = {
+        "overall_rating": payload.overall_rating,
+        "rubric_sum_percent": score_summary["rubric_sum_percent"],
+        "multiplier": score_summary["multiplier"],
+        "comment": payload.comment.strip() if payload.comment else existing.get("comment", ""),
+        "needs_manual_rescore": False,
+        "rescored_by": user["id"],
+        "rescored_at": now_iso(),
+        "updated_at": now_iso(),
+    }
+    await db.rapid_reviews.update_one(
+        {"id": review_id},
+        {"$set": updates, "$push": {"audit_history": audit_entry("rescored", user["id"], f"Rescored from {existing['overall_rating']} to {payload.overall_rating}")}},
+    )
+    updated = await db.rapid_reviews.find_one({"id": review_id}, {"_id": 0})
+    return serialize(updated)
 
 
 @api_router.get("/analytics/summary")

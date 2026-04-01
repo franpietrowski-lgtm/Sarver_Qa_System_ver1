@@ -1,5 +1,5 @@
-import { Activity, Boxes, Copy, FolderInput, Grid3X3, QrCode, ShieldCheck, Smartphone, UploadCloud, Wrench } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Activity, Boxes, Copy, FolderInput, Grid3X3, QrCode, ShieldCheck, Smartphone, UploadCloud, Wrench, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { QRCodeSVG } from "qrcode.react";
@@ -26,7 +26,17 @@ export default function OverviewPage({ user }) {
   const [equipmentLogs, setEquipmentLogs] = useState([]);
   const [rubricMatrices, setRubricMatrices] = useState([]);
   const [matrixDivisionFilter, setMatrixDivisionFilter] = useState("all");
+  const [matrixOpen, setMatrixOpen] = useState(false);
+  const matrixTimerRef = useRef(null);
   const rapidReviewUrl = useMemo(() => (typeof window !== "undefined" ? `${window.location.origin}/rapid-review/mobile` : ""), []);
+
+  useEffect(() => {
+    if (matrixOpen) {
+      if (matrixTimerRef.current) clearTimeout(matrixTimerRef.current);
+      matrixTimerRef.current = setTimeout(() => setMatrixOpen(false), 120000);
+    }
+    return () => { if (matrixTimerRef.current) clearTimeout(matrixTimerRef.current); };
+  }, [matrixOpen, matrixDivisionFilter]);
 
   useEffect(() => {
     const load = async () => {
@@ -103,108 +113,129 @@ export default function OverviewPage({ user }) {
   ];
 
   return (
-    <div className="space-y-6" data-testid="overview-page">
-      <Card className="overflow-hidden rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-hero-card">
-        <CardContent className="grid gap-6 p-8 lg:grid-cols-[1.2fr_0.8fr] lg:p-10">
+    <div className="space-y-4" data-testid="overview-page">
+      <Card className="overflow-hidden rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-hero-card">
+        <CardContent className="grid gap-4 p-5 lg:grid-cols-[1.3fr_0.7fr] lg:p-6">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]" data-testid="overview-kicker-text">Operations pulse</p>
-            <h2 className="mt-3 font-[Cabinet_Grotesk] text-5xl font-black tracking-tight text-[#111815]" data-testid="overview-title">Keep crews fast. Keep labels consistent. Keep training data clean.</h2>
-            <p className="mt-4 max-w-3xl text-sm leading-6 text-[#5c6d64]" data-testid="overview-description">This workspace gives {user?.role} users a shared view of capture volume, review queues, storage readiness, and export momentum.</p>
+            <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815] lg:text-4xl" data-testid="overview-title">Crews fast. Labels consistent. Data clean.</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#5c6d64]" data-testid="overview-description">Capture volume, review queues, storage status, and export momentum at a glance.</p>
           </div>
-          <div className="grid gap-4 rounded-[28px] border border-border bg-[#edf0e7] p-6" data-testid="overview-workflow-health-card">
+          <div className="grid gap-3 rounded-[20px] border border-border bg-[#edf0e7] p-4" data-testid="overview-workflow-health-card">
             <div>
               <p className="text-sm font-semibold text-[#243e36]">Review velocity</p>
-              <p className="mt-2 font-[Cabinet_Grotesk] text-5xl font-black text-[#111815]" data-testid="overview-review-velocity-value">{overview.workflow_health.review_velocity_percent}%</p>
-              <p className="mt-2 text-sm text-[#5c6d64]" data-testid="overview-review-velocity-hint">Share of captured work already moving through review and export stages.</p>
+              <p className="mt-1 font-[Cabinet_Grotesk] text-4xl font-black text-[#111815]" data-testid="overview-review-velocity-value">{overview.workflow_health.review_velocity_percent}%</p>
+              <p className="mt-1 text-xs text-[#5c6d64]" data-testid="overview-review-velocity-hint">Captured work moving through review and export.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]" data-testid="overview-drive-config-badge">Storage configured: {storage?.configured ? "Yes" : "No"}</Badge>
-              <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]" data-testid="overview-drive-connected-badge">Storage ready: {storage?.connected ? "Yes" : "No"}</Badge>
+              <Badge className="border-0 bg-white px-2 py-0.5 text-xs text-[#243e36]" data-testid="overview-drive-config-badge">Storage: {storage?.configured ? "OK" : "N/A"}</Badge>
+              <Badge className="border-0 bg-white px-2 py-0.5 text-xs text-[#243e36]" data-testid="overview-drive-connected-badge">Ready: {storage?.connected ? "Yes" : "No"}</Badge>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((item) => <StatCard key={item.label} {...item} />)}
       </div>
 
       <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-rubric-matrix-card">
-        <CardContent className="p-6 sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Quick matrix ref</p>
-              <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Rubric grading factors by division</h3>
-            </div>
+        <CardContent className="p-5 sm:p-6">
+          <button
+            type="button"
+            onClick={() => setMatrixOpen(!matrixOpen)}
+            className="flex w-full items-center justify-between gap-3 text-left"
+            data-testid="overview-rubric-toggle"
+          >
             <div className="flex items-center gap-3">
               <Grid3X3 className="h-5 w-5 text-[#243e36]" />
-              <Select value={matrixDivisionFilter} onValueChange={setMatrixDivisionFilter}>
-                <SelectTrigger className="h-10 w-[180px] rounded-2xl border-transparent bg-[#edf0e7]" data-testid="overview-matrix-division-filter"><SelectValue placeholder="All divisions" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All divisions</SelectItem>
-                  {DIVISIONS.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <div>
+                <h3 className="font-semibold text-[#111815]">Quick matrix ref</h3>
+                <p className="text-xs text-[#5c6d64]">{rubricMatrices.length} active rubrics across divisions</p>
+              </div>
             </div>
-          </div>
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-left text-sm" data-testid="overview-rubric-matrix-table">
-              <thead>
-                <tr className="border-b border-border/60">
-                  <th className="pb-3 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Task</th>
-                  <th className="pb-3 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Division</th>
-                  <th className="pb-3 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Grading factors</th>
-                  <th className="pb-3 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Pass</th>
-                  <th className="pb-3 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Ver</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rubricMatrices
-                  .filter((item) => matrixDivisionFilter === "all" || item.division === matrixDivisionFilter)
-                  .map((rubric) => (
-                    <tr key={rubric.id} className="border-b border-border/40" data-testid={`overview-rubric-row-${rubric.id}`}>
-                      <td className="py-3 pr-4 font-semibold capitalize text-[#243e36]">{rubric.service_type}</td>
-                      <td className="py-3 pr-4"><Badge className="border-0 bg-[#edf0e7] text-[#243e36]">{rubric.division || "General"}</Badge></td>
-                      <td className="py-3 pr-4">
-                        <div className="flex flex-wrap gap-1.5">
-                          {(rubric.categories || []).map((cat) => (
-                            <span key={cat.key} className="inline-block rounded-lg bg-[#edf0e7] px-2 py-0.5 text-xs font-medium text-[#5c6d64]">{cat.label} ({Math.round(cat.weight * 100)}%)</span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="py-3 pr-4 font-semibold text-[#243e36]">{rubric.pass_threshold}%</td>
-                      <td className="py-3 text-[#5c6d64]">v{rubric.version}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-            {rubricMatrices.filter((item) => matrixDivisionFilter === "all" || item.division === matrixDivisionFilter).length === 0 && (
-              <p className="mt-4 text-center text-sm text-[#5c6d64]" data-testid="overview-rubric-empty">No rubric matrices found for this division.</p>
-            )}
-          </div>
+            <Badge className="border-0 bg-[#edf0e7] text-[#243e36]">{matrixOpen ? "Close" : "View"}</Badge>
+          </button>
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-recent-submissions-card">
-          <CardContent className="p-6 sm:p-8">
-            <div className="flex items-center justify-between gap-4">
+      {matrixOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" data-testid="overview-rubric-widget-overlay" onClick={() => setMatrixOpen(false)}>
+          <div className="max-h-[80vh] w-full max-w-3xl overflow-hidden rounded-[28px] border border-border/80 bg-white shadow-2xl" onClick={(e) => e.stopPropagation()} data-testid="overview-rubric-widget">
+            <div className="flex items-center justify-between gap-4 border-b border-border/60 px-6 py-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Quick matrix ref</p>
+                <h3 className="mt-1 font-[Outfit] text-xl font-bold text-[#111815]">Rubric grading factors</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <Select value={matrixDivisionFilter} onValueChange={setMatrixDivisionFilter}>
+                  <SelectTrigger className="h-9 w-[160px] rounded-xl border-transparent bg-[#edf0e7] text-sm" data-testid="overview-matrix-division-filter"><SelectValue placeholder="All divisions" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All divisions</SelectItem>
+                    {DIVISIONS.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="ghost" onClick={() => setMatrixOpen(false)} className="h-8 w-8 rounded-full p-0" data-testid="overview-rubric-widget-close"><X className="h-4 w-4" /></Button>
+              </div>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto px-6 py-4">
+              <table className="w-full text-left text-sm" data-testid="overview-rubric-matrix-table">
+                <thead>
+                  <tr className="border-b border-border/60">
+                    <th className="pb-2 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Task</th>
+                    <th className="pb-2 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Division</th>
+                    <th className="pb-2 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Factors</th>
+                    <th className="pb-2 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Pass</th>
+                    <th className="pb-2 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Ver</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rubricMatrices
+                    .filter((item) => matrixDivisionFilter === "all" || item.division === matrixDivisionFilter)
+                    .map((rubric) => (
+                      <tr key={rubric.id} className="border-b border-border/30" data-testid={`overview-rubric-row-${rubric.id}`}>
+                        <td className="py-2.5 pr-4 font-semibold capitalize text-[#243e36]">{rubric.service_type}</td>
+                        <td className="py-2.5 pr-4"><Badge className="border-0 bg-[#edf0e7] text-xs text-[#243e36]">{rubric.division || "General"}</Badge></td>
+                        <td className="py-2.5 pr-4">
+                          <div className="flex flex-wrap gap-1">
+                            {(rubric.categories || []).map((cat) => (
+                              <span key={cat.key} className="inline-block rounded bg-[#edf0e7] px-1.5 py-0.5 text-[11px] font-medium text-[#5c6d64]">{cat.label} ({Math.round(cat.weight * 100)}%)</span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-2.5 pr-4 font-semibold text-[#243e36]">{rubric.pass_threshold}%</td>
+                        <td className="py-2.5 text-[#5c6d64]">v{rubric.version}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+              {rubricMatrices.filter((item) => matrixDivisionFilter === "all" || item.division === matrixDivisionFilter).length === 0 && (
+                <p className="mt-4 text-center text-sm text-[#5c6d64]" data-testid="overview-rubric-empty">No rubric matrices found.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <Card className="rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-recent-submissions-card">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Recent submissions</p>
-                <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Current field activity</h3>
+                <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[#111815]">Current field activity</h3>
               </div>
-              <Boxes className="h-6 w-6 text-[#243e36]" />
+              <Boxes className="h-5 w-5 text-[#243e36]" />
             </div>
-
-            <div className="mt-6 space-y-3">
+            <div className="mt-4 space-y-2">
               {submissions.map((submission) => (
-                <div key={submission.id} className="rounded-[26px] border border-border bg-[#f6f6f2] p-4" data-testid={`overview-submission-card-${submission.id}`}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-[#243e36]" data-testid={`overview-submission-job-${submission.id}`}>{submission.job_name_input || submission.job_id || submission.submission_code}</p>
-                      <p className="mt-1 text-sm text-[#5c6d64]" data-testid={`overview-submission-meta-${submission.id}`}>{submission.crew_label} · {submission.truck_number} · {submission.service_type}</p>
+                <div key={submission.id} className="rounded-[16px] border border-border bg-[#f6f6f2] px-4 py-3" data-testid={`overview-submission-card-${submission.id}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-[#243e36]" data-testid={`overview-submission-job-${submission.id}`}>{submission.job_name_input || submission.job_id || submission.submission_code}</p>
+                      <p className="mt-0.5 truncate text-xs text-[#5c6d64]" data-testid={`overview-submission-meta-${submission.id}`}>{submission.crew_label} · {submission.service_type}</p>
                     </div>
-                    <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]" data-testid={`overview-submission-status-${submission.id}`}>{submission.status}</Badge>
+                    <Badge className="shrink-0 border-0 bg-white px-2 py-0.5 text-xs text-[#243e36]" data-testid={`overview-submission-status-${submission.id}`}>{submission.status}</Badge>
                   </div>
                 </div>
               ))}
@@ -212,97 +243,99 @@ export default function OverviewPage({ user }) {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="overview-lifecycle-card">
-          <CardContent className="p-6 sm:p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Workflow lifecycle</p>
-            <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight">Submission state machine</h3>
-            <div className="mt-6 space-y-3">
-              {["Draft", "Submitted", "Pending Match", "Ready for Review", "Management Reviewed", "Owner Reviewed", "Finalized", "Export Ready", "Exported"].map((step, index) => (
-                <div key={step} className="flex items-center gap-4 rounded-[24px] border border-white/10 bg-white/5 px-4 py-3" data-testid={`overview-lifecycle-step-${index + 1}`}>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-sm font-bold">{index + 1}</div>
-                  <p className="text-sm font-semibold text-white/90">{step}</p>
+        <div className="space-y-4">
+          <Card className="rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-rapid-review-launch-card">
+            <CardContent className="flex items-center justify-between gap-4 p-5">
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Rapid review</p>
+                <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[#111815]">Mobile swipe lane</h3>
+                <p className="mt-1 text-xs text-[#5c6d64]">Scan or copy to open admin review on phone.</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <div className="rounded-[14px] border border-border bg-[#f6f6f2] p-2" data-testid="overview-rapid-review-qr-card">
+                  <QRCodeSVG value={rapidReviewUrl} size={72} bgColor="transparent" fgColor="#243e36" />
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="space-y-1.5">
+                  <Button asChild size="sm" className="h-8 w-full rounded-xl bg-[#243e36] text-xs hover:bg-[#1a2c26]" data-testid="overview-open-mobile-rapid-review-button">
+                    <Link to="/rapid-review/mobile"><Smartphone className="mr-1.5 h-3 w-3" />Open</Link>
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={copyRapidReviewLink} className="h-8 w-full rounded-xl border-[#243e36]/15 text-xs text-[#243e36]" data-testid="overview-copy-rapid-review-link-button">
+                    <Copy className="mr-1.5 h-3 w-3" />Copy link
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[24px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="overview-lifecycle-card">
+            <CardContent className="p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Workflow lifecycle</p>
+              <h3 className="mt-1 font-[Outfit] text-lg font-bold">Submission states</h3>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {["Draft", "Submitted", "Pending Match", "Ready for Review", "Mgmt Reviewed", "Owner Reviewed", "Finalized", "Export Ready", "Exported"].map((step, index) => (
+                  <span key={step} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-white/80" data-testid={`overview-lifecycle-step-${index + 1}`}>
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold">{index + 1}</span>
+                    {step}
+                  </span>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-rapid-review-launch-card">
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6 sm:p-8">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Rapid review mobile launch</p>
-            <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Scan the phone link and open the swipe lane where admins actually review.</h3>
-            <p className="mt-2 text-sm text-[#5c6d64]">This is a mobile-only admin flow. Scan the QR from an admin phone, or copy the link to send directly.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="rounded-[28px] border border-border bg-[#f6f6f2] p-4" data-testid="overview-rapid-review-qr-card">
-              <QRCodeSVG value={rapidReviewUrl} size={128} bgColor="transparent" fgColor="#243e36" />
-            </div>
-            <div className="space-y-3">
-              <Button asChild className="h-11 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="overview-open-mobile-rapid-review-button">
-                <Link to="/rapid-review/mobile"><Smartphone className="mr-2 h-4 w-4" />Open mobile link</Link>
-              </Button>
-              <Button type="button" variant="outline" onClick={copyRapidReviewLink} className="h-11 rounded-2xl border-[#243e36]/15 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid="overview-copy-rapid-review-link-button">
-                <Copy className="mr-2 h-4 w-4" />Copy phone link
-              </Button>
-              <div className="flex items-center gap-2 text-sm text-[#5c6d64]"><QrCode className="h-4 w-4" />Admin phones only</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-crew-qr-editor-card">
-          <CardContent className="p-6 sm:p-8">
+      <div className="grid gap-4 xl:grid-cols-2">
+        <Card className="rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-crew-qr-editor-card">
+          <CardContent className="p-5">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Crew QR updates</p>
-            <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Any admin role can update active crew QR metadata from the dashboard.</h3>
-            <div className="mt-6 space-y-4">
+            <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[#111815]">Edit active crew metadata</h3>
+            <div className="mt-4 space-y-3">
               <Select value={selectedCrewId} onValueChange={handleCrewSelection}>
-                <SelectTrigger className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-select"><SelectValue placeholder="Choose crew" /></SelectTrigger>
+                <SelectTrigger className="h-10 rounded-xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-select"><SelectValue placeholder="Choose crew" /></SelectTrigger>
                 <SelectContent>
                   {crewLinks.map((item) => <SelectItem key={item.id} value={item.id}>{item.label} · {item.division}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Input value={crewForm.label} onChange={(event) => setCrewForm((current) => ({ ...current, label: event.target.value }))} placeholder="Crew label" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-label-input" />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Input value={crewForm.truck_number} onChange={(event) => setCrewForm((current) => ({ ...current, truck_number: event.target.value }))} placeholder="Vehicle / truck" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-truck-input" />
+              <Input value={crewForm.label} onChange={(event) => setCrewForm((current) => ({ ...current, label: event.target.value }))} placeholder="Crew label" className="h-10 rounded-xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-label-input" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input value={crewForm.truck_number} onChange={(event) => setCrewForm((current) => ({ ...current, truck_number: event.target.value }))} placeholder="Vehicle / truck" className="h-10 rounded-xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-truck-input" />
                 <Select value={crewForm.division} onValueChange={(value) => setCrewForm((current) => ({ ...current, division: value }))}>
-                  <SelectTrigger className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-division-select"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 rounded-xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-division-select"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {DIVISIONS.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              <Input value={crewForm.assignment} onChange={(event) => setCrewForm((current) => ({ ...current, assignment: event.target.value }))} placeholder="Assignment / route note" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-assignment-input" />
-              <Button type="button" onClick={saveCrewMetadata} className="h-12 w-full rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="overview-save-crew-button">Save crew QR updates</Button>
+              <Input value={crewForm.assignment} onChange={(event) => setCrewForm((current) => ({ ...current, assignment: event.target.value }))} placeholder="Assignment / route" className="h-10 rounded-xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-assignment-input" />
+              <Button type="button" onClick={saveCrewMetadata} className="h-10 w-full rounded-xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="overview-save-crew-button">Save crew updates</Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-equipment-log-card">
-          <CardContent className="p-6 sm:p-8">
-            <div className="flex items-center justify-between gap-4">
+        <Card className="rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-equipment-log-card">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Equipment records</p>
-                <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Recent maintenance + red-tag records</h3>
+                <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[#111815]">Maintenance + red-tags</h3>
               </div>
-              <Wrench className="h-6 w-6 text-[#243e36]" />
+              <Wrench className="h-5 w-5 text-[#243e36]" />
             </div>
-            <div className="mt-6 space-y-3">
+            <div className="mt-4 space-y-2">
               {equipmentLogs.map((item) => (
-                <div key={item.id} className="rounded-[24px] border border-border bg-[#f6f6f2] p-4" data-testid={`overview-equipment-log-${item.id}`}>
+                <div key={item.id} className="rounded-[16px] border border-border bg-[#f6f6f2] px-4 py-3" data-testid={`overview-equipment-log-${item.id}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-[#243e36]">{item.equipment_number}</p>
-                      <p className="mt-1 text-sm text-[#5c6d64]">{item.crew_label} · {item.division}</p>
+                      <p className="mt-0.5 text-xs text-[#5c6d64]">{item.crew_label} · {item.division}</p>
                     </div>
-                    <Badge className="border-0 bg-white text-[#243e36]">{item.status}</Badge>
+                    <Badge className="border-0 bg-white px-2 py-0.5 text-xs text-[#243e36]">{item.status}</Badge>
                   </div>
-                  {item.red_tag_note && <p className="mt-3 rounded-2xl bg-[#fdeaea] px-3 py-2 text-sm text-[#8b4c4c]" data-testid={`overview-equipment-red-tag-${item.id}`}>{item.red_tag_note}</p>}
-                  {user?.title === "GM" && item.red_tag_note && !item.forwarded_to_owner && <Button type="button" variant="outline" onClick={() => forwardEquipmentLog(item.id)} className="mt-3 rounded-2xl border-[#243e36]/10 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid={`overview-forward-equipment-${item.id}`}>Forward to Owner</Button>}
+                  {item.red_tag_note && <p className="mt-2 rounded-xl bg-[#fdeaea] px-3 py-1.5 text-xs text-[#8b4c4c]" data-testid={`overview-equipment-red-tag-${item.id}`}>{item.red_tag_note}</p>}
+                  {user?.title === "GM" && item.red_tag_note && !item.forwarded_to_owner && <Button type="button" variant="outline" size="sm" onClick={() => forwardEquipmentLog(item.id)} className="mt-2 h-7 rounded-lg border-[#243e36]/10 text-xs text-[#243e36] hover:bg-[#edf0e7]" data-testid={`overview-forward-equipment-${item.id}`}>Forward to Owner</Button>}
                 </div>
               ))}
+              {equipmentLogs.length === 0 && <p className="text-center text-sm text-[#5c6d64]">No equipment logs yet.</p>}
             </div>
           </CardContent>
         </Card>
