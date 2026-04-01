@@ -1071,10 +1071,11 @@ async def seed_defaults() -> None:
         {"name": "Adam S", "email": "SAdam.Owner@SLMCo.local", "role": "owner", "title": "Owner"},
     ]
     for user in users:
-        existing = await db.users.find_one({"email": user["email"]}, {"_id": 0})
+        email_lower = user["email"].lower()
+        existing = await db.users.find_one({"email": email_lower}, {"_id": 0})
         if existing:
             await db.users.update_one(
-                {"email": user["email"]},
+                {"email": email_lower},
                 {
                     "$set": {
                         "name": user["name"],
@@ -1086,10 +1087,12 @@ async def seed_defaults() -> None:
                 },
             )
         else:
+            # Remove any stale mixed-case entry for this user
+            await db.users.delete_many({"email": {"$regex": f"^{user['email']}$", "$options": "i"}})
             await db.users.insert_one(
                 {
                     "id": make_id("user"),
-                    **user,
+                    **{**user, "email": email_lower},
                     "password_hash": get_password_hash("SLMCo2026!"),
                     "is_active": True,
                     "created_at": now_iso(),

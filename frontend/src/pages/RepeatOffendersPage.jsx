@@ -55,10 +55,14 @@ export default function RepeatOffendersPage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Repeat offender tracking</p>
               <h1 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Spot recurring quality misses, escalate them, and launch training fast.</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#5c6d64]">The window below sets the look-back period in days. Incidents within this range are aggregated per crew. Threshold levels (3/5/7) determine escalation tiers: <strong className="text-[#243e36]">Watch</strong> (3+), <strong className="text-[#243e36]">Warning</strong> (5+), and <strong className="text-[#243e36]">Critical</strong> (7+).</p>
             </div>
             <div className="flex items-center gap-3 rounded-[24px] bg-[#edf0e7] px-4 py-3">
               <Radar className="h-5 w-5 text-[#243e36]" />
-              <Input type="number" min="7" max="365" value={windowDays} onChange={(event) => setWindowDays(Number(event.target.value) || 30)} className="h-10 w-28 rounded-xl border-transparent bg-white" data-testid="repeat-offenders-window-input" />
+              <div>
+                <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-[#5f7464]">Days</label>
+                <Input type="number" min="7" max="365" value={windowDays} onChange={(event) => setWindowDays(Number(event.target.value) || 30)} className="h-10 w-28 rounded-xl border-transparent bg-white" data-testid="repeat-offenders-window-input" />
+              </div>
               <Button onClick={() => loadData(windowDays)} className="rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="repeat-offenders-refresh-button">Refresh</Button>
             </div>
           </div>

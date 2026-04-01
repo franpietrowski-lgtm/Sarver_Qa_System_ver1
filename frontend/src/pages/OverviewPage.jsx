@@ -1,4 +1,4 @@
-import { Activity, Boxes, Copy, Grid3X3, ShieldCheck, Smartphone, X } from "lucide-react";
+import { Activity, Boxes, Copy, FolderInput, Grid3X3, ShieldCheck, Smartphone, UploadCloud, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -60,7 +60,6 @@ export default function OverviewPage({ user }) {
   }
 
   const storage = overview.storage || overview.drive;
-  const selectedCrew = crewLinks.find((item) => item.id === selectedCrewId);
   const copyRapidReviewLink = async () => {
     await navigator.clipboard.writeText(rapidReviewUrl);
     toast.success("Rapid review link copied.");
