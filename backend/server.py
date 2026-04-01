@@ -1057,42 +1057,18 @@ async def seed_defaults() -> None:
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     users = [
-        {
-            "name": "Maya Manager",
-            "email": "management@fieldquality.local",
-            "role": "management",
-            "title": "Production Manager",
-        },
-        {
-            "name": "Gina GM",
-            "email": "gm@fieldquality.local",
-            "role": "management",
-            "title": "GM",
-        },
-        {
-            "name": "Avery Account Manager",
-            "email": "account.manager@fieldquality.local",
-            "role": "management",
-            "title": "Account Manager",
-        },
-        {
-            "name": "Parker Production Manager",
-            "email": "production.manager@fieldquality.local",
-            "role": "management",
-            "title": "Production Manager",
-        },
-        {
-            "name": "Sam Supervisor",
-            "email": "supervisor@fieldquality.local",
-            "role": "management",
-            "title": "Supervisor",
-        },
-        {
-            "name": "Owen Owner",
-            "email": "owner@fieldquality.local",
-            "role": "owner",
-            "title": "Owner",
-        },
+        {"name": "Johnny H", "email": "HJohnny.Super@SLMCo.local", "role": "management", "title": "Supervisor"},
+        {"name": "Craig S", "email": "SCraig.Super@SLMCo.local", "role": "management", "title": "Supervisor"},
+        {"name": "Fran P", "email": "PFran.Super@SLMCo.local", "role": "management", "title": "Supervisor"},
+        {"name": "Scott K", "email": "KScott.AccM@SLMCo.local", "role": "management", "title": "Account Manager"},
+        {"name": "Megan B", "email": "BMegan.AccM@SLMCo.local", "role": "management", "title": "Account Manager"},
+        {"name": "Daniel M", "email": "MDaniel.AccM@SLMCo.local", "role": "management", "title": "Account Manager"},
+        {"name": "Tim A", "email": "ATim.ProM@SLMCo.local", "role": "management", "title": "Production Manager"},
+        {"name": "Zach O", "email": "OZach.ProM@SLMCo.local", "role": "management", "title": "Production Manager"},
+        {"name": "Scott W", "email": "WScott.ProM@SLMCo.local", "role": "management", "title": "Production Manager"},
+        {"name": "Tyler C", "email": "CTyler.GM@SLMCo.local", "role": "management", "title": "GM"},
+        {"name": "Brad S", "email": "SBrad.GM@SLMCo.local", "role": "management", "title": "GM"},
+        {"name": "Adam S", "email": "SAdam.Owner@SLMCo.local", "role": "owner", "title": "Owner"},
     ]
     for user in users:
         existing = await db.users.find_one({"email": user["email"]}, {"_id": 0})
@@ -1114,7 +1090,7 @@ async def seed_defaults() -> None:
                 {
                     "id": make_id("user"),
                     **user,
-                    "password_hash": get_password_hash("FieldQA123!"),
+                    "password_hash": get_password_hash("SLMCo2026!"),
                     "is_active": True,
                     "created_at": now_iso(),
                     "updated_at": now_iso(),

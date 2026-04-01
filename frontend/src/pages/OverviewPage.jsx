@@ -1,4 +1,4 @@
-import { Activity, Boxes, Copy, FolderInput, Grid3X3, QrCode, ShieldCheck, Smartphone, UploadCloud, Wrench, X } from "lucide-react";
+import { Activity, Boxes, Copy, Grid3X3, ShieldCheck, Smartphone, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -8,9 +8,8 @@ import StatCard from "@/components/common/StatCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { authGet, authPatch, authPost } from "@/lib/api";
+import { authGet } from "@/lib/api";
 import { toast } from "sonner";
 
 
@@ -20,10 +19,8 @@ const DIVISIONS = ["Maintenance", "Install", "Tree", "Plant Healthcare", "Winter
 export default function OverviewPage({ user }) {
   const [overview, setOverview] = useState(null);
   const [submissions, setSubmissions] = useState([]);
-  const [crewLinks, setCrewLinks] = useState([]);
-  const [selectedCrewId, setSelectedCrewId] = useState("");
-  const [crewForm, setCrewForm] = useState({ label: "", truck_number: "", division: DIVISIONS[0], assignment: "" });
-  const [equipmentLogs, setEquipmentLogs] = useState([]);
+  const [submissionPage, setSubmissionPage] = useState(1);
+  const [submissionTotal, setSubmissionTotal] = useState(0);
   const [rubricMatrices, setRubricMatrices] = useState([]);
   const [matrixDivisionFilter, setMatrixDivisionFilter] = useState("all");
   const [matrixOpen, setMatrixOpen] = useState(false);
@@ -38,31 +35,23 @@ export default function OverviewPage({ user }) {
     return () => { if (matrixTimerRef.current) clearTimeout(matrixTimerRef.current); };
   }, [matrixOpen, matrixDivisionFilter]);
 
+  const loadSubmissions = async (page = 1) => {
+    const response = await authGet(`/submissions?scope=all&page=${page}&limit=4`);
+    setSubmissions(response.items || []);
+    setSubmissionTotal(response.total || 0);
+    setSubmissionPage(page);
+  };
+
   useEffect(() => {
     const load = async () => {
-      const [overviewResponse, submissionsResponse, crewResponse, equipmentResponse, matricesResponse] = await Promise.all([
+      const [overviewResponse, matricesResponse] = await Promise.all([
         authGet("/dashboard/overview"),
-        authGet("/submissions?scope=all&page=1&limit=6"),
-        authGet("/crew-access-links?status=active&page=1&limit=20"),
-        authGet("/equipment-logs?page=1&limit=6"),
         authGet("/rubric-matrices?division=all"),
       ]);
       setOverview(overviewResponse);
-      setSubmissions(submissionsResponse.items || []);
-      setCrewLinks(crewResponse.items || []);
-      setEquipmentLogs(equipmentResponse.items || []);
       setRubricMatrices(matricesResponse || []);
-      if (crewResponse.items?.[0]) {
-        setSelectedCrewId(crewResponse.items[0].id);
-        setCrewForm({
-          label: crewResponse.items[0].label,
-          truck_number: crewResponse.items[0].truck_number,
-          division: crewResponse.items[0].division,
-          assignment: crewResponse.items[0].assignment || "",
-        });
-      }
+      await loadSubmissions(1);
     };
-
     load();
   }, []);
 
@@ -75,34 +64,6 @@ export default function OverviewPage({ user }) {
   const copyRapidReviewLink = async () => {
     await navigator.clipboard.writeText(rapidReviewUrl);
     toast.success("Rapid review link copied.");
-  };
-
-  const handleCrewSelection = (crewId) => {
-    setSelectedCrewId(crewId);
-    const nextCrew = crewLinks.find((item) => item.id === crewId);
-    if (!nextCrew) return;
-    setCrewForm({ label: nextCrew.label, truck_number: nextCrew.truck_number, division: nextCrew.division, assignment: nextCrew.assignment || "" });
-  };
-
-  const saveCrewMetadata = async () => {
-    if (!selectedCrewId) return;
-    try {
-      const response = await authPatch(`/crew-access-links/${selectedCrewId}`, crewForm);
-      setCrewLinks((current) => current.map((item) => item.id === selectedCrewId ? response : item));
-      toast.success("Crew QR metadata updated.");
-    } catch (error) {
-      toast.error(error?.response?.data?.detail || "Unable to update crew QR");
-    }
-  };
-
-  const forwardEquipmentLog = async (logId) => {
-    try {
-      await authPost(`/equipment-logs/${logId}/forward-to-owner`, {});
-      setEquipmentLogs((current) => current.map((item) => item.id === logId ? { ...item, forwarded_to_owner: true } : item));
-      toast.success("Red-tag forwarded to Owner.");
-    } catch (error) {
-      toast.error(error?.response?.data?.detail || "Unable to forward red-tag");
-    }
   };
 
   const stats = [
@@ -240,6 +201,15 @@ export default function OverviewPage({ user }) {
                 </div>
               ))}
             </div>
+            {submissionTotal > 4 && (
+              <div className="mt-3 flex items-center justify-between" data-testid="overview-submissions-pagination">
+                <span className="text-xs text-[#5c6d64]">Page {submissionPage} of {Math.ceil(submissionTotal / 4)}</span>
+                <div className="flex gap-1.5">
+                  <Button type="button" variant="outline" size="sm" disabled={submissionPage <= 1} onClick={() => loadSubmissions(submissionPage - 1)} className="h-7 rounded-lg text-xs" data-testid="overview-submissions-prev">Prev</Button>
+                  <Button type="button" variant="outline" size="sm" disabled={submissionPage >= Math.ceil(submissionTotal / 4)} onClick={() => loadSubmissions(submissionPage + 1)} className="h-7 rounded-lg text-xs" data-testid="overview-submissions-next">Next</Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -272,7 +242,10 @@ export default function OverviewPage({ user }) {
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Workflow lifecycle</p>
               <h3 className="mt-1 font-[Outfit] text-lg font-bold">Submission states</h3>
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {["Draft", "Submitted", "Pending Match", "Ready for Review", "Mgmt Reviewed", "Owner Reviewed", "Finalized", "Export Ready", "Exported"].map((step, index) => (
+                {(user?.role === "owner"
+                  ? ["Draft", "Submitted", "Pending Match", "Ready for Review", "Mgmt Reviewed", "Owner Reviewed", "Finalized", "Export Ready", "Exported"]
+                  : ["Draft", "Submitted", "Pending Match", "Ready for Review", "Mgmt Reviewed", "Owner Reviewed", "Finalized"]
+                ).map((step, index) => (
                   <span key={step} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-white/80" data-testid={`overview-lifecycle-step-${index + 1}`}>
                     <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold">{index + 1}</span>
                     {step}
@@ -282,63 +255,6 @@ export default function OverviewPage({ user }) {
             </CardContent>
           </Card>
         </div>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card className="rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-crew-qr-editor-card">
-          <CardContent className="p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Crew QR updates</p>
-            <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[#111815]">Edit active crew metadata</h3>
-            <div className="mt-4 space-y-3">
-              <Select value={selectedCrewId} onValueChange={handleCrewSelection}>
-                <SelectTrigger className="h-10 rounded-xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-select"><SelectValue placeholder="Choose crew" /></SelectTrigger>
-                <SelectContent>
-                  {crewLinks.map((item) => <SelectItem key={item.id} value={item.id}>{item.label} · {item.division}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Input value={crewForm.label} onChange={(event) => setCrewForm((current) => ({ ...current, label: event.target.value }))} placeholder="Crew label" className="h-10 rounded-xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-label-input" />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Input value={crewForm.truck_number} onChange={(event) => setCrewForm((current) => ({ ...current, truck_number: event.target.value }))} placeholder="Vehicle / truck" className="h-10 rounded-xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-truck-input" />
-                <Select value={crewForm.division} onValueChange={(value) => setCrewForm((current) => ({ ...current, division: value }))}>
-                  <SelectTrigger className="h-10 rounded-xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-division-select"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {DIVISIONS.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Input value={crewForm.assignment} onChange={(event) => setCrewForm((current) => ({ ...current, assignment: event.target.value }))} placeholder="Assignment / route" className="h-10 rounded-xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-assignment-input" />
-              <Button type="button" onClick={saveCrewMetadata} className="h-10 w-full rounded-xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="overview-save-crew-button">Save crew updates</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-equipment-log-card">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Equipment records</p>
-                <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[#111815]">Maintenance + red-tags</h3>
-              </div>
-              <Wrench className="h-5 w-5 text-[#243e36]" />
-            </div>
-            <div className="mt-4 space-y-2">
-              {equipmentLogs.map((item) => (
-                <div key={item.id} className="rounded-[16px] border border-border bg-[#f6f6f2] px-4 py-3" data-testid={`overview-equipment-log-${item.id}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-[#243e36]">{item.equipment_number}</p>
-                      <p className="mt-0.5 text-xs text-[#5c6d64]">{item.crew_label} · {item.division}</p>
-                    </div>
-                    <Badge className="border-0 bg-white px-2 py-0.5 text-xs text-[#243e36]">{item.status}</Badge>
-                  </div>
-                  {item.red_tag_note && <p className="mt-2 rounded-xl bg-[#fdeaea] px-3 py-1.5 text-xs text-[#8b4c4c]" data-testid={`overview-equipment-red-tag-${item.id}`}>{item.red_tag_note}</p>}
-                  {user?.title === "GM" && item.red_tag_note && !item.forwarded_to_owner && <Button type="button" variant="outline" size="sm" onClick={() => forwardEquipmentLog(item.id)} className="mt-2 h-7 rounded-lg border-[#243e36]/10 text-xs text-[#243e36] hover:bg-[#edf0e7]" data-testid={`overview-forward-equipment-${item.id}`}>Forward to Owner</Button>}
-                </div>
-              ))}
-              {equipmentLogs.length === 0 && <p className="text-center text-sm text-[#5c6d64]">No equipment logs yet.</p>}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

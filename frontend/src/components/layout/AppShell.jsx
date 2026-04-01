@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChartColumn, ClipboardCheck, FileOutput, FolderInput, Grid3X3, LayoutDashboard, MoonStar, Radar, Settings, ShieldCheck, SunMedium } from "lucide-react";
+import { ChartColumn, ClipboardCheck, FileOutput, FolderInput, Grid3X3, LayoutDashboard, Radar, Settings, ShieldCheck } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +38,7 @@ export default function AppShell({ user, onLogout, children }) {
     return true;
   });
   const logoUrl = "https://sarverlandscape.com/wp-content/uploads/2024/10/sarver-logo.png";
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark } = useTheme();
 
   return (
     <div key={roleKey || "no-role"} className={`workspace-shell min-h-screen text-foreground ${isDark ? "theme-dark" : "theme-default bg-[radial-gradient(circle_at_top_left,_rgba(124,169,130,0.18),_transparent_28%),linear-gradient(180deg,_#f6f6f2_0%,_#edf0e7_100%)]"}`} data-testid="workspace-shell">
@@ -52,31 +52,12 @@ export default function AppShell({ user, onLogout, children }) {
               <p className="mt-2 text-sm text-[#41534a]" data-testid="shell-app-subtitle">Character, quality, and respect across crew capture, review, and automation readiness.</p>
             </div>
 
-            <div className="rounded-3xl border border-border bg-[#243e36] p-5 text-white shadow-sm" data-testid="shell-user-card">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm text-white/70">Signed in as</p>
-                  <p className="text-lg font-semibold" data-testid="shell-user-name">{user?.name}</p>
-                  {user?.title && <p className="text-sm text-white/70" data-testid="shell-user-title">{user.title}</p>}
-                </div>
-                <Badge className="border-0 bg-[#7ca982] px-3 py-1 text-[#10261d]" data-testid="shell-user-role-badge">{user?.role}</Badge>
-              </div>
+            <div className="rounded-2xl border border-border bg-[#243e36] p-4 text-white shadow-sm" data-testid="shell-user-card">
+              <p className="text-lg font-semibold" data-testid="shell-user-name">{user?.name}</p>
+              <p className="text-sm text-white/70" data-testid="shell-user-title">{user?.title || user?.role}</p>
             </div>
 
             <NotificationCenter user={user} />
-
-            <div className="rounded-3xl border border-border bg-white/75 p-4" data-testid="shell-theme-card">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#5f7464]">Workspace theme</p>
-                  <p className="mt-1 text-sm text-[#41534a]" data-testid="shell-theme-state">{isDark ? "Dark mode active" : "Default mode active"}</p>
-                </div>
-                <Button onClick={toggleTheme} type="button" variant="outline" className="rounded-full border-[#243e36]/10 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid="shell-theme-toggle-button">
-                  {isDark ? <SunMedium className="mr-2 h-4 w-4" /> : <MoonStar className="mr-2 h-4 w-4" />}
-                  {isDark ? "Default" : "Dark"}
-                </Button>
-              </div>
-            </div>
           </div>
 
           <nav className="mt-8 space-y-2">

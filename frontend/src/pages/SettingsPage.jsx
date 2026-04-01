@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { GitBranch, HardDrive, Network, Shapes } from "lucide-react";
+import { GitBranch, HardDrive, MoonStar, Network, Shapes, SunMedium } from "lucide-react";
 
+import { useTheme } from "@/components/theme/ThemeProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +14,7 @@ const STAFF_TITLES = ["GM", "Account Manager", "Production Manager", "Supervisor
 
 
 export default function SettingsPage() {
+  const { isDark, toggleTheme } = useTheme();
   const [storageStatus, setStorageStatus] = useState(null);
   const [blueprint, setBlueprint] = useState(null);
   const [users, setUsers] = useState([]);
@@ -72,6 +74,19 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6" data-testid="settings-page">
+      <Card className="rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="settings-theme-card">
+        <CardContent className="flex items-center justify-between gap-4 p-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Workspace theme</p>
+            <p className="mt-1 text-sm text-[#41534a]" data-testid="settings-theme-state">{isDark ? "Dark mode active" : "Default mode active"}</p>
+          </div>
+          <Button onClick={toggleTheme} type="button" variant="outline" className="h-10 rounded-xl border-[#243e36]/10 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid="settings-theme-toggle-button">
+            {isDark ? <SunMedium className="mr-2 h-4 w-4" /> : <MoonStar className="mr-2 h-4 w-4" />}
+            {isDark ? "Default" : "Dark"}
+          </Button>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
         <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="settings-drive-card">
           <CardContent className="p-8">
