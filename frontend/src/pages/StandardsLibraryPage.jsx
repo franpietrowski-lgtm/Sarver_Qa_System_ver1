@@ -13,7 +13,7 @@ import { authGet, authPatch, authPost } from "@/lib/api";
 import { toast } from "sonner";
 
 
-const DIVISIONS = ["Maintenance", "Install", "PHC - Plant Healthcare", "Sarver Tree"];
+const DIVISIONS = ["Maintenance", "Install", "Tree", "Plant Healthcare", "Winter Services"];
 const CATEGORIES = ["Edging", "Mulch", "Cleanup", "Pruning", "Damage Prevention"];
 
 const emptyForm = {

@@ -1,0 +1,94 @@
+{
+  "id": "sub_6dba7be0ed6f",
+  "submission_code": "SUB_6DBA7BE0ED6F",
+  "access_code": "f6436f7c",
+  "crew_label": "Fran_Test",
+  "job_key": "waligora",
+  "job_id": null,
+  "job_name_input": "Waligora",
+  "matched_job_id": null,
+  "match_status": "unmatched",
+  "match_confidence": 0.0,
+  "truck_number": "43",
+  "division": "Install",
+  "service_type": "",
+  "status": "Pending Match",
+  "note": "",
+  "area_tag": "Rear wall build",
+  "field_report": {
+    "type": "",
+    "notes": "",
+    "photo_files": [],
+    "reported": false
+  },
+  "gps": {
+    "lat": 40.654741,
+    "lng": -80.043614,
+    "accuracy": 83.4
+  },
+  "captured_at": "2026-03-31T16:57:17.220772+00:00",
+  "required_photo_count": 3,
+  "photo_count": 3,
+  "photo_files": [
+    {
+      "id": "file_f811a1082d47",
+      "filename": "01_b971eb.jpg",
+      "original_name": "1000004107.jpg",
+      "mime_type": "image/jpeg",
+      "sequence": 1,
+      "size_bytes": 5278118,
+      "bucket": "qa-images",
+      "storage_path": "sarver-landscape/submissions/sub_6dba7be0ed6f/captures/01_b971eb.jpg",
+      "relative_api_path": "/api/submissions/files/sub_6dba7be0ed6f/01_b971eb.jpg",
+      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_6dba7be0ed6f/01_b971eb.jpg",
+      "source_type": "supabase"
+    },
+    {
+      "id": "file_3376587b8ebf",
+      "filename": "02_a2313b.jpg",
+      "original_name": "1000004104.jpg",
+      "mime_type": "image/jpeg",
+      "sequence": 2,
+      "size_bytes": 5935164,
+      "bucket": "qa-images",
+      "storage_path": "sarver-landscape/submissions/sub_6dba7be0ed6f/captures/02_a2313b.jpg",
+      "relative_api_path": "/api/submissions/files/sub_6dba7be0ed6f/02_a2313b.jpg",
+      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_6dba7be0ed6f/02_a2313b.jpg",
+      "source_type": "supabase"
+    },
+    {
+      "id": "file_994342b56212",
+      "filename": "03_857f1d.jpg",
+      "original_name": "1000004116.jpg",
+      "mime_type": "image/jpeg",
+      "sequence": 3,
+      "size_bytes": 6911988,
+      "bucket": "qa-images",
+      "storage_path": "sarver-landscape/submissions/sub_6dba7be0ed6f/captures/03_857f1d.jpg",
+      "relative_api_path": "/api/submissions/files/sub_6dba7be0ed6f/03_857f1d.jpg",
+      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_6dba7be0ed6f/03_857f1d.jpg",
+      "source_type": "supabase"
+    }
+  ],
+  "local_folder_path": "/app/data/submissions/sub_6dba7be0ed6f",
+  "device_metadata": {
+    "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36"
+  },
+  "storage_status": "stored",
+  "created_at": "2026-03-31T16:57:17.220792+00:00",
+  "updated_at": "2026-03-31T16:57:17.220794+00:00",
+  "audit_history": [
+    {
+      "timestamp": "2026-03-31T16:57:17.220796+00:00",
+      "action": "submitted",
+      "actor_id": "f6436f7c",
+      "note": "Crew submission created"
+    },
+    {
+      "timestamp": "2026-03-31T16:57:17.220799+00:00",
+      "action": "status_change",
+      "actor_id": "f6436f7c",
+      "note": "Lifecycle moved to Pending Match"
+    }
+  ]
+}

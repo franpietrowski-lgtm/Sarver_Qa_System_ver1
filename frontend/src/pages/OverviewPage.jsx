@@ -1,4 +1,4 @@
-import { Activity, Boxes, Copy, FolderInput, QrCode, ShieldCheck, Smartphone, UploadCloud } from "lucide-react";
+import { Activity, Boxes, Copy, FolderInput, QrCode, ShieldCheck, Smartphone, UploadCloud, Wrench } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -8,22 +8,45 @@ import StatCard from "@/components/common/StatCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { authGet } from "@/lib/api";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { authGet, authPatch, authPost } from "@/lib/api";
+import { toast } from "sonner";
+
+
+const DIVISIONS = ["Maintenance", "Install", "Tree", "Plant Healthcare", "Winter Services"];
 
 
 export default function OverviewPage({ user }) {
   const [overview, setOverview] = useState(null);
   const [submissions, setSubmissions] = useState([]);
+  const [crewLinks, setCrewLinks] = useState([]);
+  const [selectedCrewId, setSelectedCrewId] = useState("");
+  const [crewForm, setCrewForm] = useState({ label: "", truck_number: "", division: DIVISIONS[0], assignment: "" });
+  const [equipmentLogs, setEquipmentLogs] = useState([]);
   const rapidReviewUrl = useMemo(() => (typeof window !== "undefined" ? `${window.location.origin}/rapid-review/mobile` : ""), []);
 
   useEffect(() => {
     const load = async () => {
-      const [overviewResponse, submissionsResponse] = await Promise.all([
+      const [overviewResponse, submissionsResponse, crewResponse, equipmentResponse] = await Promise.all([
         authGet("/dashboard/overview"),
         authGet("/submissions?scope=all&page=1&limit=6"),
+        authGet("/crew-access-links?status=active&page=1&limit=20"),
+        authGet("/equipment-logs?page=1&limit=6"),
       ]);
       setOverview(overviewResponse);
       setSubmissions(submissionsResponse.items || []);
+      setCrewLinks(crewResponse.items || []);
+      setEquipmentLogs(equipmentResponse.items || []);
+      if (crewResponse.items?.[0]) {
+        setSelectedCrewId(crewResponse.items[0].id);
+        setCrewForm({
+          label: crewResponse.items[0].label,
+          truck_number: crewResponse.items[0].truck_number,
+          division: crewResponse.items[0].division,
+          assignment: crewResponse.items[0].assignment || "",
+        });
+      }
     };
 
     load();
@@ -34,8 +57,38 @@ export default function OverviewPage({ user }) {
   }
 
   const storage = overview.storage || overview.drive;
+  const selectedCrew = crewLinks.find((item) => item.id === selectedCrewId);
   const copyRapidReviewLink = async () => {
     await navigator.clipboard.writeText(rapidReviewUrl);
+    toast.success("Rapid review link copied.");
+  };
+
+  const handleCrewSelection = (crewId) => {
+    setSelectedCrewId(crewId);
+    const nextCrew = crewLinks.find((item) => item.id === crewId);
+    if (!nextCrew) return;
+    setCrewForm({ label: nextCrew.label, truck_number: nextCrew.truck_number, division: nextCrew.division, assignment: nextCrew.assignment || "" });
+  };
+
+  const saveCrewMetadata = async () => {
+    if (!selectedCrewId) return;
+    try {
+      const response = await authPatch(`/crew-access-links/${selectedCrewId}`, crewForm);
+      setCrewLinks((current) => current.map((item) => item.id === selectedCrewId ? response : item));
+      toast.success("Crew QR metadata updated.");
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Unable to update crew QR");
+    }
+  };
+
+  const forwardEquipmentLog = async (logId) => {
+    try {
+      await authPost(`/equipment-logs/${logId}/forward-to-owner`, {});
+      setEquipmentLogs((current) => current.map((item) => item.id === logId ? { ...item, forwarded_to_owner: true } : item));
+      toast.success("Red-tag forwarded to Owner.");
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Unable to forward red-tag");
+    }
   };
 
   const stats = [
@@ -138,6 +191,62 @@ export default function OverviewPage({ user }) {
           </div>
         </CardContent>
       </Card>
+
+      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-crew-qr-editor-card">
+          <CardContent className="p-6 sm:p-8">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Crew QR updates</p>
+            <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Any admin role can update active crew QR metadata from the dashboard.</h3>
+            <div className="mt-6 space-y-4">
+              <Select value={selectedCrewId} onValueChange={handleCrewSelection}>
+                <SelectTrigger className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-select"><SelectValue placeholder="Choose crew" /></SelectTrigger>
+                <SelectContent>
+                  {crewLinks.map((item) => <SelectItem key={item.id} value={item.id}>{item.label} · {item.division}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Input value={crewForm.label} onChange={(event) => setCrewForm((current) => ({ ...current, label: event.target.value }))} placeholder="Crew label" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-label-input" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Input value={crewForm.truck_number} onChange={(event) => setCrewForm((current) => ({ ...current, truck_number: event.target.value }))} placeholder="Vehicle / truck" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-truck-input" />
+                <Select value={crewForm.division} onValueChange={(value) => setCrewForm((current) => ({ ...current, division: value }))}>
+                  <SelectTrigger className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-division-select"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {DIVISIONS.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input value={crewForm.assignment} onChange={(event) => setCrewForm((current) => ({ ...current, assignment: event.target.value }))} placeholder="Assignment / route note" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="overview-crew-assignment-input" />
+              <Button type="button" onClick={saveCrewMetadata} className="h-12 w-full rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="overview-save-crew-button">Save crew QR updates</Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-equipment-log-card">
+          <CardContent className="p-6 sm:p-8">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Equipment records</p>
+                <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Recent maintenance + red-tag records</h3>
+              </div>
+              <Wrench className="h-6 w-6 text-[#243e36]" />
+            </div>
+            <div className="mt-6 space-y-3">
+              {equipmentLogs.map((item) => (
+                <div key={item.id} className="rounded-[24px] border border-border bg-[#f6f6f2] p-4" data-testid={`overview-equipment-log-${item.id}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[#243e36]">{item.equipment_number}</p>
+                      <p className="mt-1 text-sm text-[#5c6d64]">{item.crew_label} · {item.division}</p>
+                    </div>
+                    <Badge className="border-0 bg-white text-[#243e36]">{item.status}</Badge>
+                  </div>
+                  {item.red_tag_note && <p className="mt-3 rounded-2xl bg-[#fdeaea] px-3 py-2 text-sm text-[#8b4c4c]" data-testid={`overview-equipment-red-tag-${item.id}`}>{item.red_tag_note}</p>}
+                  {user?.title === "GM" && item.red_tag_note && !item.forwarded_to_owner && <Button type="button" variant="outline" onClick={() => forwardEquipmentLog(item.id)} className="mt-3 rounded-2xl border-[#243e36]/10 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid={`overview-forward-equipment-${item.id}`}>Forward to Owner</Button>}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

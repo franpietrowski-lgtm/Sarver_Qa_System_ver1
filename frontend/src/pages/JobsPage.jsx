@@ -9,7 +9,7 @@ import { authGet, authPatch, authPost, authPostForm, getApiOrigin } from "@/lib/
 import { toast } from "sonner";
 
 
-const DIVISIONS = ["Maintenance", "Install", "PHC - Plant Healthcare", "Sarver Tree"];
+const DIVISIONS = ["Maintenance", "Install", "Tree", "Plant Healthcare", "Winter Services"];
 const PAGE_SIZE = 10;
 
 
@@ -21,7 +21,7 @@ export default function JobsPage() {
   const [csvFile, setCsvFile] = useState(null);
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [newLink, setNewLink] = useState({ label: "", truck_number: "", division: DIVISIONS[0] });
+  const [newLink, setNewLink] = useState({ label: "", truck_number: "", division: DIVISIONS[0], assignment: "" });
   const [jobPagination, setJobPagination] = useState({ page: 1, pages: 1, total: 0, limit: PAGE_SIZE });
   const [activeLinkPagination, setActiveLinkPagination] = useState({ page: 1, pages: 1, total: 0, limit: PAGE_SIZE });
   const [inactiveLinkPagination, setInactiveLinkPagination] = useState({ page: 1, pages: 1, total: 0, limit: PAGE_SIZE });
@@ -75,7 +75,7 @@ export default function JobsPage() {
     try {
       await authPost("/crew-access-links", newLink);
       toast.success("New crew QR link created.");
-      setNewLink({ label: "", truck_number: "", division: DIVISIONS[0] });
+      setNewLink({ label: "", truck_number: "", division: DIVISIONS[0], assignment: "" });
       await loadPage({ nextActivePage: 1, nextInactivePage: 1 });
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Unable to create crew link");
@@ -129,6 +129,7 @@ export default function JobsPage() {
             <form className="mt-6 grid gap-4" onSubmit={handleCreateCrewLink} data-testid="jobs-create-crew-link-form">
               <Input value={newLink.label} onChange={(event) => setNewLink((current) => ({ ...current, label: event.target.value }))} placeholder="Crew label" className="h-12 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-label-input" />
               <Input value={newLink.truck_number} onChange={(event) => setNewLink((current) => ({ ...current, truck_number: event.target.value }))} placeholder="Truck number" className="h-12 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-truck-input" />
+              <Input value={newLink.assignment} onChange={(event) => setNewLink((current) => ({ ...current, assignment: event.target.value }))} placeholder="Assignment / route note" className="h-12 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-assignment-input" />
               <select value={newLink.division} onChange={(event) => setNewLink((current) => ({ ...current, division: event.target.value }))} className="h-12 rounded-2xl border border-white/10 bg-white/10 px-4 text-sm text-white focus:outline-none" data-testid="crew-link-division-input">
                 {DIVISIONS.map((division) => <option key={division} value={division} className="text-[#243e36]">{division}</option>)}
               </select>
@@ -165,6 +166,7 @@ export default function JobsPage() {
                     <div>
                       <p className="text-sm font-semibold text-[#243e36]" data-testid={`crew-qr-label-${link.code}`}>{link.label}</p>
                       <p className="mt-1 text-sm text-[#5c6d64]" data-testid={`crew-qr-meta-${link.code}`}>{link.crew_member_id} · {link.truck_number} · {link.division}</p>
+                      {link.assignment && <p className="mt-1 text-xs text-[#5c6d64]">{link.assignment}</p>}
                     </div>
                   </div>
                   <div className="mt-4 flex justify-center rounded-[28px] bg-white p-4">
@@ -197,6 +199,7 @@ export default function JobsPage() {
               <div key={link.id} className="rounded-[28px] border border-border bg-[#f6f6f2] p-5" data-testid={`inactive-crew-card-${link.code}`}>
                 <p className="text-sm font-semibold text-[#243e36]">{link.label}</p>
                 <p className="mt-1 text-sm text-[#5c6d64]">{link.crew_member_id} · {link.truck_number} · {link.division}</p>
+                {link.assignment && <p className="mt-1 text-xs text-[#5c6d64]">{link.assignment}</p>}
                 <Button type="button" onClick={() => handleToggleCrewLink(link.id, true)} className="mt-4 h-11 w-full rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid={`inactive-crew-reactivate-button-${link.code}`}>Reactivate link</Button>
               </div>
             ))}

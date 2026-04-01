@@ -194,6 +194,11 @@ def build_submission_file_response_url(submission_id: str, filename: str) -> tup
     return relative_api_path, f"{os.environ['FRONTEND_URL']}{relative_api_path}"
 
 
+def build_equipment_file_response_url(log_id: str, filename: str) -> tuple[str, str]:
+    relative_api_path = f"/api/equipment-logs/files/{log_id}/{filename}"
+    return relative_api_path, f"{os.environ['FRONTEND_URL']}{relative_api_path}"
+
+
 def build_missing_image_placeholder(filename: str) -> bytes:
     safe_name = html.escape(filename)
     svg = f"""
@@ -251,6 +256,7 @@ def get_submission_list_projection() -> dict:
         "truck_number": 1,
         "division": 1,
         "service_type": 1,
+        "task_type": 1,
         "status": 1,
         "match_status": 1,
         "match_confidence": 1,
@@ -283,6 +289,7 @@ def get_crew_link_projection() -> dict:
         "label": 1,
         "truck_number": 1,
         "division": 1,
+        "assignment": 1,
         "enabled": 1,
         "created_at": 1,
         "updated_at": 1,
@@ -347,6 +354,14 @@ class CrewAccessCreate(BaseModel):
     label: str
     truck_number: str
     division: str
+    assignment: str = ""
+
+
+class CrewAccessUpdate(BaseModel):
+    label: str
+    truck_number: str
+    division: str
+    assignment: str = ""
 
 
 class MatchOverrideRequest(BaseModel):
@@ -1376,6 +1391,7 @@ async def create_submission(
     access_code: str = Form(...),
     job_id: str = Form(""),
     job_name: str = Form(""),
+    task_type: str = Form(""),
     truck_number: str = Form(...),
     gps_lat: float = Form(...),
     gps_lng: float = Form(...),
@@ -1486,6 +1502,7 @@ async def create_submission(
         "truck_number": truck_number,
         "division": job["division"] if job else crew_link["division"],
         "service_type": job["service_type"] if job else "",
+        "task_type": task_type,
         "status": status,
         "note": note,
         "area_tag": area_tag,
@@ -1528,7 +1545,7 @@ async def create_submission(
         title="New crew submission ready",
         message=f"{crew_link['label']} submitted {job_name_value} for management review.",
         audience="management",
-        target_role="management",
+        target_titles=["Supervisor", "Production Manager", "Account Manager", "GM"],
         related_submission_id=submission_id,
         related_job_id=job_key,
         notification_type="new_submission",
@@ -1538,7 +1555,7 @@ async def create_submission(
             title="Crew reported an issue or damage",
             message=f"{crew_link['label']} reported '{issue_type or 'field issue'}' on {job_name_value}.",
             audience="management",
-            target_titles=["Production Manager", "Account Manager"],
+            target_titles=["Supervisor", "Production Manager", "Account Manager", "GM"],
             related_submission_id=submission_id,
             related_job_id=job_key,
             notification_type="field_issue",
@@ -1573,6 +1590,135 @@ async def get_submission_file(submission_id: str, filename: str):
         return FileResponse(local_path, media_type=file_entry.get("mime_type", "application/octet-stream"))
 
     return Response(content=build_missing_image_placeholder(filename), media_type="image/svg+xml")
+
+
+@api_router.post("/public/equipment-logs")
+async def create_equipment_log(
+    request: Request,
+    access_code: str = Form(...),
+    equipment_number: str = Form(...),
+    general_note: str = Form(""),
+    red_tag_note: str = Form(""),
+    pre_service_photo: UploadFile = File(...),
+    post_service_photo: UploadFile = File(...),
+):
+    crew_link = await db.crew_access_links.find_one({"code": access_code, "enabled": True}, {"_id": 0})
+    if not crew_link:
+        raise HTTPException(status_code=404, detail="Crew access link not found")
+
+    log_id = make_id("equip")
+    local_folder = SUBMISSIONS_DIR / log_id
+    local_folder.mkdir(parents=True, exist_ok=True)
+    photos = []
+    for label, upload in [("pre", pre_service_photo), ("post", post_service_photo)]:
+        content = await upload.read()
+        suffix = Path(upload.filename or f"{label}.jpg").suffix or ".jpg"
+        filename = f"{label}_{uuid.uuid4().hex[:6]}{suffix}"
+        relative_api_path, media_url = build_equipment_file_response_url(log_id, filename)
+        storage_path = f"sarver-landscape/equipment-logs/{log_id}/{filename}"
+        await upload_bytes_to_storage(storage_path, content, upload.content_type or "application/octet-stream")
+        photos.append(
+            {
+                "slot": label,
+                "filename": filename,
+                "mime_type": upload.content_type or "application/octet-stream",
+                "bucket": get_storage_bucket(),
+                "storage_path": storage_path,
+                "relative_api_path": relative_api_path,
+                "media_url": media_url,
+                "source_type": "supabase",
+            }
+        )
+
+    log = {
+        "id": log_id,
+        "access_code": access_code,
+        "crew_label": crew_link["label"],
+        "truck_number": crew_link["truck_number"],
+        "division": crew_link["division"],
+        "equipment_number": equipment_number,
+        "general_note": general_note,
+        "red_tag_note": red_tag_note,
+        "photos": photos,
+        "status": "red_tag_review" if red_tag_note else "logged",
+        "forwarded_to_owner": False,
+        "device_metadata": {"user_agent": request.headers.get("user-agent", "unknown")},
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+        "audit_history": [audit_entry("submitted", access_code, "Equipment maintenance log created")],
+    }
+    await db.equipment_logs.insert_one({**log})
+    await create_notification(
+        title="Equipment maintenance record submitted",
+        message=f"{crew_link['label']} logged equipment {equipment_number}.",
+        audience="management",
+        target_titles=["Supervisor", "Production Manager", "Account Manager", "GM"],
+        notification_type="equipment_log",
+    )
+    if red_tag_note:
+        await create_notification(
+            title="Red-tag equipment issue reported",
+            message=f"{crew_link['label']} flagged equipment {equipment_number}: {red_tag_note}",
+            audience="management",
+            target_titles=["Supervisor", "Production Manager", "GM"],
+            notification_type="equipment_red_tag",
+        )
+    return {"equipment_log": log}
+
+
+@api_router.get("/equipment-logs")
+async def get_equipment_logs(
+    user: dict = Depends(require_roles("management", "owner")),
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=50),
+):
+    page = normalize_page(page)
+    limit = normalize_limit(limit, default=10, max_limit=50)
+    total = await db.equipment_logs.count_documents({})
+    items = (
+        await db.equipment_logs.find({}, {"_id": 0})
+        .sort("created_at", -1)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .to_list(limit)
+    )
+    return build_paginated_response(items, page, limit, total)
+
+
+@api_router.post("/equipment-logs/{log_id}/forward-to-owner")
+async def forward_equipment_log_to_owner(log_id: str, user: dict = Depends(require_roles("management", "owner"))):
+    if user.get("title") != "GM" and user.get("role") != "owner":
+        raise HTTPException(status_code=403, detail="Only GM or Owner can forward this red-tag to Owner review")
+    equipment_log = await db.equipment_logs.find_one({"id": log_id}, {"_id": 0})
+    if not equipment_log:
+        raise HTTPException(status_code=404, detail="Equipment log not found")
+    await db.equipment_logs.update_one(
+        {"id": log_id},
+        {"$set": {"forwarded_to_owner": True, "updated_at": now_iso()}},
+    )
+    await create_notification(
+        title="Equipment red-tag forwarded to Owner",
+        message=f"GM forwarded equipment {equipment_log['equipment_number']} from {equipment_log['crew_label']} for Owner review.",
+        audience="owner",
+        target_role="owner",
+        notification_type="equipment_red_tag_forwarded",
+    )
+    return {"status": "forwarded"}
+
+
+@api_router.get("/equipment-logs/files/{log_id}/{filename}")
+async def get_equipment_log_file(log_id: str, filename: str):
+    equipment_log = await db.equipment_logs.find_one({"id": log_id}, {"_id": 0, "photos": 1})
+    if not equipment_log:
+        raise HTTPException(status_code=404, detail="Equipment log not found")
+    file_entry = next((item for item in equipment_log.get("photos", []) if item.get("filename") == filename), None)
+    if not file_entry:
+        raise HTTPException(status_code=404, detail="File not found")
+    try:
+        content = await download_bytes_from_storage(file_entry["storage_path"], file_entry.get("bucket") or get_storage_bucket())
+        return Response(content=content, media_type=file_entry.get("mime_type", "application/octet-stream"))
+    except Exception:
+        return Response(content=build_missing_image_placeholder(filename), media_type="image/svg+xml")
 
 
 @api_router.get("/dashboard/overview")
@@ -1736,6 +1882,7 @@ async def create_crew_access_link(payload: CrewAccessCreate, user: dict = Depend
         "label": payload.label,
         "truck_number": payload.truck_number,
         "division": payload.division,
+        "assignment": payload.assignment,
         "enabled": True,
         "created_at": now_iso(),
         "updated_at": now_iso(),
@@ -1756,6 +1903,31 @@ async def update_crew_access_link_status(
         {
             "$set": {"enabled": payload.enabled, "updated_at": now_iso()},
             "$push": {"audit_history": audit_entry("status_update", user["id"], f"enabled={payload.enabled}")},
+        },
+    )
+    crew_link = await db.crew_access_links.find_one({"id": crew_link_id}, {"_id": 0})
+    if not crew_link:
+        raise HTTPException(status_code=404, detail="Crew link not found")
+    return present_crew_link(crew_link)
+
+
+@api_router.patch("/crew-access-links/{crew_link_id}")
+async def update_crew_access_link(
+    crew_link_id: str,
+    payload: CrewAccessUpdate,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    await db.crew_access_links.update_one(
+        {"id": crew_link_id},
+        {
+            "$set": {
+                "label": payload.label,
+                "truck_number": payload.truck_number,
+                "division": payload.division,
+                "assignment": payload.assignment,
+                "updated_at": now_iso(),
+            },
+            "$push": {"audit_history": audit_entry("updated", user["id"], "Crew QR metadata updated")},
         },
     )
     crew_link = await db.crew_access_links.find_one({"id": crew_link_id}, {"_id": 0})
