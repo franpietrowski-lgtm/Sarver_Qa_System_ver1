@@ -33,7 +33,10 @@ const navigationByRole = {
 
 export default function AppShell({ user, onLogout, children }) {
   const roleKey = (user?.role || "").trim().toLowerCase();
-  const navItems = navigationByRole[roleKey] || [];
+  const navItems = (navigationByRole[roleKey] || []).filter((item) => {
+    if (item.to === "/rubric-editor" && !["GM", "Owner"].includes(user?.title) && user?.role !== "owner") return false;
+    return true;
+  });
   const logoUrl = "https://sarverlandscape.com/wp-content/uploads/2024/10/sarver-logo.png";
   const { isDark, toggleTheme } = useTheme();
 

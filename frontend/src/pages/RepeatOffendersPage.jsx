@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Copy, Radar } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -115,6 +116,19 @@ export default function RepeatOffendersPage() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2" data-testid="repeat-offenders-crosslinks">
+        <Link to="/standards" className="rounded-[20px] border border-border bg-[#f6f6f2] p-4 transition hover:bg-white" data-testid="repeat-link-standards">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#5f7464]">Related</p>
+          <p className="mt-1 font-semibold text-[#243e36]">Standards Library</p>
+          <p className="mt-0.5 text-xs text-[#5c6d64]">Build and manage quality standards for training sessions.</p>
+        </Link>
+        <Link to="/rubric-editor" className="rounded-[20px] border border-border bg-[#f6f6f2] p-4 transition hover:bg-white" data-testid="repeat-link-rubric-editor">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#5f7464]">Related</p>
+          <p className="mt-1 font-semibold text-[#243e36]">Rubric Matrices</p>
+          <p className="mt-0.5 text-xs text-[#5c6d64]">View and edit grading criteria linked to quality standards.</p>
+        </Link>
       </div>
     </div>
   );

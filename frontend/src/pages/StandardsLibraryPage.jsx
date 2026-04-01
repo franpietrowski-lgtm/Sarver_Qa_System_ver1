@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Copy, LibraryBig, Plus, QrCode } from "lucide-react";
+import { Link } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 
 import { Badge } from "@/components/ui/badge";
@@ -340,6 +341,19 @@ export default function StandardsLibraryPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2" data-testid="standards-crosslinks">
+        <Link to="/repeat-offenders" className="rounded-[20px] border border-border bg-[#f6f6f2] p-4 transition hover:bg-white" data-testid="standards-link-repeat-offenders">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#5f7464]">Related</p>
+          <p className="mt-1 font-semibold text-[#243e36]">Repeat Offenders</p>
+          <p className="mt-0.5 text-xs text-[#5c6d64]">Track crews who repeat quality issues and trigger training.</p>
+        </Link>
+        <Link to="/rubric-editor" className="rounded-[20px] border border-border bg-[#f6f6f2] p-4 transition hover:bg-white" data-testid="standards-link-rubric-editor">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#5f7464]">Related</p>
+          <p className="mt-1 font-semibold text-[#243e36]">Rubric Matrices</p>
+          <p className="mt-0.5 text-xs text-[#5c6d64]">Manage grading factors and thresholds by division.</p>
+        </Link>
       </div>
     </div>
   );
