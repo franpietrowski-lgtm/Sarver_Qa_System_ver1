@@ -829,10 +829,166 @@ frontend:
           agent: "testing"
           comment: "UNABLE TO TEST - Could not test session submit flow due to lack of valid training session code. Needs valid training session to test end screen functionality."
 
+  - task: "Overview Dashboard - Quality + Training workflow prominently surfaced"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/OverviewPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - Overview dashboard prominently displays Quality + Training workflow. Hero card shows title 'Keep crews fast. Keep labels consistent. Keep training data clean.' with workflow description. Workflow health card displays review velocity (78.1%) and storage readiness badges. All workflow elements rendering correctly."
+
+  - task: "Overview page - Rapid Review QR/mobile launch card"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/OverviewPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - Rapid Review QR/mobile launch card fully functional. Card displays: QR code for mobile scanning, 'Open mobile link' button, 'Copy phone link' button, 'Admin phones only' badge, and descriptive text 'Scan the phone link and open the swipe lane where admins actually review.' All elements present and working."
+
+  - task: "Overview page - Crew QR metadata editor card"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/OverviewPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - Crew QR metadata editor card fully functional. Card includes: crew select dropdown (4 active crews available), crew label input, truck number input, division select dropdown, assignment/route note input, and 'Save crew QR updates' button. All fields populate correctly when crew is selected. Tested with both Production Manager and Owner roles - both can access and edit without runtime errors."
+
+  - task: "Overview page - Equipment records card"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/OverviewPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - Equipment records card displays correctly. Card shows 'Recent maintenance + red-tag records' with 2 equipment log items. Found 1 red-tag note displayed in red background ('Hydraulic leak spotted' for equipment E-204). Equipment logs show equipment number, crew label, division, and status badges. Card rendering properly."
+
+  - task: "Crew QR editor - Production Manager access without runtime errors"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/OverviewPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - Production Manager can use crew QR editor without any runtime errors. Successfully tested: opening crew dropdown (4 options available), selecting crew 'Fran_Test', fields auto-populated (label: 'Fran_Test', truck: '43'), editing assignment field with test data. No console errors, no runtime exceptions. Editor fully functional."
+
+  - task: "Crew QR editor - Owner access without runtime errors"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/OverviewPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - Owner can use crew QR editor without any runtime errors. Successfully tested: Owner can see crew QR editor card, access crew dropdown (4 options available), select crew 'Fran_Test', and all fields populate correctly. No console errors, no runtime exceptions. Owner has full access to crew metadata editing functionality."
+
+  - task: "Crew portal - Current task dropdown (division-aware)"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/CrewCapturePage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - Current task dropdown is division-aware and working correctly. Tested with Maintenance division crew - dropdown shows 6 division-specific tasks: 1) Bed edging, 2) Spring/Fall Cleanup, 3) Property Maintenance, 4) Pruning, 5) Weeding, 6) Mulching. Tasks are filtered based on crew's division (DIVISION_TASKS object in code). Dropdown renders correctly with data-testid='crew-task-type-select'."
+
+  - task: "Crew portal - Tab structure (Work Capture, Standards Highlights, Equipment Maintenance)"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/CrewCapturePage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - All 3 crew portal tabs present and functional. Tab list includes: 1) 'Work capture' tab (default capture form), 2) 'Standards highlights' tab (crew standards library), 3) 'Equipment maintenance' tab (equipment logging). All tabs render correctly and are clickable. Tab structure matches requirements exactly."
+
+  - task: "Crew portal - Equipment Maintenance tab fields"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/CrewCapturePage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - Equipment Maintenance tab contains ALL required fields: 1) Equipment## input (placeholder: 'Equipment##'), 2) General note textarea (placeholder: 'General note'), 3) Red-Tag Note textarea (placeholder: 'Red-Tag Note') with red background styling, 4) Pre-service photo upload field with upload icon, 5) Post-service photo upload field with upload icon, 6) 'Submit equipment record' button. All fields render correctly with proper styling and data-testids. Form structure matches requirements exactly."
+
+  - task: "Rapid Review - Mobile-link oriented and still works (regression)"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/RapidReviewPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - Rapid Review remains mobile-link oriented and fully functional. Tested /rapid-review/mobile route - page loads correctly with mobile swipe lane interface. All 4 rating buttons present and working: Fail, Concern, Standard, Exemplary. Page shows 'Mobile swipe lane' title and phone-first admin interface. No regressions detected - feature working as expected."
+
+  - task: "Standards Library - Still loads after updates (regression)"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/StandardsLibraryPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - Standards Library page loads without runtime errors after dashboard/crew/equipment updates. No error overlays detected. Page content includes standards and training elements. No regressions from new features. Page remains functional."
+
+  - task: "Repeat Offenders - Still loads after updates (regression)"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/RepeatOffendersPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - Repeat Offenders page loads without runtime errors after dashboard/crew/equipment updates. No error overlays detected. Page content includes repeat offender tracking elements. No regressions from new features. Page remains functional."
+
+  - task: "Training Mode - Still loads after updates (regression)"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/TrainingModePage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "PASSED - Training Mode page loads without TypeError crash after dashboard/crew/equipment updates. Tested with invalid training code - page shows friendly error message 'Training session unavailable' instead of crashing. No regressions from new features. Error handling working correctly."
+
 metadata:
   created_by: "testing_agent"
-  version: "1.5"
-  test_sequence: 6
+  version: "1.6"
+  test_sequence: 7
   run_ui: true
   last_tested: "2026-04-01"
 
@@ -855,3 +1011,5 @@ agent_communication:
       message: "🔄 RETEST 2026-03-31 COMPLETE - Retested live frontend at https://landscape-qa.preview.emergentagent.com after latest fixes. RESULTS: 2 OUT OF 3 CRITICAL ISSUES FIXED, 1 REMAINS BROKEN. ✅ FIXED ISSUES: 1) Standards Library 422 error - RESOLVED! Page loads completely without runtime errors or 422 API errors from crew-access-links endpoint. All content renders correctly. 2) Training Mode invalid code handling - RESOLVED! Now shows friendly 'Training session unavailable' message instead of crashing with TypeError. ❌ STILL BROKEN: Owner role navigation restrictions - Owner INCORRECTLY sees 'Alignment & QR' and 'Review Queue' (should be management-only). Owner CORRECTLY sees 'Owner Review' and can access /owner page (this part was fixed). ✅ ALL OTHER FLOWS WORKING: Overview rapid review QR card present, /rapid-review/mobile swipe lane renders with all 4 rating buttons, Fail comment modal opens correctly, Standards training session generator present, Repeat Offenders page loads successfully. MAIN AGENT ACTION REQUIRED: Fix Owner navigation visibility logic in AppShell.jsx to hide 'Alignment & QR' and 'Review Queue' links for Owner role."
     - agent: "testing"
       message: "✅ RETEST 2026-04-01 COMPLETE - Owner navigation restrictions NOW FULLY FIXED! Tested live app at https://landscape-qa.preview.emergentagent.com with Owner credentials (owner@fieldquality.local). VERIFICATION RESULTS: Owner sees exactly 7 navigation links: 1) Overview, 2) Owner Review, 3) Calibration, 4) Standards Library, 5) Repeat Offenders, 6) Exports, 7) Settings. Owner correctly DOES NOT see: Alignment & QR (management-only), Review Queue (management-only). All expected links present ✓, all forbidden links hidden ✓. Navigation visibility logic in AppShell.jsx (lines 20-28) working perfectly. The stuck task is now resolved. No further action required for owner navigation restrictions."
+    - agent: "testing"
+      message: "✅ DASHBOARD/CREW/EQUIPMENT UPDATES TESTING COMPLETE - 2026-04-01. Tested all new features after Phase 1 updates. RESULTS: ALL 13 FEATURES PASSED (13/13). ✅ OVERVIEW DASHBOARD: Quality + Training workflow prominently displayed with hero card title 'Keep crews fast. Keep labels consistent. Keep training data clean.' and workflow health card showing 78.1% review velocity. ✅ THREE NEW OVERVIEW CARDS: 1) Rapid Review QR/mobile launch card with QR code, 'Open mobile link' and 'Copy phone link' buttons working, 2) Crew QR metadata editor card with crew select dropdown (4 crews), label/truck/division/assignment inputs, and save button - tested with both Production Manager and Owner roles WITHOUT RUNTIME ERRORS, 3) Equipment records card showing 2 equipment logs with 1 red-tag note ('Hydraulic leak spotted'). ✅ CREW PORTAL UPDATES: Current task dropdown is division-aware (6 Maintenance tasks displayed), all 3 tabs present (Work Capture, Standards Highlights, Equipment Maintenance), Equipment Maintenance tab contains ALL 5 required fields (Equipment##, General note, Red-Tag Note, Pre-service photo, Post-service photo) with submit button. ✅ REGRESSION TESTS: Rapid Review mobile lane still works with all 4 rating buttons, Standards Library loads without errors, Repeat Offenders loads without errors, Training Mode loads without errors. ✅ MINOR CONSOLE WARNINGS: Some 404 errors for Cloudflare CDN/RUM monitoring (not app-breaking), one failed request to example.com placeholder image (not critical). NO CRITICAL ISSUES FOUND. All requested features working correctly. Screenshots captured: overview-dashboard-prod-manager.png, overview-dashboard-owner.png, equipment-maintenance-tab.png."
