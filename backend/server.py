@@ -520,6 +520,258 @@ RUBRIC_LIBRARY = [
             {"key": "visual_finish", "label": "Visual Finish", "weight": 0.18, "max_score": 5},
         ],
     },
+    {
+        "id": "rubric_property_maintenance_v1",
+        "service_type": "property maintenance",
+        "title": "Property Maintenance v1",
+        "version": 1,
+        "min_photos": 3,
+        "pass_threshold": 80,
+        "hard_fail_conditions": ["unsafe_site_left", "major_missed_scope"],
+        "categories": [
+            {"key": "horticultural_quality", "label": "Horticultural Quality", "weight": 0.34, "max_score": 5},
+            {"key": "scope_completeness", "label": "Scope Completeness", "weight": 0.33, "max_score": 5},
+            {"key": "site_finish", "label": "Site Finish", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_pruning_v1",
+        "service_type": "pruning",
+        "title": "Pruning v1",
+        "version": 1,
+        "min_photos": 3,
+        "pass_threshold": 82,
+        "hard_fail_conditions": ["plant_damage", "unsafe_cutting_practice"],
+        "categories": [
+            {"key": "cut_quality", "label": "Cut Quality", "weight": 0.34, "max_score": 5},
+            {"key": "shape_intent", "label": "Shape Intent", "weight": 0.33, "max_score": 5},
+            {"key": "cleanup_finish", "label": "Cleanup Finish", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_weeding_v1",
+        "service_type": "weeding",
+        "title": "Weeding v1",
+        "version": 1,
+        "min_photos": 3,
+        "pass_threshold": 80,
+        "hard_fail_conditions": ["weed_patch_missed", "ornamental_damage"],
+        "categories": [
+            {"key": "weed_removal", "label": "Weed Removal", "weight": 0.34, "max_score": 5},
+            {"key": "bed_protection", "label": "Bed Protection", "weight": 0.33, "max_score": 5},
+            {"key": "final_cleanup", "label": "Final Cleanup", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_mulching_v1",
+        "service_type": "mulching",
+        "title": "Mulching v1",
+        "version": 1,
+        "min_photos": 3,
+        "pass_threshold": 82,
+        "hard_fail_conditions": ["mulch_on_turf", "root_flare_buried"],
+        "categories": [
+            {"key": "depth_consistency", "label": "Depth Consistency", "weight": 0.34, "max_score": 5},
+            {"key": "bed_definition", "label": "Bed Definition", "weight": 0.33, "max_score": 5},
+            {"key": "spill_control", "label": "Spill Control", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_softscape_v1",
+        "service_type": "softscape",
+        "title": "Softscape v1",
+        "version": 1,
+        "min_photos": 4,
+        "pass_threshold": 83,
+        "hard_fail_conditions": ["material_damage", "layout_miss"],
+        "categories": [
+            {"key": "layout_accuracy", "label": "Layout Accuracy", "weight": 0.34, "max_score": 5},
+            {"key": "material_condition", "label": "Material Condition", "weight": 0.33, "max_score": 5},
+            {"key": "finish_detail", "label": "Finish Detail", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_hardscape_v1",
+        "service_type": "hardscape",
+        "title": "Hardscape v1",
+        "version": 1,
+        "min_photos": 4,
+        "pass_threshold": 84,
+        "hard_fail_conditions": ["trip_hazard", "failed_alignment"],
+        "categories": [
+            {"key": "alignment_grade", "label": "Alignment / Grade", "weight": 0.34, "max_score": 5},
+            {"key": "stability_compaction", "label": "Stability / Compaction", "weight": 0.33, "max_score": 5},
+            {"key": "finish_detail", "label": "Finish Detail", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_tree_plant_install_removal_v1",
+        "service_type": "tree/plant install/removal",
+        "title": "Tree/Plant Install/Removal v1",
+        "version": 1,
+        "min_photos": 4,
+        "pass_threshold": 82,
+        "hard_fail_conditions": ["unsafe_lift", "site_damage"],
+        "categories": [
+            {"key": "safety_control", "label": "Safety / Control", "weight": 0.34, "max_score": 5},
+            {"key": "plant_material_handling", "label": "Plant/Material Handling", "weight": 0.33, "max_score": 5},
+            {"key": "site_restoration", "label": "Site Restoration", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_drainage_trenching_v1",
+        "service_type": "drainage/trenching",
+        "title": "Drainage/Trenching v1",
+        "version": 1,
+        "min_photos": 4,
+        "pass_threshold": 82,
+        "hard_fail_conditions": ["poor_grade", "unsafe_open_trench"],
+        "categories": [
+            {"key": "trench_accuracy", "label": "Trench Accuracy", "weight": 0.34, "max_score": 5},
+            {"key": "drainage_function", "label": "Drainage Function", "weight": 0.33, "max_score": 5},
+            {"key": "restoration_finish", "label": "Restoration Finish", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_lighting_v1",
+        "service_type": "lighting",
+        "title": "Lighting v1",
+        "version": 1,
+        "min_photos": 3,
+        "pass_threshold": 83,
+        "hard_fail_conditions": ["wiring_exposed", "fixture_misfire"],
+        "categories": [
+            {"key": "placement_accuracy", "label": "Placement Accuracy", "weight": 0.34, "max_score": 5},
+            {"key": "function_test", "label": "Function Test", "weight": 0.33, "max_score": 5},
+            {"key": "concealment_finish", "label": "Concealment Finish", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_removal_v1",
+        "service_type": "removal",
+        "title": "Removal v1",
+        "version": 1,
+        "min_photos": 4,
+        "pass_threshold": 84,
+        "hard_fail_conditions": ["unsafe_drop_zone", "debris_left_behind"],
+        "categories": [
+            {"key": "safety_execution", "label": "Safety Execution", "weight": 0.34, "max_score": 5},
+            {"key": "debris_clearance", "label": "Debris Clearance", "weight": 0.33, "max_score": 5},
+            {"key": "surface_protection", "label": "Surface Protection", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_stump_grinding_v1",
+        "service_type": "stump grinding",
+        "title": "Stump Grinding v1",
+        "version": 1,
+        "min_photos": 3,
+        "pass_threshold": 83,
+        "hard_fail_conditions": ["stump_remaining", "surface_damage"],
+        "categories": [
+            {"key": "grind_completeness", "label": "Grind Completeness", "weight": 0.34, "max_score": 5},
+            {"key": "debris_containment", "label": "Debris Containment", "weight": 0.33, "max_score": 5},
+            {"key": "surface_finish", "label": "Surface Finish", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_fert_and_chem_treatments_v1",
+        "service_type": "fert and chem treatments",
+        "title": "Fert and Chem Treatments v1",
+        "version": 1,
+        "min_photos": 2,
+        "pass_threshold": 85,
+        "hard_fail_conditions": ["label_noncompliance", "unsafe_application"],
+        "categories": [
+            {"key": "coverage_accuracy", "label": "Coverage Accuracy", "weight": 0.34, "max_score": 5},
+            {"key": "safety_compliance", "label": "Safety Compliance", "weight": 0.33, "max_score": 5},
+            {"key": "record_clarity", "label": "Record Clarity", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_air_spade_v1",
+        "service_type": "air spade",
+        "title": "Air Spade v1",
+        "version": 1,
+        "min_photos": 3,
+        "pass_threshold": 84,
+        "hard_fail_conditions": ["root_damage", "unsafe_excavation"],
+        "categories": [
+            {"key": "root_zone_care", "label": "Root Zone Care", "weight": 0.34, "max_score": 5},
+            {"key": "excavation_control", "label": "Excavation Control", "weight": 0.33, "max_score": 5},
+            {"key": "restoration_finish", "label": "Restoration Finish", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_dormant_pruning_v1",
+        "service_type": "dormant pruning",
+        "title": "Dormant Pruning v1",
+        "version": 1,
+        "min_photos": 3,
+        "pass_threshold": 84,
+        "hard_fail_conditions": ["bud_damage", "unsafe_cutting_practice"],
+        "categories": [
+            {"key": "pruning_intent", "label": "Pruning Intent", "weight": 0.34, "max_score": 5},
+            {"key": "plant_health_protection", "label": "Plant Health Protection", "weight": 0.33, "max_score": 5},
+            {"key": "cleanup_finish", "label": "Cleanup Finish", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_deer_fencing_and_shrub_treatment_v1",
+        "service_type": "deer fencing and shrub treatment",
+        "title": "Deer Fencing and Shrub Treatment v1",
+        "version": 1,
+        "min_photos": 3,
+        "pass_threshold": 83,
+        "hard_fail_conditions": ["coverage_gap", "plant_damage"],
+        "categories": [
+            {"key": "protection_coverage", "label": "Protection Coverage", "weight": 0.34, "max_score": 5},
+            {"key": "treatment_quality", "label": "Treatment Quality", "weight": 0.33, "max_score": 5},
+            {"key": "final_presentation", "label": "Final Presentation", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_snow_removal_v1",
+        "service_type": "snow removal",
+        "title": "Snow Removal v1",
+        "version": 1,
+        "min_photos": 3,
+        "pass_threshold": 85,
+        "hard_fail_conditions": ["unsafe_walkway", "missed_access_lane"],
+        "categories": [
+            {"key": "surface_coverage", "label": "Surface Coverage", "weight": 0.34, "max_score": 5},
+            {"key": "access_safety", "label": "Access Safety", "weight": 0.33, "max_score": 5},
+            {"key": "pile_placement", "label": "Pile Placement", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_plow_v1",
+        "service_type": "plow",
+        "title": "Plow v1",
+        "version": 1,
+        "min_photos": 3,
+        "pass_threshold": 84,
+        "hard_fail_conditions": ["missed_route", "curb_damage"],
+        "categories": [
+            {"key": "route_completeness", "label": "Route Completeness", "weight": 0.34, "max_score": 5},
+            {"key": "obstruction_control", "label": "Obstruction Control", "weight": 0.33, "max_score": 5},
+            {"key": "final_surface", "label": "Final Surface", "weight": 0.33, "max_score": 5},
+        ],
+    },
+    {
+        "id": "rubric_salting_v1",
+        "service_type": "salting",
+        "title": "Salting v1",
+        "version": 1,
+        "min_photos": 2,
+        "pass_threshold": 85,
+        "hard_fail_conditions": ["untreated_hazard_zone", "material_overuse"],
+        "categories": [
+            {"key": "coverage_consistency", "label": "Coverage Consistency", "weight": 0.34, "max_score": 5},
+            {"key": "slip_risk_reduction", "label": "Slip-Risk Reduction", "weight": 0.33, "max_score": 5},
+            {"key": "material_control", "label": "Material Control", "weight": 0.33, "max_score": 5},
+        ],
+    },
 ]
 
 
@@ -953,19 +1205,21 @@ async def seed_defaults() -> None:
     await db.crew_access_links.update_many({"division": "Cleanup"}, {"$set": {"division": "Maintenance", "updated_at": now_iso()}})
     await db.submissions.update_many({"division": "Cleanup"}, {"$set": {"division": "Maintenance", "updated_at": now_iso()}})
 
-    if await db.rubric_definitions.count_documents({}) == 0:
-        payload = []
-        for rubric in RUBRIC_LIBRARY:
-            payload.append(
-                {
-                    **rubric,
-                    "is_active": True,
-                    "created_at": now_iso(),
-                    "updated_at": now_iso(),
-                    "audit_history": [audit_entry("seeded", "system", f"Rubric {rubric['title']} loaded")],
-                }
-            )
-        await db.rubric_definitions.insert_many(payload)
+    for rubric in RUBRIC_LIBRARY:
+        existing = await db.rubric_definitions.find_one({"service_type": rubric["service_type"].lower(), "version": rubric["version"]}, {"_id": 0})
+        document = {
+            **rubric,
+            "service_type": rubric["service_type"].lower(),
+            "is_active": True,
+            "created_at": existing.get("created_at", now_iso()) if existing else now_iso(),
+            "updated_at": now_iso(),
+            "audit_history": existing.get("audit_history", [audit_entry("seeded", "system", f"Rubric {rubric['title']} loaded")]) if existing else [audit_entry("seeded", "system", f"Rubric {rubric['title']} loaded")],
+        }
+        await db.rubric_definitions.update_one(
+            {"service_type": rubric["service_type"].lower(), "version": rubric["version"]},
+            {"$set": document},
+            upsert=True,
+        )
 
     if await db.crew_access_links.count_documents({}) == 0:
         crew_links = [
@@ -1501,7 +1755,7 @@ async def create_submission(
         "match_confidence": match_confidence,
         "truck_number": truck_number,
         "division": job["division"] if job else crew_link["division"],
-        "service_type": job["service_type"] if job else "",
+        "service_type": (job["service_type"] if job else task_type).lower() if (job or task_type) else "",
         "task_type": task_type,
         "status": status,
         "note": note,
