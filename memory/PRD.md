@@ -26,6 +26,10 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Rapid Review refinement: mobile-only in practice, launched by QR/mobile link from admin dashboards rather than a desktop nav workspace
 - Standards Library: start with universal categories (edging, mulch, cleanup, pruning, damage prevention) and allow division-specific omissions/bundles
 - Training Mode phase choice: build session + swipe/quiz flow first, then add deeper history later
+- Dashboard priority: Quality + Training should be at the forefront regardless of admin role
+- Notifications: incident/damage alerts go to all admin roles except Owner; equipment Red-Tag flow goes to PM + Supervisor + GM, with GM forwarding to Owner when needed
+- Crew equipment logging: separate crew-side tab with pre-service photo, post-service photo, Equipment##, General note, and Red-Tag Note
+- Crew QR editing: any admin role should be able to update crew QR metadata from the dashboard
 
 ## Architecture Decisions
 - Frontend: React 19 + React Router + Tailwind + shadcn/ui + Framer Motion
@@ -107,6 +111,12 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Built Repeat Offender tracking with a backend aggregation endpoint, crew/issue heatmap, escalation levels, related-submission lists, and one-click training session generation
 - Built first-pass Crew Training Mode with unique no-login session links, image-first flow, swipe/tap into quiz, multiple-choice/free-text support, completion summary, and invalid/completed-session error states
 - Improved backend API contracts for this phase: create endpoints now return 201 where appropriate, and standards updates support partial PATCH payloads
+- Brought Quality + Training to the dashboard forefront with a mobile Rapid Review QR launch card, dashboard-level crew QR metadata editor, and recent equipment records panel
+- Added division-aware crew task selection and updated division structure toward Maintenance, Install, Tree, Plant Healthcare, and Winter Services
+- Added crew-side Equipment Maintenance tab with recordkeeping fields for pre/post service photos, equipment number, general notes, and Red-Tag Notes
+- Added backend equipment maintenance record storage, paginated admin listing, red-tag notifications, and GM/Owner forwarding flow for Owner review escalation
+- Expanded crew QR metadata to support assignment updates and enabled dashboard editing for any admin role
+- Reran deployment health review after these changes: PASS with no blockers
 
 ## Prioritized Backlog
 ### P0
@@ -119,6 +129,7 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Expand Repeat Offender tracking with configurable thresholds UI, deeper drilldowns, and stronger links into Training Mode history
 - Expand Crew Training Mode with historical performance dashboards, monthly auto-session generation, and richer answer analytics
 - Add dynamic QR metadata editing for vehicle/division/assignment while preserving historical records
+- Deepen system-to-system links between Standards Library, Repeat Offenders, Training Mode, and equipment/red-tag review workflows
 - Add richer analytics drilldowns by reviewer/service type within the new time windows
 - Add search-assisted job matching UX for large imported job libraries
 - Add LMN direct API sync after CSV-first workflow is validated
@@ -138,6 +149,7 @@ Build a lightweight, scalable internal application for a landscaping company tha
 - Run deployment readiness / health review again against the updated Supabase + paginated-query build
 - Expand Rapid Review from Phase 1 into stronger queue filters, persistent annotations, and optional revisit/edit flows for summary ratings
 - Add stronger admin workflow links between Standards Library, Repeat Offenders, and Training Mode (assign/reassign, archive, reopen session)
+- Finalize a role-optimized dashboard system map and page choreography so each role sees its highest-value Quality/Training actions first
 - Expand seeded/sample data or import a real CSV to mirror production routing and validate multi-page queues further
 - Add deeper calibration analytics by reviewer and service type inside the new daily/weekly/monthly/quarterly/annual filters
 - Add editable admin settings for rubric thresholds and hard-fail conditions
