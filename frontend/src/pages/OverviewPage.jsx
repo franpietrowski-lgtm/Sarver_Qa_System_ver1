@@ -1,4 +1,4 @@
-import { Activity, Boxes, Copy, FolderInput, QrCode, ShieldCheck, Smartphone, UploadCloud, Wrench } from "lucide-react";
+import { Activity, Boxes, Copy, FolderInput, Grid3X3, QrCode, ShieldCheck, Smartphone, UploadCloud, Wrench } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -24,20 +24,24 @@ export default function OverviewPage({ user }) {
   const [selectedCrewId, setSelectedCrewId] = useState("");
   const [crewForm, setCrewForm] = useState({ label: "", truck_number: "", division: DIVISIONS[0], assignment: "" });
   const [equipmentLogs, setEquipmentLogs] = useState([]);
+  const [rubricMatrices, setRubricMatrices] = useState([]);
+  const [matrixDivisionFilter, setMatrixDivisionFilter] = useState("all");
   const rapidReviewUrl = useMemo(() => (typeof window !== "undefined" ? `${window.location.origin}/rapid-review/mobile` : ""), []);
 
   useEffect(() => {
     const load = async () => {
-      const [overviewResponse, submissionsResponse, crewResponse, equipmentResponse] = await Promise.all([
+      const [overviewResponse, submissionsResponse, crewResponse, equipmentResponse, matricesResponse] = await Promise.all([
         authGet("/dashboard/overview"),
         authGet("/submissions?scope=all&page=1&limit=6"),
         authGet("/crew-access-links?status=active&page=1&limit=20"),
         authGet("/equipment-logs?page=1&limit=6"),
+        authGet("/rubric-matrices?division=all"),
       ]);
       setOverview(overviewResponse);
       setSubmissions(submissionsResponse.items || []);
       setCrewLinks(crewResponse.items || []);
       setEquipmentLogs(equipmentResponse.items || []);
+      setRubricMatrices(matricesResponse || []);
       if (crewResponse.items?.[0]) {
         setSelectedCrewId(crewResponse.items[0].id);
         setCrewForm({
@@ -124,6 +128,62 @@ export default function OverviewPage({ user }) {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((item) => <StatCard key={item.label} {...item} />)}
       </div>
+
+      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-rubric-matrix-card">
+        <CardContent className="p-6 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Quick matrix ref</p>
+              <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Rubric grading factors by division</h3>
+            </div>
+            <div className="flex items-center gap-3">
+              <Grid3X3 className="h-5 w-5 text-[#243e36]" />
+              <Select value={matrixDivisionFilter} onValueChange={setMatrixDivisionFilter}>
+                <SelectTrigger className="h-10 w-[180px] rounded-2xl border-transparent bg-[#edf0e7]" data-testid="overview-matrix-division-filter"><SelectValue placeholder="All divisions" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All divisions</SelectItem>
+                  {DIVISIONS.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full text-left text-sm" data-testid="overview-rubric-matrix-table">
+              <thead>
+                <tr className="border-b border-border/60">
+                  <th className="pb-3 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Task</th>
+                  <th className="pb-3 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Division</th>
+                  <th className="pb-3 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Grading factors</th>
+                  <th className="pb-3 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Pass</th>
+                  <th className="pb-3 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Ver</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rubricMatrices
+                  .filter((item) => matrixDivisionFilter === "all" || item.division === matrixDivisionFilter)
+                  .map((rubric) => (
+                    <tr key={rubric.id} className="border-b border-border/40" data-testid={`overview-rubric-row-${rubric.id}`}>
+                      <td className="py-3 pr-4 font-semibold capitalize text-[#243e36]">{rubric.service_type}</td>
+                      <td className="py-3 pr-4"><Badge className="border-0 bg-[#edf0e7] text-[#243e36]">{rubric.division || "General"}</Badge></td>
+                      <td className="py-3 pr-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          {(rubric.categories || []).map((cat) => (
+                            <span key={cat.key} className="inline-block rounded-lg bg-[#edf0e7] px-2 py-0.5 text-xs font-medium text-[#5c6d64]">{cat.label} ({Math.round(cat.weight * 100)}%)</span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4 font-semibold text-[#243e36]">{rubric.pass_threshold}%</td>
+                      <td className="py-3 text-[#5c6d64]">v{rubric.version}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+            {rubricMatrices.filter((item) => matrixDivisionFilter === "all" || item.division === matrixDivisionFilter).length === 0 && (
+              <p className="mt-4 text-center text-sm text-[#5c6d64]" data-testid="overview-rubric-empty">No rubric matrices found for this division.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-recent-submissions-card">

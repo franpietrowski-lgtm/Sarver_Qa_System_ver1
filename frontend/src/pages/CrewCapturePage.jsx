@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Camera, Crosshair, MapPinned, Upload } from "lucide-react";
+import { BookOpen, Camera, Crosshair, MapPinned, Upload, Wrench } from "lucide-react";
 import { useParams } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -230,9 +230,9 @@ export default function CrewCapturePage() {
           <CardContent className="p-6">
             <Tabs defaultValue="capture" className="space-y-4" data-testid="crew-portal-tabs">
               <TabsList className="grid h-auto w-full grid-cols-3 rounded-[22px] bg-[#edf0e7] p-1" data-testid="crew-portal-tab-list">
-                <TabsTrigger value="capture" className="rounded-[18px] py-3 text-sm font-semibold" data-testid="crew-capture-tab-trigger">Work capture</TabsTrigger>
-                <TabsTrigger value="standards" className="rounded-[18px] py-3 text-sm font-semibold" data-testid="crew-standards-tab-trigger">Standards highlights</TabsTrigger>
-                <TabsTrigger value="equipment" className="rounded-[18px] py-3 text-sm font-semibold" data-testid="crew-equipment-tab-trigger">Equipment maintenance</TabsTrigger>
+                <TabsTrigger value="capture" className="flex items-center justify-center gap-2 rounded-[18px] py-3 text-sm font-semibold" data-testid="crew-capture-tab-trigger"><Camera className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">Capture</span></TabsTrigger>
+                <TabsTrigger value="standards" className="flex items-center justify-center gap-2 rounded-[18px] py-3 text-sm font-semibold" data-testid="crew-standards-tab-trigger"><BookOpen className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">Standards</span></TabsTrigger>
+                <TabsTrigger value="equipment" className="flex items-center justify-center gap-2 rounded-[18px] py-3 text-sm font-semibold" data-testid="crew-equipment-tab-trigger"><Wrench className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">Equipment</span></TabsTrigger>
               </TabsList>
 
               <TabsContent value="capture">

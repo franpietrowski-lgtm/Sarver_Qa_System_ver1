@@ -1,0 +1,152 @@
+<analysis>**original_problem_statement**: 
+Build a lightweight, scalable internal application for a landscaping company (Sarver Landscape) that captures field work via structured photo submissions, allows management to review/score work using defined rubrics, and outputs structured datasets for AI training. The system has since expanded into a comprehensive QA System (V1.1) including Rapid Review (mobile swipe), Standards Library, Repeat Offender Tracking, and Training Mode.
+**PRODUCT REQUIREMENTS:**
+- Mobile-first crew portal (QR/link, no login) with division-aware tasking and equipment maintenance logs.
+- Admin/Management dashboard with quality/training workflows at the forefront.
+- Owner/GM dashboard with calibration heatmap, dataset exports, and dynamic rubric matrix editing.
+- Tinder-style Rapid Review for fast mobile QA processing.
+- Supabase Object Storage for images.
+
+**User's preferred language**: English (INSTRUCT next agent to respond in English only)
+
+**what currently exists?**: 
+A functional full-stack app (React, FastAPI, MongoDB) with fully integrated Supabase storage. Features include JWT auth, crew submissions, standard/rapid reviews, standards library, repeat offender tracking, training mode, and equipment logs. Optimized with pagination, role-based navigation, and a dark/light theme toggler.
+
+**Last working item**: 
+    - Last item agent was working: The agent reviewed the previous handoff summary and sent an  tool call to propose the priority plan to the user before starting development. No code changes were made in this immediate session yet.
+    - Status: BLOCKED (Waiting for user response)
+    - Agent Testing Done: N
+    - Which testing method agent to use?: both (testing agent for backend APIs and frontend tests + manual UI screenshots to verify dark mode and Rapid Review mobile UI constraints)
+    - User Testing Done: N
+
+**All Pending/In progress Issue list**:
+  Issue 1: Crew App UI Polish (Icon Tabs) (P1)
+     - Attempted fixes: None yet.
+     - Next debug checklist: Modify . Replace text tabs for Work capture, Standards highlights, and Equipment maintenance with appropriate icons to prevent text overflow on mobile.
+     - Why fix this issue and what will be achieved with the fix?: Improves mobile user experience and avoids a cluttered UI.
+     - Status: NOT STARTED
+     - Is recurring issue?: N
+     - Should Test frontend/backend/both after fix?: Frontend
+     - Blocked on other issue: None
+
+  Issue 2: Strict Mobile UI for Rapid Review (P1)
+     - Attempted fixes: None yet.
+     - Next debug checklist: Update . Remove any scrollable content below the main image and swipe HUD. Ensure prompted remarks appear seamlessly when triggered (Fail/Exemplary swipes).
+     - Why fix this issue and what will be achieved with the fix?: Rapid Review must act as a constrained, high-speed mobile swipe tool without dashboard clutter.
+     - Status: NOT STARTED
+     - Is recurring issue?: N
+     - Should Test frontend/backend/both after fix?: Frontend
+     - Blocked on other issue: None
+
+  Issue 3: Dark Theme Visibility Bugs (P2)
+     - Attempted fixes: None yet.
+     - Next debug checklist: Inspect  and Shadcn UI components. Fix the issue where dropdowns, headings, and border boxes become invisible in dark mode until hovered.
+     - Why fix this issue and what will be achieved with the fix?: Ensures usability across all themes.
+     - Status: NOT STARTED
+     - Is recurring issue?: N
+     - Should Test frontend/backend/both after fix?: Frontend
+     - Blocked on other issue: None
+
+**In progress Task List**:
+  Task 1: Dynamic Rubric Matrices & Quick Matrix Ref (P0)
+     - Where to resume: Modify  to support dynamic rubric matrices by division/task (with 3 default grading factors). Implement CRUD API endpoints for GM/Owner. Update  to include a Quick Matrix Ref table.
+     - What will be achieved with this?: Allows leadership to actively manage grading criteria without code deployments.
+     - Status: IN PROGRESS (Carried over from previous fork, current agent has not edited yet)
+     - Should Test frontend/backend/both after fix?: Both
+     - Blocked on something: None
+
+**Upcoming and Future Tasks**
+  Future Tasks:
+  - AI-assisted scoring (P2)
+  - Automate quality checks and grading using the gathered rubric dataset and attached image files (AI training) (P2)
+  - Closed-loop coaching system (auto-generating monthly training sessions from repeat-offender thresholds) (P2)
+
+**Completed work in this session**
+- List of all completed tasks with file and method name:
+  None in this immediate session. Agent only initiated .
+- Recently completed (from prior sessions):
+  - Supabase image storage migration (DONE)
+  - Pagination and DB query optimization for deployment readiness (DONE)
+  - Unified login screen, Theme toggler, and Role routing (DONE)
+  - Mobile-first Rapid Review swipe mode (DONE)
+  - Standards Library, Repeat Offenders tracking, and Training Mode flows (DONE)
+  - Equipment Maintenance logging & Notifications (DONE)
+
+**Earlier issues found/mentioned but not fixed**
+None.
+
+**Known issue recurrence from previous fork**
+  - Issue recurrence in previous fork: None
+  - Recurrence count: 0
+  - Status: RESOLVED
+
+**Code Architecture**
+- : FastAPI backend ( handles routes and DB ops).
+- : React app using TailwindCSS, Framer Motion (swipe mechanics), and Shadcn UI.
+- : Contains PRD and test credentials.
+
+**Key Technical Concepts**
+React, FastAPI, MongoDB, Supabase Storage (Service Role backend architecture), JWT Auth, Framer Motion (Tinder-style swipes).
+
+**key DB schema**
+  - : {email, hashed_password, role, active}
+  - : {code, label, division, active}
+  - , , , , 
+  - : {title, category, rules, images}
+  - : {crew_id, modules, score}
+  - : {equipment_number, pre_photo, post_photo, notes, red_tag}
+  - : {user_id, message, read}
+
+**changes in tech stack**
+- Fully transitioned from Google Drive to PostgreSQL/Supabase Storage.
+
+**All files of reference** 
+  - : Huge backend routing file containing DB logic, auth, models, and routes.
+  - : Mobile swipe UI logic.
+  - : Crew UI portal.
+  - : Main dashboard logic.
+  - : Global styles (check here for the dark mode bugs).
+
+**Areas that need refactoring**: 
+-  is nearly 2800 lines long. It handles everything and desperately needs to be modularized into separate routers/controllers in the future.
+
+**key api endpoints**
+-  (POST)
+-  (GET/POST)
+-  (GET/POST)
+-  (GET/POST)
+-  (GET/POST)
+
+**Critical Info for New Agent**
+- Do not add any new UI features to Rapid Review other than the swipe HUD and the image. The user explicitly requested it strictly be a mobile-first, zero-scroll interface.
+- Red Tag equipment submissions trigger notifications to PMs, Supervisors, GM, and Owner. Logic exists, preserve it.
+- Supabase is configured correctly. Do not alter the backend service role logic for image handling.
+- When you start, you will receive the user's response to the  tool regarding the proposed execution plan.
+
+**documents and test reports created in this job** 
+  -  to  (from prior forks)
+  -  
+  - 
+
+**Last 10 User Messages and any pending HUMAN messages** 
+ - Agent: I’ve got the handoff — quickly checking the project brief before proposing priorities. (Used )
+ - **PENDING HUMAN MESSAGE**: Waiting for the user to respond to the  tool call to approve or modify the execution plan.
+
+**Project Health Check:**
+- Broken: Dark Mode UI has some invisible text/dropdown states.
+- Mocked: Rubric logic is currently transitioning from static backend dictionaries to a fully dynamic database-backed system.
+
+**3rd Party Integrations** 
+  - Supabase (Storage) — requires User API Key (Already configured and stored in )
+
+**Testing status**
+  - Testing agent used after significant changes: NO (not in this session)
+  - Troubleshoot agent used after agent stuck in loop: NO
+  - Test files created: None
+  - Known regressions: None
+
+**Credentials to test flow:**
+Available in 
+
+**What agent forgot to execute**
+The current agent only had time to read the initial prompt and fire an  to propose a plan. All coding tasks (dynamic rubrics, icon tabs, rapid review strict UI, dark mode fixes) remain pending.</analysis>

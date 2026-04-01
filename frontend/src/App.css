@@ -49,38 +49,107 @@ h4,
     100% { transform: rotate(2deg) translateY(-3px); }
 }
 
+/* ─── Dark theme overrides ─── */
 .workspace-shell.theme-dark {
     background: linear-gradient(180deg, #0d120e 0%, #141a15 100%);
     color: #f0f4ef;
 }
 
-.workspace-shell.theme-dark [class*='bg-white'],
+.workspace-shell.theme-dark [class*='bg-white/95'],
+.workspace-shell.theme-dark [class*='bg-white/90'],
 .workspace-shell.theme-dark [class*='bg-[#f6f6f2]'],
 .workspace-shell.theme-dark [class*='bg-[#edf0e7]'] {
-    background-color: #141a15 !important;
+    background-color: #1a211b !important;
+}
+
+.workspace-shell.theme-dark [class*='bg-white'] {
+    background-color: #1a211b !important;
 }
 
 .workspace-shell.theme-dark [class*='bg-[#243e36]'] {
     background-color: #0f1712 !important;
 }
 
+/* Text visibility in dark mode */
 .workspace-shell.theme-dark [class*='text-[#111815]'],
 .workspace-shell.theme-dark [class*='text-[#243e36]'],
 .workspace-shell.theme-dark [class*='text-[#41534a]'],
 .workspace-shell.theme-dark [class*='text-[#5c6d64]'],
 .workspace-shell.theme-dark [class*='text-foreground'] {
-    color: #f0f4ef !important;
-}
-
-.workspace-shell.theme-dark [class*='border-border'],
-.workspace-shell.theme-dark [class*='border-[#243e36]'],
-.workspace-shell.theme-dark [class*='border-white/10'],
-.workspace-shell.theme-dark [class*='border-white/15'] {
-    border-color: #2b372d !important;
+    color: #e4ebe2 !important;
 }
 
 .workspace-shell.theme-dark [class*='text-white/70'],
 .workspace-shell.theme-dark [class*='text-white/80'],
 .workspace-shell.theme-dark [class*='text-[#5f7464]'] {
     color: #a3b39e !important;
+}
+
+/* Borders */
+.workspace-shell.theme-dark [class*='border-border'],
+.workspace-shell.theme-dark [class*='border-[#243e36]'],
+.workspace-shell.theme-dark [class*='border-transparent'] {
+    border-color: #2b372d !important;
+}
+
+/* ─── Shadcn dropdown / select in dark mode ─── */
+.workspace-shell.theme-dark [data-radix-popper-content-wrapper] [role="listbox"],
+.workspace-shell.theme-dark [data-radix-popper-content-wrapper] [role="menu"],
+.workspace-shell.theme-dark [data-radix-popper-content-wrapper] > div {
+    background-color: #1a211b !important;
+    border-color: #2b372d !important;
+    color: #e4ebe2 !important;
+}
+
+.workspace-shell.theme-dark [data-radix-popper-content-wrapper] [role="option"],
+.workspace-shell.theme-dark [data-radix-popper-content-wrapper] [data-radix-collection-item] {
+    color: #e4ebe2 !important;
+}
+
+.workspace-shell.theme-dark [data-radix-popper-content-wrapper] [role="option"]:hover,
+.workspace-shell.theme-dark [data-radix-popper-content-wrapper] [role="option"][data-highlighted],
+.workspace-shell.theme-dark [data-radix-popper-content-wrapper] [data-radix-collection-item]:hover {
+    background-color: #243e36 !important;
+    color: #f0f4ef !important;
+}
+
+/* Select trigger text in dark mode */
+.workspace-shell.theme-dark button[role="combobox"],
+.workspace-shell.theme-dark [data-slot="select-trigger"] {
+    color: #e4ebe2 !important;
+}
+
+/* Input fields */
+.workspace-shell.theme-dark input,
+.workspace-shell.theme-dark textarea,
+.workspace-shell.theme-dark select {
+    background-color: #141a15 !important;
+    color: #e4ebe2 !important;
+    border-color: #2b372d !important;
+}
+
+/* Checkbox / Switch in dark mode */
+.workspace-shell.theme-dark [role="checkbox"],
+.workspace-shell.theme-dark [role="switch"] {
+    border-color: #3d4f3e !important;
+}
+
+/* Badge visibility */
+.workspace-shell.theme-dark .inline-flex[class*='bg-white'] {
+    background-color: #243e36 !important;
+    color: #e4ebe2 !important;
+}
+
+/* Table styles for matrix ref */
+.workspace-shell.theme-dark table th {
+    color: #a3b39e !important;
+}
+
+.workspace-shell.theme-dark table td {
+    color: #e4ebe2 !important;
+    border-color: #2b372d !important;
+}
+
+.workspace-shell.theme-dark table tr {
+    border-color: #2b372d !important;
 }

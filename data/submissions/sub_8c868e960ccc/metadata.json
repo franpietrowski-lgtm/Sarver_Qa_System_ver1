@@ -40,7 +40,7 @@
       "bucket": "qa-images",
       "storage_path": "sarver-landscape/submissions/sub_8c868e960ccc/captures/01_810d15.jpg",
       "relative_api_path": "/api/submissions/files/sub_8c868e960ccc/01_810d15.jpg",
-      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_8c868e960ccc/01_810d15.jpg",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_8c868e960ccc/01_810d15.jpg",
       "source_type": "supabase"
     },
     {
@@ -53,7 +53,7 @@
       "bucket": "qa-images",
       "storage_path": "sarver-landscape/submissions/sub_8c868e960ccc/captures/02_001f47.jpg",
       "relative_api_path": "/api/submissions/files/sub_8c868e960ccc/02_001f47.jpg",
-      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_8c868e960ccc/02_001f47.jpg",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_8c868e960ccc/02_001f47.jpg",
       "source_type": "supabase"
     },
     {
@@ -66,7 +66,7 @@
       "bucket": "qa-images",
       "storage_path": "sarver-landscape/submissions/sub_8c868e960ccc/captures/03_adbbd0.jpg",
       "relative_api_path": "/api/submissions/files/sub_8c868e960ccc/03_adbbd0.jpg",
-      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_8c868e960ccc/03_adbbd0.jpg",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_8c868e960ccc/03_adbbd0.jpg",
       "source_type": "supabase"
     }
   ],

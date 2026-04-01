@@ -29,7 +29,7 @@
         "bucket": "qa-images",
         "storage_path": "sarver-landscape/submissions/sub_2bc251021e6e/issues/issue_01_7cdb24.png",
         "relative_api_path": "/api/submissions/files/sub_2bc251021e6e/issue_01_7cdb24.png",
-        "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_2bc251021e6e/issue_01_7cdb24.png",
+        "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_2bc251021e6e/issue_01_7cdb24.png",
         "source_type": "supabase"
       }
     ],
@@ -54,7 +54,7 @@
       "bucket": "qa-images",
       "storage_path": "sarver-landscape/submissions/sub_2bc251021e6e/captures/01_5ebe0b.png",
       "relative_api_path": "/api/submissions/files/sub_2bc251021e6e/01_5ebe0b.png",
-      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_2bc251021e6e/01_5ebe0b.png",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_2bc251021e6e/01_5ebe0b.png",
       "source_type": "supabase"
     },
     {
@@ -67,7 +67,7 @@
       "bucket": "qa-images",
       "storage_path": "sarver-landscape/submissions/sub_2bc251021e6e/captures/02_59fa5d.png",
       "relative_api_path": "/api/submissions/files/sub_2bc251021e6e/02_59fa5d.png",
-      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_2bc251021e6e/02_59fa5d.png",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_2bc251021e6e/02_59fa5d.png",
       "source_type": "supabase"
     },
     {
@@ -80,7 +80,7 @@
       "bucket": "qa-images",
       "storage_path": "sarver-landscape/submissions/sub_2bc251021e6e/captures/03_4f4960.png",
       "relative_api_path": "/api/submissions/files/sub_2bc251021e6e/03_4f4960.png",
-      "media_url": "https://landscape-qa.preview.emergentagent.com/api/submissions/files/sub_2bc251021e6e/03_4f4960.png",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_2bc251021e6e/03_4f4960.png",
       "source_type": "supabase"
     }
   ],

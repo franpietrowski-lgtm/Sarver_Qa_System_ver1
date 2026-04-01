@@ -475,6 +475,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_bed_edging_v1",
         "service_type": "bed edging",
+        "division": "Maintenance",
         "title": "Bed Edging v1",
         "version": 1,
         "min_photos": 3,
@@ -491,6 +492,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_spring_cleanup_v1",
         "service_type": "spring cleanup",
+        "division": "Maintenance",
         "title": "Spring Cleanup v1",
         "version": 1,
         "min_photos": 4,
@@ -507,6 +509,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_fall_cleanup_v1",
         "service_type": "fall cleanup",
+        "division": "Maintenance",
         "title": "Fall Cleanup v1",
         "version": 1,
         "min_photos": 4,
@@ -523,6 +526,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_property_maintenance_v1",
         "service_type": "property maintenance",
+        "division": "Maintenance",
         "title": "Property Maintenance v1",
         "version": 1,
         "min_photos": 3,
@@ -537,6 +541,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_pruning_v1",
         "service_type": "pruning",
+        "division": "Maintenance",
         "title": "Pruning v1",
         "version": 1,
         "min_photos": 3,
@@ -551,6 +556,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_weeding_v1",
         "service_type": "weeding",
+        "division": "Maintenance",
         "title": "Weeding v1",
         "version": 1,
         "min_photos": 3,
@@ -565,6 +571,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_mulching_v1",
         "service_type": "mulching",
+        "division": "Maintenance",
         "title": "Mulching v1",
         "version": 1,
         "min_photos": 3,
@@ -579,6 +586,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_softscape_v1",
         "service_type": "softscape",
+        "division": "Install",
         "title": "Softscape v1",
         "version": 1,
         "min_photos": 4,
@@ -593,6 +601,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_hardscape_v1",
         "service_type": "hardscape",
+        "division": "Install",
         "title": "Hardscape v1",
         "version": 1,
         "min_photos": 4,
@@ -607,6 +616,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_tree_plant_install_removal_v1",
         "service_type": "tree/plant install/removal",
+        "division": "Install",
         "title": "Tree/Plant Install/Removal v1",
         "version": 1,
         "min_photos": 4,
@@ -621,6 +631,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_drainage_trenching_v1",
         "service_type": "drainage/trenching",
+        "division": "Install",
         "title": "Drainage/Trenching v1",
         "version": 1,
         "min_photos": 4,
@@ -635,6 +646,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_lighting_v1",
         "service_type": "lighting",
+        "division": "Install",
         "title": "Lighting v1",
         "version": 1,
         "min_photos": 3,
@@ -649,6 +661,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_removal_v1",
         "service_type": "removal",
+        "division": "Tree",
         "title": "Removal v1",
         "version": 1,
         "min_photos": 4,
@@ -663,6 +676,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_stump_grinding_v1",
         "service_type": "stump grinding",
+        "division": "Tree",
         "title": "Stump Grinding v1",
         "version": 1,
         "min_photos": 3,
@@ -677,6 +691,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_fert_and_chem_treatments_v1",
         "service_type": "fert and chem treatments",
+        "division": "Plant Healthcare",
         "title": "Fert and Chem Treatments v1",
         "version": 1,
         "min_photos": 2,
@@ -691,6 +706,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_air_spade_v1",
         "service_type": "air spade",
+        "division": "Plant Healthcare",
         "title": "Air Spade v1",
         "version": 1,
         "min_photos": 3,
@@ -705,6 +721,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_dormant_pruning_v1",
         "service_type": "dormant pruning",
+        "division": "Plant Healthcare",
         "title": "Dormant Pruning v1",
         "version": 1,
         "min_photos": 3,
@@ -719,6 +736,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_deer_fencing_and_shrub_treatment_v1",
         "service_type": "deer fencing and shrub treatment",
+        "division": "Plant Healthcare",
         "title": "Deer Fencing and Shrub Treatment v1",
         "version": 1,
         "min_photos": 3,
@@ -733,6 +751,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_snow_removal_v1",
         "service_type": "snow removal",
+        "division": "Winter Services",
         "title": "Snow Removal v1",
         "version": 1,
         "min_photos": 3,
@@ -747,6 +766,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_plow_v1",
         "service_type": "plow",
+        "division": "Winter Services",
         "title": "Plow v1",
         "version": 1,
         "min_photos": 3,
@@ -761,6 +781,7 @@ RUBRIC_LIBRARY = [
     {
         "id": "rubric_salting_v1",
         "service_type": "salting",
+        "division": "Winter Services",
         "title": "Salting v1",
         "version": 1,
         "min_photos": 2,
@@ -2272,6 +2293,145 @@ async def mark_notification_read(notification_id: str, user: dict = Depends(requ
 async def get_rubrics(user: dict = Depends(require_roles("management", "owner"))):
     rubrics = await db.rubric_definitions.find({"is_active": True}, {"_id": 0}).sort("service_type", 1).to_list(50)
     return rubrics
+
+
+@api_router.get("/rubric-matrices")
+async def get_rubric_matrices(
+    user: dict = Depends(require_roles("management", "owner")),
+    division: str = "all",
+    service_type: str = "all",
+    include_inactive: bool = False,
+):
+    query: dict[str, Any] = {}
+    if not include_inactive:
+        query["is_active"] = True
+    if division != "all":
+        query["division"] = division
+    if service_type != "all":
+        query["service_type"] = service_type.lower()
+    rubrics = await db.rubric_definitions.find(query, {"_id": 0}).sort([("division", 1), ("service_type", 1)]).to_list(200)
+    return rubrics
+
+
+class RubricCategoryInput(BaseModel):
+    key: str
+    label: str
+    weight: float = Field(ge=0, le=1)
+    max_score: int = Field(default=5, ge=1, le=10)
+
+
+class RubricMatrixCreate(BaseModel):
+    service_type: str
+    division: str
+    title: str
+    min_photos: int = Field(default=3, ge=1, le=20)
+    pass_threshold: int = Field(default=80, ge=1, le=100)
+    hard_fail_conditions: list[str] = []
+    categories: list[RubricCategoryInput] = Field(min_length=1, max_length=10)
+
+
+class RubricMatrixUpdate(BaseModel):
+    title: str | None = None
+    division: str | None = None
+    min_photos: int | None = None
+    pass_threshold: int | None = None
+    hard_fail_conditions: list[str] | None = None
+    categories: list[RubricCategoryInput] | None = None
+    is_active: bool | None = None
+
+
+@api_router.post("/rubric-matrices", status_code=201)
+async def create_rubric_matrix(
+    payload: RubricMatrixCreate,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    if user.get("title") not in ("GM", "Owner"):
+        raise HTTPException(status_code=403, detail="Only GM or Owner can create rubric matrices")
+    existing = await db.rubric_definitions.find_one(
+        {"service_type": payload.service_type.lower(), "division": payload.division, "is_active": True}, {"_id": 0}
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail=f"Active rubric already exists for {payload.service_type} in {payload.division}")
+    max_version_doc = await db.rubric_definitions.find_one(
+        {"service_type": payload.service_type.lower()}, {"version": 1, "_id": 0}, sort=[("version", -1)]
+    )
+    next_version = (max_version_doc["version"] + 1) if max_version_doc else 1
+    rubric_id = make_id("rubric")
+    document = {
+        "id": rubric_id,
+        "service_type": payload.service_type.lower(),
+        "division": payload.division,
+        "title": payload.title,
+        "version": next_version,
+        "min_photos": payload.min_photos,
+        "pass_threshold": payload.pass_threshold,
+        "hard_fail_conditions": payload.hard_fail_conditions,
+        "categories": [cat.model_dump() for cat in payload.categories],
+        "is_active": True,
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+        "audit_history": [audit_entry("created", user["id"], f"Rubric matrix created by {user['title']}")],
+    }
+    await db.rubric_definitions.insert_one(document)
+    document.pop("_id", None)
+    return document
+
+
+@api_router.patch("/rubric-matrices/{rubric_id}")
+async def update_rubric_matrix(
+    rubric_id: str,
+    payload: RubricMatrixUpdate,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    if user.get("title") not in ("GM", "Owner"):
+        raise HTTPException(status_code=403, detail="Only GM or Owner can update rubric matrices")
+    existing = await db.rubric_definitions.find_one({"id": rubric_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Rubric matrix not found")
+    updates: dict[str, Any] = {"updated_at": now_iso()}
+    if payload.title is not None:
+        updates["title"] = payload.title
+    if payload.division is not None:
+        updates["division"] = payload.division
+    if payload.min_photos is not None:
+        updates["min_photos"] = payload.min_photos
+    if payload.pass_threshold is not None:
+        updates["pass_threshold"] = payload.pass_threshold
+    if payload.hard_fail_conditions is not None:
+        updates["hard_fail_conditions"] = payload.hard_fail_conditions
+    if payload.categories is not None:
+        updates["categories"] = [cat.model_dump() for cat in payload.categories]
+    if payload.is_active is not None:
+        updates["is_active"] = payload.is_active
+    await db.rubric_definitions.update_one(
+        {"id": rubric_id},
+        {
+            "$set": updates,
+            "$push": {"audit_history": audit_entry("updated", user["id"], f"Rubric updated by {user['title']}")},
+        },
+    )
+    updated = await db.rubric_definitions.find_one({"id": rubric_id}, {"_id": 0})
+    return serialize(updated)
+
+
+@api_router.delete("/rubric-matrices/{rubric_id}")
+async def delete_rubric_matrix(
+    rubric_id: str,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    if user.get("title") not in ("GM", "Owner"):
+        raise HTTPException(status_code=403, detail="Only GM or Owner can delete rubric matrices")
+    existing = await db.rubric_definitions.find_one({"id": rubric_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Rubric matrix not found")
+    await db.rubric_definitions.update_one(
+        {"id": rubric_id},
+        {
+            "$set": {"is_active": False, "updated_at": now_iso()},
+            "$push": {"audit_history": audit_entry("deactivated", user["id"], f"Rubric deactivated by {user['title']}")},
+        },
+    )
+    return {"ok": True, "detail": "Rubric matrix deactivated"}
 
 
 @api_router.get("/standards")

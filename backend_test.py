@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing for Field Quality Capture & Review System
-Tests the live backend at https://landscape-qa.preview.emergentagent.com/api
+Tests the live backend at https://quality-hub-32.preview.emergentagent.com/api
 """
 
 import json
@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://landscape-qa.preview.emergentagent.com/api"
+BASE_URL = "https://quality-hub-32.preview.emergentagent.com/api"
 CREDENTIALS = {
     "owner": {"email": "owner@fieldquality.local", "password": "FieldQA123!"},
     "production_manager": {"email": "production.manager@fieldquality.local", "password": "FieldQA123!"}
