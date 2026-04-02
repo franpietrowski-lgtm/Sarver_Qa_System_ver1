@@ -1,0 +1,124 @@
+{
+  "id": "sub_777e481cdb02",
+  "submission_code": "SUB_777E481CDB02",
+  "access_code": "f6436f7c",
+  "crew_label": "Fran_Test",
+  "job_key": "waligora",
+  "job_id": null,
+  "job_name_input": "Waligora",
+  "matched_job_id": null,
+  "match_status": "unmatched",
+  "match_confidence": 0.0,
+  "truck_number": "43",
+  "division": "Maintenance",
+  "service_type": "bed edging",
+  "task_type": "Bed edging",
+  "status": "Pending Match",
+  "note": "",
+  "area_tag": "Rear of home",
+  "field_report": {
+    "type": "Incident: Struck by object",
+    "notes": "INCIDENT REPORT — Struck by object\r\nDate/Time: 2026-03-31T14:45\r\nLocation: At edge of wall and patio post\r\nInjured person: Dylan\r\nBody part affected: Arm / hand\r\nFirst aid / treatment: Inspected wound site, wrapped for transport to reduce risk of infection\r\nWitness: None listed\r\nDescription: Dylans foot shifted while assisting in large wall block placement, which caused the load to shift and pinch his pinky fi ger between the block and the pillar",
+    "photo_files": [
+      {
+        "id": "issuefile_47b27e8d5efe",
+        "filename": "issue_01_ccd669.jpg",
+        "original_name": "1000004104.jpg",
+        "mime_type": "image/jpeg",
+        "sequence": 1,
+        "size_bytes": 5935164,
+        "bucket": "qa-images",
+        "storage_path": "sarver-landscape/submissions/sub_777e481cdb02/issues/issue_01_ccd669.jpg",
+        "relative_api_path": "/api/submissions/files/sub_777e481cdb02/issue_01_ccd669.jpg",
+        "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_777e481cdb02/issue_01_ccd669.jpg",
+        "source_type": "supabase"
+      }
+    ],
+    "reported": true
+  },
+  "gps": {
+    "lat": 40.465082,
+    "lng": -80.211445,
+    "accuracy": 9.3
+  },
+  "gps_low_confidence": true,
+  "work_date": "2026-03-31",
+  "captured_at": "2026-04-02T06:47:59.813297+00:00",
+  "required_photo_count": 3,
+  "photo_count": 4,
+  "photo_files": [
+    {
+      "id": "file_b0d1e8e7d460",
+      "filename": "01_f09eea.jpg",
+      "original_name": "1000004122.jpg",
+      "mime_type": "image/jpeg",
+      "sequence": 1,
+      "size_bytes": 305697,
+      "bucket": "qa-images",
+      "storage_path": "sarver-landscape/submissions/sub_777e481cdb02/captures/01_f09eea.jpg",
+      "relative_api_path": "/api/submissions/files/sub_777e481cdb02/01_f09eea.jpg",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_777e481cdb02/01_f09eea.jpg",
+      "source_type": "supabase"
+    },
+    {
+      "id": "file_1e248d74ef90",
+      "filename": "02_e35ffe.jpg",
+      "original_name": "1000004120.jpg",
+      "mime_type": "image/jpeg",
+      "sequence": 2,
+      "size_bytes": 5987410,
+      "bucket": "qa-images",
+      "storage_path": "sarver-landscape/submissions/sub_777e481cdb02/captures/02_e35ffe.jpg",
+      "relative_api_path": "/api/submissions/files/sub_777e481cdb02/02_e35ffe.jpg",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_777e481cdb02/02_e35ffe.jpg",
+      "source_type": "supabase"
+    },
+    {
+      "id": "file_17b77d24cac7",
+      "filename": "03_18a9c7.jpg",
+      "original_name": "1000004104.jpg",
+      "mime_type": "image/jpeg",
+      "sequence": 3,
+      "size_bytes": 5935164,
+      "bucket": "qa-images",
+      "storage_path": "sarver-landscape/submissions/sub_777e481cdb02/captures/03_18a9c7.jpg",
+      "relative_api_path": "/api/submissions/files/sub_777e481cdb02/03_18a9c7.jpg",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_777e481cdb02/03_18a9c7.jpg",
+      "source_type": "supabase"
+    },
+    {
+      "id": "file_c14de7388c9c",
+      "filename": "04_330fd3.jpg",
+      "original_name": "1000004092.jpg",
+      "mime_type": "image/jpeg",
+      "sequence": 4,
+      "size_bytes": 502829,
+      "bucket": "qa-images",
+      "storage_path": "sarver-landscape/submissions/sub_777e481cdb02/captures/04_330fd3.jpg",
+      "relative_api_path": "/api/submissions/files/sub_777e481cdb02/04_330fd3.jpg",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_777e481cdb02/04_330fd3.jpg",
+      "source_type": "supabase"
+    }
+  ],
+  "local_folder_path": "/app/data/submissions/sub_777e481cdb02",
+  "device_metadata": {
+    "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36"
+  },
+  "storage_status": "stored",
+  "created_at": "2026-04-02T06:47:59.813320+00:00",
+  "updated_at": "2026-04-02T06:47:59.813322+00:00",
+  "audit_history": [
+    {
+      "timestamp": "2026-04-02T06:47:59.813324+00:00",
+      "action": "submitted",
+      "actor_id": "f6436f7c",
+      "note": "Crew submission created"
+    },
+    {
+      "timestamp": "2026-04-02T06:47:59.813327+00:00",
+      "action": "status_change",
+      "actor_id": "f6436f7c",
+      "note": "Lifecycle moved to Pending Match"
+    }
+  ]
+}
