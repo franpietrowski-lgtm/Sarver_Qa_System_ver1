@@ -5,20 +5,8 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 
 ## User Personas
 - **Crew**: Mobile field workers submitting photos via QR/link (no login)
-- **Management** (Supervisor, PM, AM, GM): Reviews submissions, manages standards
-- **Owner**: Final calibration, dataset approval, system oversight, reviewer analytics
-
-## Core Requirements
-- Mobile-first crew portal with division-aware tasking, OSHA incident/damage split, equipment logs
-- High-accuracy GPS capture (+/-2m target, soft-warn + flag)
-- Admin/Management/Owner dashboards with role-based visibility
-- Tinder-style Rapid Review for fast mobile QA
-- Supabase Object Storage for images
-- JWT auth with lowercase email standardization
-- Role-specific onboarding (Welcome Modal, Getting Started Panel, Help Popovers)
-- 6 color themes + 4 font packages (independent of each other)
-- Reviewer Performance Dashboard (owner-only)
-- Closed-loop coaching from repeat-offender thresholds
+- **Management** (Supervisor, PM, AM, GM): Reviews, manages standards, coaching
+- **Owner**: Calibration, dataset approval, system oversight, reviewer analytics
 
 ## Tech Stack
 - **Frontend**: React 19 + TailwindCSS + Shadcn/UI + Framer Motion
@@ -29,34 +17,39 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 ## Architecture
 ```
 /app/backend/
-  server.py, /shared/deps.py, /shared/models.py
-  /routes/ (19 modules): auth, system, public, submissions, equipment,
-    jobs, crew_access, users, notifications, rubrics, standards,
-    reviews, rapid_reviews, training, analytics, exports,
-    integrations, reviewer_performance, coaching
+  server.py, /shared/deps.py, /shared/models.py, auth_utils.py
+  /routes/ (19 modules)
 /app/frontend/src/
-  /pages/ (12 pages), /components/common/, /components/theme/,
-  /components/layout/, /components/ui/
+  /pages/ (12 pages), /hooks/useIdleTimeout.js
+  /components/common/, /components/theme/, /components/layout/, /components/ui/
+/app/frontend/public/
+  index.html, manifest.json, icon.svg
 ```
 
 ## What's Been Implemented
-- Full crew submission portal, standard/rapid review flows
+- Full crew submission portal with work_date, incident/damage split
+- GPS accuracy polling (10s watchPosition, color-coded badges, backend flag)
+- Standard and rapid review flows
 - Standards library, repeat offender tracking, training mode, equipment logs
 - Dynamic rubric matrix management, calibration heatmap, dataset exports
 - Supabase image storage, backend modularization (19 route files)
-- Role-specific onboarding UI
-- **6 Color Themes**: Default, Dark, Tomboy, Gold, Noir, Neon — with 20+ CSS custom properties per theme + Tailwind variable overrides
-- **4 Font Packages** (Apr 2026):
-  - Brand (Cabinet Grotesk + Manrope — default)
-  - Duckfake (Permanent Marker — grungy hand-painted)
-  - Kid-Ergarten (Patrick Hand — childlike handwriting)
-  - Hikaru (Fredoka — chunky cute rounded)
-  - Independent of color theme, stored in separate localStorage key
-  - Font picker on Settings page with live 'Aa' sample previews
-- **Reviewer Performance Dashboard**: Owner-only, per-reviewer stats, speed trends, calibration drift
-- **Closed-Loop Coaching**: Auto-generate training for Warning/Critical crews
+- Role-specific onboarding UI (WelcomeModal, GettingStartedPanel, HelpPopover)
+- 6 Color Themes + 4 Font Packages (independent of each other)
+- Reviewer Performance Dashboard (owner-only)
+- Closed-Loop Coaching (auto-generate training for Warning/Critical crews)
+- **Staff Password Management** (Apr 2026):
+  - Admin password reset: POST /api/users/{id}/reset-password (generates temp password, shown inline)
+  - Self-service change: POST /api/auth/change-password (validates current, min 6 chars)
+  - Settings page UI: "Change My Password" card + "Reset password" button per staff row
+- **Session Idle Timeout** (Apr 2026):
+  - 5-minute client-side idle timer tracking mouse/keyboard/touch/scroll
+  - Auto-logout with "Session expired" toast on inactivity
+  - 401 response interceptor clears auth state and redirects to login
+- **PWA Wrapper** (Apr 2026):
+  - manifest.json with standalone display, #243e36 theme
+  - SVG icon (shield + checkmark)
+  - Apple mobile web app meta tags for "Add to Home Screen"
 
 ## Backlog
 - **P2**: Owner random sampling filters and variance drilldowns
-- **Backlog**: Staff password reset/invite flows
 - **Backlog**: AI-assisted scoring and automated quality checks
