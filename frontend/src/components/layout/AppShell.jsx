@@ -38,10 +38,10 @@ export default function AppShell({ user, onLogout, children }) {
     return true;
   });
   const logoUrl = "https://sarverlandscape.com/wp-content/uploads/2024/10/sarver-logo.png";
-  const { isDark } = useTheme();
+  const { theme } = useTheme();
 
   return (
-    <div key={roleKey || "no-role"} className={`workspace-shell min-h-screen text-foreground ${isDark ? "theme-dark" : "theme-default bg-[radial-gradient(circle_at_top_left,_rgba(124,169,130,0.18),_transparent_28%),linear-gradient(180deg,_#f6f6f2_0%,_#edf0e7_100%)]"}`} data-testid="workspace-shell">
+    <div key={roleKey || "no-role"} className={`workspace-shell min-h-screen text-foreground theme-${theme} ${theme === "default" ? "bg-[radial-gradient(circle_at_top_left,_rgba(124,169,130,0.18),_transparent_28%),linear-gradient(180deg,_#f6f6f2_0%,_#edf0e7_100%)]" : ""}`} data-testid="workspace-shell">
       <div className="grid min-h-screen lg:grid-cols-[280px_1fr]">
         <aside className="border-b border-border/80 bg-white/85 px-6 py-8 backdrop-blur-xl lg:border-b-0 lg:border-r">
           <div className="space-y-4">

@@ -25,7 +25,7 @@ const FAST_TRIGGER_MS = 4000;
 export default function RapidReviewPage({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isDark } = useTheme();
+  const { theme } = useTheme();
   const mobileLane = location.pathname.endsWith("/mobile");
 
   const [queue, setQueue] = useState([]);
@@ -237,7 +237,7 @@ export default function RapidReviewPage({ user }) {
   const elapsedSec = Math.round((imageViewStart > 0 ? Date.now() - imageViewStart : 0) / 1000);
 
   return (
-    <div className={`fixed inset-0 flex flex-col overflow-hidden text-white ${isDark ? "bg-[#0a0e0b]" : "bg-[#0d120e]"}`} data-testid="rapid-review-page">
+    <div className={`fixed inset-0 flex flex-col overflow-hidden text-white bg-[#0d120e]`} data-testid="rapid-review-page">
       {/* Progress bar */}
       <div className="relative h-1.5 shrink-0 bg-white/5" data-testid="rapid-review-progress-bar-container">
         <div

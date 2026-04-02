@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { GitBranch, HardDrive, MoonStar, Network, Shapes, SunMedium } from "lucide-react";
+import { GitBranch, HardDrive, Network, Shapes } from "lucide-react";
 
-import { useTheme } from "@/components/theme/ThemeProvider";
+import { useTheme, THEMES, THEME_SWATCHES } from "@/components/theme/ThemeProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +14,7 @@ const STAFF_TITLES = ["GM", "Account Manager", "Production Manager", "Supervisor
 
 
 export default function SettingsPage() {
-  const { isDark, toggleTheme } = useTheme();
+  const { theme: currentTheme, setTheme } = useTheme();
   const [storageStatus, setStorageStatus] = useState(null);
   const [blueprint, setBlueprint] = useState(null);
   const [users, setUsers] = useState([]);
@@ -75,15 +75,33 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6" data-testid="settings-page">
       <Card className="rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="settings-theme-card">
-        <CardContent className="flex items-center justify-between gap-4 p-5">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Workspace theme</p>
-            <p className="mt-1 text-sm text-[#41534a]" data-testid="settings-theme-state">{isDark ? "Dark mode active" : "Default mode active"}</p>
+        <CardContent className="p-5 sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Workspace theme</p>
+          <p className="mt-1 mb-4 text-sm text-[#41534a]" data-testid="settings-theme-state">Active: {THEMES.find((t) => t.id === currentTheme)?.label || "Default"}</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {THEMES.map((t) => {
+              const swatches = THEME_SWATCHES[t.id];
+              const isActive = currentTheme === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => { setTheme(t.id); toast.success(`Theme switched to ${t.label}`); }}
+                  className={`group relative flex flex-col items-center gap-2 rounded-2xl border-2 p-3 transition-all ${isActive ? "border-[#243e36] shadow-md ring-2 ring-[#243e36]/20" : "border-border/60 hover:border-[#243e36]/40 hover:shadow-sm"}`}
+                  data-testid={`settings-theme-option-${t.id}`}
+                >
+                  <div className="flex h-10 w-full overflow-hidden rounded-xl">
+                    {swatches.map((color, i) => (
+                      <div key={i} className="flex-1" style={{ backgroundColor: color }} />
+                    ))}
+                  </div>
+                  <span className="text-xs font-semibold text-[#243e36]">{t.label}</span>
+                  <span className="text-[10px] leading-tight text-[#5c6d64]">{t.description}</span>
+                  {isActive && <div className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#243e36]" />}
+                </button>
+              );
+            })}
           </div>
-          <Button onClick={toggleTheme} type="button" variant="outline" className="h-10 rounded-xl border-[#243e36]/10 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid="settings-theme-toggle-button">
-            {isDark ? <SunMedium className="mr-2 h-4 w-4" /> : <MoonStar className="mr-2 h-4 w-4" />}
-            {isDark ? "Default" : "Dark"}
-          </Button>
         </CardContent>
       </Card>
 
