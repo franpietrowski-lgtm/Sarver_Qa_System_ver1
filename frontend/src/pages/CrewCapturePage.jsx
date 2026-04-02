@@ -11,6 +11,7 @@ import { HelpPopover } from "@/components/common/HelpPopover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { authPostForm, publicGet } from "@/lib/api";
+import { copyToClipboard } from "@/lib/clipboard";
 import { toast } from "sonner";
 
 
@@ -320,7 +321,7 @@ export default function CrewCapturePage() {
                   className="shrink-0 rounded-2xl border-[#243e36]/15 bg-white text-[#243e36] hover:bg-[#edf0e7]"
                   onClick={() => {
                     const link = `${window.location.origin}/member/join/${code}`;
-                    navigator.clipboard.writeText(link);
+                    copyToClipboard(link);
                     toast.success("Member registration link copied!");
                   }}
                   data-testid="crew-copy-member-link-button"

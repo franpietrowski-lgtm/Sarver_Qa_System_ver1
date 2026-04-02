@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { HelpPopover } from "@/components/common/HelpPopover";
 import { authGet, authPatch, authPost } from "@/lib/api";
+import { copyToClipboard } from "@/lib/clipboard";
 import { toast } from "sonner";
 
 
@@ -237,8 +238,8 @@ export default function StandardsLibraryPage() {
   };
 
   const copyValue = async (value) => {
-    try { await navigator.clipboard.writeText(value); toast.success("Copied to clipboard."); }
-    catch { const input = document.createElement("input"); input.value = value; document.body.appendChild(input); input.select(); document.execCommand("copy"); document.body.removeChild(input); toast.success("Copied to clipboard."); }
+    try { await copyToClipboard(value); toast.success("Copied to clipboard."); }
+    catch { toast.info(value); }
   };
 
   return (

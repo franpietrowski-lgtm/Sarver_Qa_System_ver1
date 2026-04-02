@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getApiOrigin, publicGet, publicPost } from "@/lib/api";
+import { copyToClipboard } from "@/lib/clipboard";
 import { toast } from "sonner";
 
 const DIVISIONS = ["Maintenance", "Install", "Tree", "Plant Healthcare", "Winter Services"];
@@ -61,7 +62,7 @@ export default function CrewMemberRegisterPage() {
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(dashboardUrl);
+    copyToClipboard(dashboardUrl);
     toast.success("Dashboard link copied!");
   };
 

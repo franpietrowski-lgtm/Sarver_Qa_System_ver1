@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { authGet } from "@/lib/api";
+import { copyToClipboard } from "@/lib/clipboard";
 import { toast } from "sonner";
 
 
@@ -67,7 +68,7 @@ export default function OverviewPage({ user }) {
   const storage = overview.storage || overview.drive;
   const copyRapidReviewLink = async () => {
     try {
-      await navigator.clipboard.writeText(rapidReviewUrl);
+      await copyToClipboard(rapidReviewUrl);
       toast.success("Rapid review link copied.");
     } catch {
       toast.info(rapidReviewUrl);
