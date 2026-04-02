@@ -17,7 +17,7 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - Supabase Object Storage for images
 - JWT auth with lowercase email standardization
 - Role-specific onboarding (Welcome Modal, Getting Started Panel, Help Popovers)
-- Multi-theme workspace (6 themes: Default, Dark, Tomboy, Gold, Noir, Neon)
+- Multi-theme workspace (6 themes with full CSS variable system)
 
 ## Tech Stack
 - **Frontend**: React 19 + TailwindCSS + Shadcn/UI + Framer Motion
@@ -54,13 +54,19 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - Backend modularization Phase 1 + Phase 2 — COMPLETE
 - Role-specific onboarding UI (WelcomeModal, GettingStartedPanel, HelpPopover)
 - **6-Theme System** (Apr 2026):
-  - Default (nature green light), Dark (forest dark), Tomboy (slate navy + hot pink), Gold (black & gold luxury), Noir (charcoal + crimson), Neon (deep green + lime glow)
-  - Visual theme picker grid on Settings page with swatch previews
-  - localStorage persistence, toast feedback, active indicator
-  - Full CSS override system for backgrounds, text, borders, inputs, dropdowns, tables, badges
-- **Theme-aware status tiers & heatmaps** (Apr 2026):
-  - Watch/Warning/Critical tier cards, crew training recommendation level badges, and heatmap cells now use CSS custom properties (--status-*-bg/border/text, --heat-r/g/b) that adapt per theme
-  - Analytics calibration heatmap color key dots and cell intensity also theme-aware
+  - Default (nature green), Dark (forest), Tomboy (navy+pink), Gold (black+gold), Noir (charcoal+crimson), Neon (green+lime)
+  - 20+ CSS custom properties per theme:
+    - Status tiers: `--status-watch/warning/critical-bg/border/text`
+    - Heatmap: `--heat-r/g/b`, `--heat-empty`
+    - UI panels: `--panel-gradient-from/to`, `--panel-border`
+    - Buttons: `--btn-accent`, `--btn-accent-hover`
+    - Forms: `--form-card-bg/border`, `--slider-accent`
+    - Badges: `--inactive-badge-bg/text`, `--chip-bg`
+    - Modals: `--modal-bg`, `--modal-header-bg`
+    - Progress: `--progress-dot-inactive`
+    - Text: `--tier-desc-text`
+  - Each theme provides ~30% different color/brightness in accent sections
+  - Visual theme picker on Settings page with swatch previews
 
 ## Backlog (Prioritized)
 - **P1**: Reviewer Performance Dashboard (swipe speed trends, accuracy, calibration drift)
