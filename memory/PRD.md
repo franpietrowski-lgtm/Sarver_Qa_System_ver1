@@ -10,6 +10,7 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 
 ## Core Requirements
 - Mobile-first crew portal with division-aware tasking, OSHA incident/damage split, equipment logs
+- High-accuracy GPS capture (±2m target, soft-warn + flag for reviewers if exceeded)
 - Admin/Management dashboard with role-based visibility
 - Owner dashboard with calibration heatmap, exports, rubric management
 - Tinder-style Rapid Review for fast mobile QA
@@ -29,28 +30,17 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
   /shared/
     deps.py              (516 lines — DB, helpers, constants)
     models.py            (170 lines — Pydantic schemas)
-  /routes/               (17 modules, 1979 total lines)
-    auth.py              (login, me)
-    system.py            (root, health, blueprint)
-    public.py            (crew-access, jobs, submissions, equipment-logs, training)
-    submissions.py       (files, list, detail, match)
-    equipment.py         (list, forward, files)
-    jobs.py              (list, CSV import)
-    crew_access.py       (CRUD)
-    users.py             (list, create, status)
-    notifications.py     (list, read)
-    rubrics.py           (list, matrices CRUD)
-    standards.py         (list, create, update)
-    reviews.py           (management, owner)
-    rapid_reviews.py     (queue, create, sessions, flagged, rescore)
-    training.py          (sessions, repeat offenders)
-    analytics.py         (dashboard, analytics summary)
-    exports.py           (run, list, download)
-    integrations.py      (storage status, drive status)
+  /routes/               (17 modules, ~1980 total lines)
+    auth.py, system.py, public.py, submissions.py, equipment.py,
+    jobs.py, crew_access.py, users.py, notifications.py, rubrics.py,
+    standards.py, reviews.py, rapid_reviews.py, training.py,
+    analytics.py, exports.py, integrations.py
 ```
 
 ## What's Been Implemented
 - Full crew submission portal with work_date, incident/damage split
+- **GPS accuracy polling**: `watchPosition` with `enableHighAccuracy: true`, 10s polling for best reading, color-coded accuracy badges (Precise ≤2m / Fair ≤5m / Low confidence >5m), "Flagged for review" badge, progress bar animation
+- **Backend GPS flag**: `gps_low_confidence: true` on submissions where `gps_accuracy > 2.0`
 - Standard and rapid review flows
 - Standards library with pagination/popups
 - Repeat offender tracking with 8-month seeded heatmap
@@ -60,7 +50,7 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - Analytics summary with calibration heatmap
 - Dataset exports (CSV/JSONL)
 - Supabase image storage (fully integrated)
-- Backend modularization Phase 1 (models/helpers) + Phase 2 (routes) — COMPLETE
+- Backend modularization Phase 1 + Phase 2 — COMPLETE
 
 ## Backlog (Prioritized)
 - **P1**: Owner random sampling filters and variance drilldowns
