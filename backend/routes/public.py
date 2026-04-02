@@ -71,6 +71,7 @@ async def create_submission(
     issue_notes: str = Form(""),
     photos: list[UploadFile] = File(...),
     issue_photos: list[UploadFile] = File([]),
+    member_code: str = Form(""),
 ):
     crew_link = await deps.db.crew_access_links.find_one({"code": access_code, "enabled": True}, {"_id": 0})
     if not crew_link:
@@ -191,6 +192,7 @@ async def create_submission(
         "local_folder_path": str(local_folder),
         "device_metadata": {"user_agent": request.headers.get("user-agent", "unknown")},
         "storage_status": "stored",
+        "member_code": member_code if member_code else None,
         "created_at": now_iso(),
         "updated_at": now_iso(),
         "audit_history": [

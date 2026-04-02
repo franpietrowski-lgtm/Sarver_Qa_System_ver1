@@ -35,13 +35,19 @@ from routes.exports import router as exports_router
 from routes.integrations import router as integrations_router
 from routes.reviewer_performance import router as reviewer_performance_router
 from routes.coaching import router as coaching_router
+from routes.crew_members import router as crew_members_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
 mongo_url = os.environ["MONGO_URL"]
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ["DB_NAME"]]
+db_name = os.environ["DB_NAME"]
+
+def get_fresh_db():
+    c = AsyncIOMotorClient(mongo_url)
+    return c, c[db_name]
+
+client, db = get_fresh_db()
 deps.db = db
 
 app = FastAPI(title="Field Quality Capture & Review System")
@@ -740,6 +746,14 @@ async def seed_defaults() -> None:
 
 @app.on_event("startup")
 async def startup_event():
+    global client, db
+    try:
+        # Test if existing client works
+        await db.command("ping")
+    except Exception:
+        # Recreate client if stale
+        client, db = get_fresh_db()
+        deps.db = db
     await seed_defaults()
     await db.rapid_reviews.create_index("submission_id", unique=True)
     await db.rapid_review_sessions.create_index("reviewer_id")
@@ -774,6 +788,7 @@ api_router.include_router(exports_router)
 api_router.include_router(integrations_router)
 api_router.include_router(reviewer_performance_router)
 api_router.include_router(coaching_router)
+api_router.include_router(crew_members_router)
 
 app.include_router(api_router)
 
@@ -791,4 +806,5 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    client.close()
+    pass
+client.close()

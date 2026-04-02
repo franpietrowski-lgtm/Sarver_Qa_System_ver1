@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Camera, Crosshair, MapPinned, Upload, Wrench, X } from "lucide-react";
+import { BookOpen, Camera, Copy, Crosshair, MapPinned, Upload, UserPlus, Wrench, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -293,6 +293,32 @@ export default function CrewCapturePage() {
                   <p className="mt-1 text-sm text-[#5c6d64]">{item.message}</p>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {crewLink && (
+          <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="crew-invite-member-card">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#243e36]">Invite crew members</p>
+                  <p className="mt-1 text-xs text-[#5c6d64]">Share this link so members get their own QR dashboard.</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 rounded-2xl border-[#243e36]/15 bg-white text-[#243e36] hover:bg-[#edf0e7]"
+                  onClick={() => {
+                    const link = `${window.location.origin}/member/join/${code}`;
+                    navigator.clipboard.writeText(link);
+                    toast.success("Member registration link copied!");
+                  }}
+                  data-testid="crew-copy-member-link-button"
+                >
+                  <UserPlus className="mr-1.5 h-4 w-4" /> Copy link
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}

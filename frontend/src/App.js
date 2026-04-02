@@ -22,6 +22,8 @@ import RubricEditorPage from "@/pages/RubricEditorPage";
 import SettingsPage from "@/pages/SettingsPage";
 import StandardsLibraryPage from "@/pages/StandardsLibraryPage";
 import TrainingModePage from "@/pages/TrainingModePage";
+import CrewMemberRegisterPage from "@/pages/CrewMemberRegisterPage";
+import CrewMemberDashboard from "@/pages/CrewMemberDashboard";
 
 
 function ProtectedRoute({ authState, allowedRoles, onLogout, shell = true, children }) {
@@ -108,6 +110,8 @@ function App() {
             <Route path="/login" element={<LoginPage onLogin={handleLogin} authUser={authState.user} />} />
             <Route path="/crew/:code" element={<CrewCapturePage />} />
             <Route path="/training/:code" element={<TrainingModePage />} />
+            <Route path="/member/join/:parentCode" element={<CrewMemberRegisterPage />} />
+            <Route path="/member/:code" element={<CrewMemberDashboard />} />
             <Route path="/dashboard" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><OverviewPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/jobs" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management"]}><JobsPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/review" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management"]}><ReviewPage {...pageProps} /></ProtectedRoute>} />
