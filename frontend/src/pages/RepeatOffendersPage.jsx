@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, Radar } from "lucide-react";
+import { AlertTriangle, BrainCircuit, ChevronDown, ChevronLeft, ChevronRight, Loader2, Radar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -91,6 +91,8 @@ export default function RepeatOffendersPage() {
   const [windowDays, setWindowDays] = useState(30);
   const [summary, setSummary] = useState(null);
   const [heatmapOpen, setHeatmapOpen] = useState(false);
+  const [coachLoading, setCoachLoading] = useState(false);
+  const [coachResult, setCoachResult] = useState(null);
   const navigate = useNavigate();
 
   const loadData = async (nextWindow = windowDays) => {
@@ -113,6 +115,23 @@ export default function RepeatOffendersPage() {
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Unable to create training session");
     }
+  };
+
+  const runAutoCoach = async () => {
+    setCoachLoading(true);
+    setCoachResult(null);
+    try {
+      const result = await authPost(`/coaching/auto-generate?window_days=${windowDays}`);
+      setCoachResult(result);
+      if (result.generated > 0) {
+        toast.success(`${result.generated} coaching session(s) generated.`);
+      } else {
+        toast.info("No new coaching sessions needed — all crews already have active sessions or no eligible standards.");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Unable to auto-generate coaching");
+    }
+    setCoachLoading(false);
   };
 
   if (!summary) {
@@ -171,6 +190,72 @@ export default function RepeatOffendersPage() {
                 </div>
               ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Closed-Loop Auto-Coaching */}
+      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="repeat-offenders-coaching-card">
+        <CardContent className="p-6 lg:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Closed-loop coaching</p>
+              <p className="mt-2 text-sm text-[#5c6d64]">
+                Auto-generate training sessions for all crews at Warning or Critical levels. Sessions are pre-loaded with standards matching each crew's division.
+                <HelpPopover title="Closed-loop coaching" side="right">
+                  <p className="mb-2 text-xs">Clicking "Auto-Coach" reads the current repeat offender data, identifies crews at Warning (5+ incidents) or Critical (7+ incidents), and creates a training session for each one.</p>
+                  <p className="mb-2 text-xs"><strong>Critical crews</strong> get 5 training items. <strong>Warning crews</strong> get 3.</p>
+                  <p className="text-xs">Crews that already have an active coaching session are skipped to avoid duplicates.</p>
+                </HelpPopover>
+              </p>
+            </div>
+            <Button
+              type="button"
+              onClick={runAutoCoach}
+              disabled={coachLoading}
+              className="rounded-2xl text-white"
+              style={{ backgroundColor: "var(--btn-accent)" }}
+              data-testid="auto-coach-button"
+            >
+              {coachLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="mr-2 h-4 w-4" />}
+              Auto-Coach
+            </Button>
+          </div>
+
+          {coachResult && (
+            <div className="mt-4 space-y-3" data-testid="auto-coach-results">
+              <div className="flex flex-wrap gap-2">
+                <Badge className="border-0" style={{ backgroundColor: "var(--status-watch-bg)", color: "var(--status-watch-text)" }}>
+                  {coachResult.generated} generated
+                </Badge>
+                {coachResult.skipped > 0 && (
+                  <Badge className="border-0" style={{ backgroundColor: "var(--status-warning-bg)", color: "var(--status-warning-text)" }}>
+                    {coachResult.skipped} skipped
+                  </Badge>
+                )}
+              </div>
+              {coachResult.sessions?.length > 0 && (
+                <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                  {coachResult.sessions.map((s) => (
+                    <div key={s.session_id} className="rounded-2xl border border-border p-3" style={{ backgroundColor: "var(--heat-empty)" }} data-testid={`coach-session-${s.session_id}`}>
+                      <p className="text-sm font-semibold text-[#243e36]">{s.crew}</p>
+                      <p className="mt-0.5 text-xs font-bold" style={{ color: `var(--status-${s.level.toLowerCase()}-text)` }}>{s.level}</p>
+                      <p className="mt-1 text-xs" style={{ color: "var(--tier-desc-text)" }}>{s.item_count} items &middot; {s.top_issues.join(", ")}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {coachResult.skipped_details?.length > 0 && (
+                <details className="text-xs" style={{ color: "var(--tier-desc-text)" }}>
+                  <summary className="cursor-pointer font-semibold">Skipped details</summary>
+                  <ul className="mt-1 space-y-0.5 pl-4 list-disc">
+                    {coachResult.skipped_details.map((s, i) => (
+                      <li key={i}>{s.crew}: {s.reason}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
