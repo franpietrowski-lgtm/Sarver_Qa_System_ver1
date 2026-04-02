@@ -52,7 +52,10 @@ async def get_analytics_summary(
 ):
     period = period if period in ANALYTICS_PERIODS else "monthly"
     cutoff = get_period_cutoff(period).isoformat()
-    submissions = await deps.db.submissions.find({"created_at": {"$gte": cutoff}}, {"_id": 0}).to_list(2000)
+    submissions = await deps.db.submissions.find(
+        {"created_at": {"$gte": cutoff}},
+        {"_id": 0, "id": 1, "created_at": 1, "crew_label": 1, "truck_number": 1, "service_type": 1},
+    ).to_list(2000)
     submission_ids = [item["id"] for item in submissions]
     review_query = {"submission_id": {"$in": submission_ids or ["__none__"]}}
     management_reviews = await deps.db.management_reviews.find(review_query, {"_id": 0}).to_list(2000)
