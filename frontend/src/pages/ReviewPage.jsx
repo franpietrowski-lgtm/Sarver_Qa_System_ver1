@@ -158,7 +158,7 @@ export default function ReviewPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-[#243e36]">{submission.job_name_input || submission.job_id || submission.submission_code}</p>
-                    <p className="mt-1 text-sm text-[#5c6d64]">{submission.crew_label} · {submission.truck_number}</p>
+                    <p className="mt-1 text-sm text-[#5c6d64]">{submission.crew_label} · {submission.truck_number}{submission.work_date ? ` · ${submission.work_date}` : ""}</p>
                   </div>
                   <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]">{submission.status}</Badge>
                 </div>
@@ -184,7 +184,7 @@ export default function ReviewPage() {
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Reviewing submission</p>
                   <h2 className="mt-2 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]" data-testid="review-detail-title">{detail.submission.job_name_input || detail.submission.job_id || detail.submission.submission_code}</h2>
-                  <p className="mt-2 text-sm text-[#5c6d64]" data-testid="review-detail-meta">{detail.submission.crew_label} · {selectedServiceType || "service type pending"} · Confidence {Math.round((detail.submission.match_confidence || 0) * 100)}%</p>
+                  <p className="mt-2 text-sm text-[#5c6d64]" data-testid="review-detail-meta">{detail.submission.crew_label} · {selectedServiceType || "service type pending"} · Confidence {Math.round((detail.submission.match_confidence || 0) * 100)}%{detail.submission.work_date ? ` · Work date: ${detail.submission.work_date}` : ""}</p>
                 </div>
                 <Badge className="border-0 bg-[#edf0e7] px-3 py-1 text-[#243e36]" data-testid="review-match-status-badge">{detail.submission.match_status}</Badge>
               </div>

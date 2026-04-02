@@ -202,7 +202,7 @@ export default function OverviewPage({ user }) {
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-[#243e36]" data-testid={`overview-submission-job-${submission.id}`}>{submission.job_name_input || submission.job_id || submission.submission_code}</p>
-                      <p className="mt-0.5 truncate text-xs text-[#5c6d64]" data-testid={`overview-submission-meta-${submission.id}`}>{submission.crew_label} · {submission.service_type}</p>
+                      <p className="mt-0.5 truncate text-xs text-[#5c6d64]" data-testid={`overview-submission-meta-${submission.id}`}>{submission.crew_label} · {submission.service_type}{submission.work_date ? ` · ${submission.work_date}` : ""}</p>
                     </div>
                     <Badge className="shrink-0 border-0 bg-white px-2 py-0.5 text-xs text-[#243e36]" data-testid={`overview-submission-status-${submission.id}`}>{submission.status}</Badge>
                   </div>

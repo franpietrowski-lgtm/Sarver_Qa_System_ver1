@@ -251,7 +251,8 @@ def get_submission_list_projection() -> dict:
     return {
         "_id": 0, "id": 1, "submission_code": 1, "job_id": 1, "job_name_input": 1,
         "crew_label": 1, "truck_number": 1, "division": 1, "service_type": 1,
-        "task_type": 1, "status": 1, "match_status": 1, "match_confidence": 1, "created_at": 1,
+        "task_type": 1, "status": 1, "match_status": 1, "match_confidence": 1,
+        "work_date": 1, "captured_at": 1, "created_at": 1,
     }
 
 

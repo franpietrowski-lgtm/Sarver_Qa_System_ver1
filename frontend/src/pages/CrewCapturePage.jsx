@@ -63,6 +63,7 @@ export default function CrewCapturePage() {
   const [submitting, setSubmitting] = useState(false);
   const [crewNotifications, setCrewNotifications] = useState([]);
   const [taskType, setTaskType] = useState("");
+  const [workDate, setWorkDate] = useState(new Date().toISOString().slice(0, 10));
 
   // Damage Reporting State
   const [damageEnabled, setDamageEnabled] = useState(false);
@@ -138,6 +139,7 @@ export default function CrewCapturePage() {
     formData.append("gps_accuracy", gps.accuracy || 0);
     formData.append("note", note);
     formData.append("area_tag", areaTag);
+    formData.append("work_date", workDate);
     photos.forEach((photo) => formData.append("photos", photo));
 
     // Damage report fields
@@ -262,10 +264,14 @@ export default function CrewCapturePage() {
                       <Input id="crew-area-tag-input" value={areaTag} onChange={(e) => setAreaTag(e.target.value)} placeholder="Front entry / bed 2" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="crew-area-tag-input" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-semibold text-[#243e36]" htmlFor="crew-photo-input">Photos</label>
-                      <label htmlFor="crew-photo-input" className="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#cdd3c8] bg-[#edf0e7] text-sm font-semibold text-[#243e36]" data-testid="crew-photo-upload-field"><Upload className="h-4 w-4" />Add photos</label>
-                      <input id="crew-photo-input" type="file" multiple accept="image/*" className="hidden" onChange={(e) => setPhotos(Array.from(e.target.files || []))} data-testid="crew-photo-input" />
+                      <label className="text-sm font-semibold text-[#243e36]" htmlFor="crew-work-date-input">Work date</label>
+                      <Input id="crew-work-date-input" type="date" value={workDate} onChange={(e) => setWorkDate(e.target.value)} className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="crew-work-date-input" />
                     </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-[#243e36]" htmlFor="crew-photo-input">Photos</label>
+                    <label htmlFor="crew-photo-input" className="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#cdd3c8] bg-[#edf0e7] text-sm font-semibold text-[#243e36]" data-testid="crew-photo-upload-field"><Upload className="h-4 w-4" />Add photos</label>
+                    <input id="crew-photo-input" type="file" multiple accept="image/*" className="hidden" onChange={(e) => setPhotos(Array.from(e.target.files || []))} data-testid="crew-photo-input" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-[#243e36]" htmlFor="crew-note-input">Optional note</label>

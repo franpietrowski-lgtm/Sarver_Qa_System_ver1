@@ -629,110 +629,62 @@ async def seed_defaults() -> None:
             ready_submission_id = make_id("sub")
             reviewed_submission_id = make_id("sub")
             finalized_submission_id = make_id("sub")
-            samples = [
-                {
-                    "id": ready_submission_id,
-                    "submission_code": ready_submission_id.upper(),
-                    "access_code": crew_links[0]["code"],
-                    "crew_label": crew_links[0]["label"],
-                    "job_id": ready_job["job_id"],
-                    "matched_job_id": ready_job["id"],
-                    "match_status": "confirmed",
-                    "match_confidence": 0.94,
-                    "truck_number": ready_job["truck_number"],
-                    "division": ready_job["division"],
-                    "service_type": ready_job["service_type"],
-                    "status": "Ready for Review",
-                    "note": "Seeded sample awaiting management scoring",
-                    "area_tag": "Front entry",
-                    "gps": {"lat": 43.631, "lng": -79.412, "accuracy": 7},
-                    "captured_at": now_iso(),
-                    "photo_count": 3,
-                    "required_photo_count": 3,
-                    "photo_files": [
-                        {
-                            "id": make_id("file"),
-                            "filename": "seed-ready-1.jpg",
-                            "mime_type": "image/jpeg",
-                            "sequence": 1,
-                            "source_type": "remote",
-                            "media_url": "https://images.pexels.com/photos/6728925/pexels-photo-6728925.jpeg?auto=compress&cs=tinysrgb&w=1200",
-                        }
-                    ],
-                    "storage_status": "seed_remote",
-                    "created_at": now_iso(),
-                    "updated_at": now_iso(),
-                    "audit_history": [audit_entry("seeded", "system", "Sample submission created")],
-                },
-                {
-                    "id": reviewed_submission_id,
-                    "submission_code": reviewed_submission_id.upper(),
-                    "access_code": crew_links[1]["code"],
-                    "crew_label": crew_links[1]["label"],
-                    "job_id": reviewed_job["job_id"],
-                    "matched_job_id": reviewed_job["id"],
-                    "match_status": "confirmed",
-                    "match_confidence": 0.9,
-                    "truck_number": reviewed_job["truck_number"],
-                    "division": reviewed_job["division"],
-                    "service_type": reviewed_job["service_type"],
-                    "status": "Management Reviewed",
-                    "note": "Cleanup completed with minor clippings left in curb line",
-                    "area_tag": "Parking edge",
-                    "gps": {"lat": 43.641, "lng": -79.401, "accuracy": 8},
-                    "captured_at": now_iso(),
-                    "photo_count": 4,
-                    "required_photo_count": 4,
-                    "photo_files": [
-                        {
-                            "id": make_id("file"),
-                            "filename": "seed-review-1.jpg",
-                            "mime_type": "image/jpeg",
-                            "sequence": 1,
-                            "source_type": "remote",
-                            "media_url": "https://images.unsplash.com/photo-1696663118264-55a63c75409b?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
-                        }
-                    ],
-                    "storage_status": "seed_remote",
-                    "created_at": now_iso(),
-                    "updated_at": now_iso(),
-                    "audit_history": [audit_entry("seeded", "system", "Sample submission created")],
-                },
-                {
-                    "id": finalized_submission_id,
-                    "submission_code": finalized_submission_id.upper(),
-                    "access_code": crew_links[2]["code"],
-                    "crew_label": crew_links[2]["label"],
-                    "job_id": finalized_job["job_id"],
-                    "matched_job_id": finalized_job["id"],
-                    "match_status": "confirmed",
-                    "match_confidence": 0.88,
-                    "truck_number": finalized_job["truck_number"],
-                    "division": finalized_job["division"],
-                    "service_type": finalized_job["service_type"],
-                    "status": "Export Ready",
-                    "note": "Owner-approved gold sample",
-                    "area_tag": "Rear drainage swale",
-                    "gps": {"lat": 43.622, "lng": -79.392, "accuracy": 6},
-                    "captured_at": now_iso(),
-                    "photo_count": 4,
-                    "required_photo_count": 4,
-                    "photo_files": [
-                        {
-                            "id": make_id("file"),
-                            "filename": "seed-owner-1.jpg",
-                            "mime_type": "image/jpeg",
-                            "sequence": 1,
-                            "source_type": "remote",
-                            "media_url": "https://images.unsplash.com/photo-1605117882932-f9e32b03fea9?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
-                        }
-                    ],
-                    "storage_status": "seed_remote",
-                    "created_at": now_iso(),
-                    "updated_at": now_iso(),
-                    "audit_history": [audit_entry("seeded", "system", "Sample submission created")],
-                },
+
+            photo_urls = [
+                "https://images.pexels.com/photos/6728925/pexels-photo-6728925.jpeg?auto=compress&cs=tinysrgb&w=1200",
+                "https://images.unsplash.com/photo-1696663118264-55a63c75409b?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
+                "https://images.unsplash.com/photo-1605117882932-f9e32b03fea9?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
             ]
+
+            def make_seed_submission(sub_id, job, crew_link, status, note, area_tag, days_ago, issue_type="", issue_notes=""):
+                ts = (utc_now() - timedelta(days=days_ago)).isoformat()
+                work_d = (utc_now() - timedelta(days=days_ago)).strftime("%Y-%m-%d")
+                return {
+                    "id": sub_id, "submission_code": sub_id.upper(),
+                    "access_code": crew_link["code"], "crew_label": crew_link["label"],
+                    "job_id": job["job_id"], "job_name_input": job.get("job_name", job["job_id"]),
+                    "matched_job_id": job["id"], "match_status": "confirmed", "match_confidence": 0.92,
+                    "truck_number": job["truck_number"], "division": job["division"],
+                    "service_type": job["service_type"], "task_type": job["service_type"],
+                    "status": status, "note": note, "area_tag": area_tag,
+                    "field_report": {"type": issue_type, "notes": issue_notes, "photo_files": [], "reported": bool(issue_type)},
+                    "gps": {"lat": 43.631 + (days_ago % 10) * 0.001, "lng": -79.412 + (days_ago % 7) * 0.001, "accuracy": 7},
+                    "work_date": work_d, "captured_at": ts,
+                    "photo_count": 3, "required_photo_count": 3,
+                    "photo_files": [{"id": make_id("file"), "filename": f"seed-{sub_id[-6:]}-1.jpg", "mime_type": "image/jpeg", "sequence": 1, "source_type": "remote", "media_url": photo_urls[days_ago % len(photo_urls)]}],
+                    "storage_status": "seed_remote",
+                    "created_at": ts, "updated_at": ts,
+                    "audit_history": [audit_entry("seeded", "system", "Sample submission created")],
+                }
+
+            # Original 3 core submissions
+            samples = [
+                make_seed_submission(ready_submission_id, ready_job, crew_links[0], "Ready for Review", "Seeded sample awaiting management scoring", "Front entry", 1),
+                make_seed_submission(reviewed_submission_id, reviewed_job, crew_links[1], "Management Reviewed", "Cleanup completed with minor clippings left in curb line", "Parking edge", 5),
+                make_seed_submission(finalized_submission_id, finalized_job, crew_links[2], "Export Ready", "Owner-approved gold sample", "Rear drainage swale", 10),
+            ]
+
+            # 20 additional test submissions spread across last 8 months for repeat offender testing
+            issue_types = ["curb_line_cleanup", "edge_quality", "debris_left", "incomplete_mulch", "pruning_damage", "missed_area"]
+            statuses = ["Ready for Review", "Management Reviewed", "Management Reviewed", "Management Reviewed"]
+            notes = ["Minor issues found during review", "Missed section along north fence", "Inconsistent edge depth", "Debris left on walkway", "Pruning cuts too aggressive", "Mulch layer too thin near beds"]
+            areas = ["Front entry", "Side lot", "Parking edge", "Rear beds", "North fence line", "Main walkway"]
+            num_crews = min(len(crew_links), 5)
+            num_jobs = min(len(jobs), 3)
+            for i in range(20):
+                sub_id = make_id("sub")
+                days_ago = int((i / 20) * 240) + 2  # Spread across 0-240 days (8 months)
+                crew = crew_links[i % num_crews]
+                job = jobs[i % num_jobs]
+                has_issue = i % 3 != 0  # ~67% have issues
+                samples.append(make_seed_submission(
+                    sub_id, job, crew,
+                    statuses[i % len(statuses)],
+                    notes[i % len(notes)], areas[i % len(areas)], days_ago,
+                    issue_type=issue_types[i % len(issue_types)] if has_issue else "",
+                    issue_notes=f"Seed issue for repeat offender testing ({days_ago} days ago)" if has_issue else "",
+                ))
+
             await db.submissions.insert_many(samples)
 
             management_user = await db.users.find_one({"role": "management"}, {"_id": 0})
@@ -787,6 +739,30 @@ async def seed_defaults() -> None:
             }
             await db.management_reviews.insert_one(management_review)
             await db.owner_reviews.insert_one(owner_review)
+
+            # Seed rapid reviews for the additional test submissions to populate repeat offender heatmap
+            rapid_reviews_seed = []
+            issue_tags = ["curb_line_cleanup", "edge_quality", "debris_left", "incomplete_mulch", "pruning_damage", "missed_area"]
+            ratings = ["fail", "concern", "concern", "fail", "concern", "standard"]
+            for i, sub in enumerate(samples[3:]):  # Skip the first 3 core submissions
+                days_ago = int((i / 20) * 240) + 2
+                ts = (utc_now() - timedelta(days=days_ago)).isoformat()
+                has_issue = i % 3 != 0
+                if has_issue:
+                    rapid_reviews_seed.append({
+                        "id": make_id("rr"),
+                        "submission_id": sub["id"],
+                        "reviewer_id": management_user["id"],
+                        "overall_rating": ratings[i % len(ratings)],
+                        "issue_tag": issue_tags[i % len(issue_tags)],
+                        "remark": f"Seed rapid review for testing ({days_ago} days ago)",
+                        "time_spent_ms": 4500 + (i * 300),
+                        "created_at": ts,
+                        "updated_at": ts,
+                        "audit_history": [audit_entry("seeded", management_user["id"], "Seed rapid review")],
+                    })
+            if rapid_reviews_seed:
+                await db.rapid_reviews.insert_many(rapid_reviews_seed)
 
     if await db.standards_library.count_documents({}) == 0:
         standards = [
@@ -974,6 +950,7 @@ async def create_submission(
     gps_accuracy: float = Form(0),
     note: str = Form(""),
     area_tag: str = Form(""),
+    work_date: str = Form(""),
     issue_type: str = Form(""),
     issue_notes: str = Form(""),
     photos: list[UploadFile] = File(...),
@@ -1089,6 +1066,7 @@ async def create_submission(
             "reported": bool(issue_type or issue_notes or field_report_photo_files),
         },
         "gps": {"lat": gps_lat, "lng": gps_lng, "accuracy": gps_accuracy},
+        "work_date": work_date or now_iso()[:10],
         "captured_at": now_iso(),
         "required_photo_count": required_photo_count,
         "photo_count": len(photo_files),
