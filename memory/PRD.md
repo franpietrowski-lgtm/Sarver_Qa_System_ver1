@@ -10,12 +10,13 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 
 ## Core Requirements
 - Mobile-first crew portal with division-aware tasking, OSHA incident/damage split, equipment logs
-- High-accuracy GPS capture (±2m target, soft-warn + flag for reviewers if exceeded)
+- High-accuracy GPS capture (+/-2m target, soft-warn + flag for reviewers if exceeded)
 - Admin/Management dashboard with role-based visibility
 - Owner dashboard with calibration heatmap, exports, rubric management
 - Tinder-style Rapid Review for fast mobile QA
 - Supabase Object Storage for images
 - JWT auth with lowercase email standardization
+- Role-specific onboarding (Welcome Modal, Getting Started Panel, Help Popovers)
 
 ## Tech Stack
 - **Frontend**: React 19 + TailwindCSS + Shadcn/UI + Framer Motion
@@ -39,7 +40,7 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 
 ## What's Been Implemented
 - Full crew submission portal with work_date, incident/damage split
-- **GPS accuracy polling**: `watchPosition` with `enableHighAccuracy: true`, 10s polling for best reading, color-coded accuracy badges (Precise ≤2m / Fair ≤5m / Low confidence >5m), "Flagged for review" badge, progress bar animation
+- **GPS accuracy polling**: `watchPosition` with `enableHighAccuracy: true`, 10s polling for best reading, color-coded accuracy badges (Precise <=2m / Fair <=5m / Low confidence >5m), "Flagged for review" badge, progress bar animation
 - **Backend GPS flag**: `gps_low_confidence: true` on submissions where `gps_accuracy > 2.0`
 - Standard and rapid review flows
 - Standards library with pagination/popups
@@ -51,10 +52,15 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - Dataset exports (CSV/JSONL)
 - Supabase image storage (fully integrated)
 - Backend modularization Phase 1 + Phase 2 — COMPLETE
+- **Role-specific onboarding UI** (Apr 2026):
+  - `WelcomeModal`: Role-aware multi-step workflow guide (5 steps for Supervisors, 6 for Owners), localStorage-gated so it only shows on first visit
+  - `GettingStartedPanel`: Collapsible quick-start tips panel with role-specific content (4 tips for Management, 5 for Owner)
+  - `HelpPopover`: Contextual guide tooltips on key UI elements across OverviewPage, JobsPage, StandardsLibraryPage, CrewCapturePage, AnalyticsPage, RepeatOffendersPage, RubricEditorPage
+- **Frontend regression tested**: Iteration 18 — 100% pass on all 7 pages and onboarding components
 
 ## Backlog (Prioritized)
-- **P1**: Owner random sampling filters and variance drilldowns
-- **P2**: Reviewer Performance Dashboard (swipe speed trends, accuracy, calibration drift)
-- **P3**: Closed-loop coaching (auto-generated from repeat-offender thresholds)
+- **P1**: Reviewer Performance Dashboard (swipe speed trends, accuracy, calibration drift)
+- **P2**: Closed-loop coaching (auto-generated from repeat-offender thresholds)
+- **P2**: Owner random sampling filters and variance drilldowns
 - **Backlog**: Staff password reset/invite flows
 - **Backlog**: AI-assisted scoring and automated quality checks
