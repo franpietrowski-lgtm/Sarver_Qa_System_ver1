@@ -1,0 +1,97 @@
+{
+  "id": "sub_62dd31eda151",
+  "submission_code": "SUB_62DD31EDA151",
+  "access_code": "000a07ca",
+  "crew_label": "North Crew",
+  "job_key": "test_gps_above_threshold_1775096791",
+  "job_id": null,
+  "job_name_input": "TEST_GPS_Above_Threshold_1775096791",
+  "matched_job_id": null,
+  "match_status": "unmatched",
+  "match_confidence": 0.0,
+  "truck_number": "T-104",
+  "division": "Install",
+  "service_type": "mulching",
+  "task_type": "Mulching",
+  "status": "Pending Match",
+  "note": "Test submission with just above threshold GPS accuracy",
+  "area_tag": "Garden bed",
+  "field_report": {
+    "type": "",
+    "notes": "",
+    "photo_files": [],
+    "reported": false
+  },
+  "gps": {
+    "lat": 40.7614,
+    "lng": -73.9776,
+    "accuracy": 2.1
+  },
+  "gps_low_confidence": true,
+  "work_date": "2026-01-15",
+  "captured_at": "2026-04-02T02:26:35.286228+00:00",
+  "required_photo_count": 3,
+  "photo_count": 3,
+  "photo_files": [
+    {
+      "id": "file_bea1e6e37e0d",
+      "filename": "01_9d9b23.jpg",
+      "original_name": "photo1.jpg",
+      "mime_type": "image/jpeg",
+      "sequence": 1,
+      "size_bytes": 332,
+      "bucket": "qa-images",
+      "storage_path": "sarver-landscape/submissions/sub_62dd31eda151/captures/01_9d9b23.jpg",
+      "relative_api_path": "/api/submissions/files/sub_62dd31eda151/01_9d9b23.jpg",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_62dd31eda151/01_9d9b23.jpg",
+      "source_type": "supabase"
+    },
+    {
+      "id": "file_c1e8d962c031",
+      "filename": "02_6001f2.jpg",
+      "original_name": "photo2.jpg",
+      "mime_type": "image/jpeg",
+      "sequence": 2,
+      "size_bytes": 332,
+      "bucket": "qa-images",
+      "storage_path": "sarver-landscape/submissions/sub_62dd31eda151/captures/02_6001f2.jpg",
+      "relative_api_path": "/api/submissions/files/sub_62dd31eda151/02_6001f2.jpg",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_62dd31eda151/02_6001f2.jpg",
+      "source_type": "supabase"
+    },
+    {
+      "id": "file_69d99879e738",
+      "filename": "03_db53ce.jpg",
+      "original_name": "photo3.jpg",
+      "mime_type": "image/jpeg",
+      "sequence": 3,
+      "size_bytes": 332,
+      "bucket": "qa-images",
+      "storage_path": "sarver-landscape/submissions/sub_62dd31eda151/captures/03_db53ce.jpg",
+      "relative_api_path": "/api/submissions/files/sub_62dd31eda151/03_db53ce.jpg",
+      "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_62dd31eda151/03_db53ce.jpg",
+      "source_type": "supabase"
+    }
+  ],
+  "local_folder_path": "/app/data/submissions/sub_62dd31eda151",
+  "device_metadata": {
+    "user_agent": "python-requests/2.32.5"
+  },
+  "storage_status": "stored",
+  "created_at": "2026-04-02T02:26:35.286246+00:00",
+  "updated_at": "2026-04-02T02:26:35.286248+00:00",
+  "audit_history": [
+    {
+      "timestamp": "2026-04-02T02:26:35.286251+00:00",
+      "action": "submitted",
+      "actor_id": "000a07ca",
+      "note": "Crew submission created"
+    },
+    {
+      "timestamp": "2026-04-02T02:26:35.286253+00:00",
+      "action": "status_change",
+      "actor_id": "000a07ca",
+      "note": "Lifecycle moved to Pending Match"
+    }
+  ]
+}

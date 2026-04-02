@@ -182,6 +182,7 @@ async def create_submission(
             "reported": bool(issue_type or issue_notes or field_report_photo_files),
         },
         "gps": {"lat": gps_lat, "lng": gps_lng, "accuracy": gps_accuracy},
+        "gps_low_confidence": gps_accuracy > 2.0,
         "work_date": work_date or now_iso()[:10],
         "captured_at": now_iso(),
         "required_photo_count": required_photo_count,

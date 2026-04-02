@@ -153,3 +153,9 @@ h4,
 .workspace-shell.theme-dark table tr {
     border-color: #2b372d !important;
 }
+
+
+@keyframes gpsProgress {
+    from { width: 0%; }
+    to { width: 100%; }
+}

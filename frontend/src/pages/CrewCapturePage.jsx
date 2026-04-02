@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BookOpen, Camera, Crosshair, MapPinned, Upload, Wrench, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 
@@ -60,6 +60,13 @@ export default function CrewCapturePage() {
   const [photos, setPhotos] = useState([]);
   const [gps, setGps] = useState(null);
   const [locating, setLocating] = useState(false);
+  const [gpsPolling, setGpsPolling] = useState(false);
+  const watchIdRef = useRef(null);
+  const pollTimerRef = useRef(null);
+  const bestReadingRef = useRef(null);
+
+  const GPS_TARGET = 2; // meters
+  const GPS_POLL_MS = 10000; // 10 seconds
   const [submitting, setSubmitting] = useState(false);
   const [crewNotifications, setCrewNotifications] = useState([]);
   const [taskType, setTaskType] = useState("");
@@ -104,21 +111,63 @@ export default function CrewCapturePage() {
 
   useEffect(() => { loadCrewContext(); }, [code]);
 
-  const requestGps = () => {
-    if (!navigator.geolocation) { toast.error("Geolocation is not supported on this device."); return; }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setGps({ lat: Number(position.coords.latitude.toFixed(6)), lng: Number(position.coords.longitude.toFixed(6)), accuracy: Number(position.coords.accuracy?.toFixed(1) || 0) });
-        setLocating(false);
-        toast.success("GPS locked.");
-      },
-      () => { setLocating(false); toast.error("GPS permission is required before submitting."); },
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
+  const stopGpsPolling = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    if (pollTimerRef.current) {
+      clearTimeout(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+    setGpsPolling(false);
+    setLocating(false);
   };
 
-  useEffect(() => { requestGps(); }, []);
+  const requestGps = () => {
+    if (!navigator.geolocation) { toast.error("Geolocation is not supported on this device."); return; }
+    stopGpsPolling();
+    setLocating(true);
+    setGpsPolling(true);
+    bestReadingRef.current = null;
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const reading = {
+          lat: Number(position.coords.latitude.toFixed(6)),
+          lng: Number(position.coords.longitude.toFixed(6)),
+          accuracy: Number(position.coords.accuracy?.toFixed(1) || 0),
+        };
+        if (!bestReadingRef.current || reading.accuracy < bestReadingRef.current.accuracy) {
+          bestReadingRef.current = reading;
+          setGps({ ...reading });
+        }
+        if (reading.accuracy <= GPS_TARGET) {
+          stopGpsPolling();
+          toast.success(`GPS locked — ±${reading.accuracy}m`);
+        }
+      },
+      () => {
+        stopGpsPolling();
+        if (!bestReadingRef.current) toast.error("GPS permission is required before submitting.");
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+
+    pollTimerRef.current = setTimeout(() => {
+      stopGpsPolling();
+      const best = bestReadingRef.current;
+      if (best) {
+        if (best.accuracy > GPS_TARGET) {
+          toast.warning(`Best GPS: ±${best.accuracy}m — submission will be flagged for reviewer attention.`);
+        } else {
+          toast.success(`GPS locked — ±${best.accuracy}m`);
+        }
+      }
+    }, GPS_POLL_MS);
+  };
+
+  useEffect(() => { requestGps(); return () => stopGpsPolling(); }, []);
 
   useEffect(() => {
     if (!taskType && availableTasks.length) setTaskType(availableTasks[0]);
@@ -368,14 +417,33 @@ export default function CrewCapturePage() {
 
                   <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4" data-testid="crew-gps-card">
                     <div className="flex items-start justify-between gap-3">
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-[#243e36]">GPS lock</p>
-                        <p className="mt-1 text-sm text-[#5c6d64]" data-testid="crew-gps-status-text">{gps ? `${gps.lat}, ${gps.lng} · ±${gps.accuracy}m` : "Waiting for device location"}</p>
+                        {gps ? (
+                          <>
+                            <p className="mt-1 text-sm text-[#5c6d64]">{gps.lat}, {gps.lng}</p>
+                            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${gps.accuracy <= GPS_TARGET ? "bg-emerald-100 text-emerald-800" : gps.accuracy <= 5 ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`} data-testid="crew-gps-accuracy-badge">
+                                <span className={`inline-block h-1.5 w-1.5 rounded-full ${gps.accuracy <= GPS_TARGET ? "bg-emerald-500" : gps.accuracy <= 5 ? "bg-amber-500" : "bg-red-500"}`} />
+                                ±{gps.accuracy}m {gps.accuracy <= GPS_TARGET ? "— Precise" : gps.accuracy <= 5 ? "— Fair" : "— Low confidence"}
+                              </span>
+                              {gps.accuracy > GPS_TARGET && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700" data-testid="crew-gps-flagged-badge">Flagged for review</span>}
+                            </div>
+                            {gpsPolling && <p className="mt-1.5 text-xs text-[#5c6d64] animate-pulse" data-testid="crew-gps-refining-text">Refining position...</p>}
+                          </>
+                        ) : (
+                          <p className="mt-1 text-sm text-[#5c6d64]" data-testid="crew-gps-status-text">{locating ? "Acquiring satellite lock..." : "Waiting for device location"}</p>
+                        )}
                       </div>
-                      <Button type="button" onClick={requestGps} variant="outline" className="rounded-2xl border-[#243e36]/10 bg-white" disabled={locating} data-testid="crew-gps-refresh-button">
+                      <Button type="button" onClick={requestGps} variant="outline" className="shrink-0 rounded-2xl border-[#243e36]/10 bg-white" disabled={locating} data-testid="crew-gps-refresh-button">
                         <Crosshair className="mr-2 h-4 w-4" />{locating ? "Locating" : "Refresh"}
                       </Button>
                     </div>
+                    {gpsPolling && (
+                      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#dde4d6]" data-testid="crew-gps-progress-bar">
+                        <div className="h-full rounded-full bg-[#243e36]" style={{ animation: "gpsProgress 10s linear forwards" }} />
+                      </div>
+                    )}
                   </div>
 
                   {photos.length > 0 && (
