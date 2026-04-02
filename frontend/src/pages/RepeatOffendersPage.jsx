@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { HelpPopover } from "@/components/common/HelpPopover";
 import { authGet, authPost } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -126,7 +127,21 @@ export default function RepeatOffendersPage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Repeat offender tracking</p>
               <h1 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815] lg:text-4xl">Spot recurring quality misses, escalate them, and launch training fast.</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#5c6d64]">The window below sets the look-back period in days. Incidents within this range are aggregated per crew. Threshold levels (3/5/7) determine escalation tiers: <strong className="text-[#243e36]">Watch</strong> (3+), <strong className="text-[#243e36]">Warning</strong> (5+), and <strong className="text-[#243e36]">Critical</strong> (7+).</p>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#5c6d64]">
+                The window below sets the look-back period in days. Incidents within this range are aggregated per crew.
+                <HelpPopover title="Repeat offender tracking">
+                  <p className="mb-2"><strong>How thresholds work:</strong></p>
+                  <ul className="mb-2 list-inside list-disc space-y-1 text-xs">
+                    <li><strong>Watch (3+)</strong> — crew flagged for awareness; include in next training rotation</li>
+                    <li><strong>Warning (5+)</strong> — corrective training required; auto-generate a focused session</li>
+                    <li><strong>Critical (7+)</strong> — escalation: suspend solo work, require ride-along, full retraining</li>
+                  </ul>
+                  <p className="mb-2 font-semibold">Using the heatmap:</p>
+                  <p className="mb-2 text-xs">The collapsible heatmap below shows issue density across crews and time buckets. Darker cells = more incidents.</p>
+                  <p className="font-semibold">Creating training:</p>
+                  <p className="text-xs">Click "Create training session" on any crew card to auto-generate a quiz targeting their division's standards.</p>
+                </HelpPopover>
+              </p>
             </div>
             <div className="flex items-center gap-3 rounded-[24px] bg-[#edf0e7] px-4 py-3">
               <Radar className="h-5 w-5 text-[#243e36]" />

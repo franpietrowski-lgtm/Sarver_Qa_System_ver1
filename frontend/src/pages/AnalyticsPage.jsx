@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { HelpPopover } from "@/components/common/HelpPopover";
 import { authGet } from "@/lib/api";
 
 
@@ -139,6 +140,20 @@ export default function AnalyticsPage() {
         <CardContent className="p-8">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Owner calibration dashboard</p>
           <h2 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Owner-only calibration, reviewer drift, and training signal quality by {analytics.period_label.toLowerCase()} window.</h2>
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-[#5c6d64]">
+            <HelpPopover title="Analytics & calibration guide">
+              <p className="mb-2"><strong>What this page shows:</strong></p>
+              <ul className="mb-2 list-inside list-disc space-y-1 text-xs">
+                <li><strong>Score by crew</strong> — average review score per crew, ranked highest to lowest</li>
+                <li><strong>Variance</strong> — the gap between management and owner scores (lower = better calibration)</li>
+                <li><strong>Fail reasons</strong> — most common issues flagged across all reviews</li>
+                <li><strong>Volume trends</strong> — submission count over time, bucketed by period</li>
+                <li><strong>Calibration heatmap</strong> — per-crew, per-service breakdown of management vs. owner scores</li>
+              </ul>
+              <p className="mb-2 font-semibold">Reading the heatmap:</p>
+              <p className="text-xs">Darker cells = higher variance. A consistently dark cell means management and owner are grading that crew/service differently — time to recalibrate.</p>
+            </HelpPopover>
+          </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <div className="rounded-[28px] border border-border bg-[#f6f6f2] p-5" data-testid="analytics-approved-card">
               <p className="text-sm text-[#5c6d64]">Training-approved records</p>

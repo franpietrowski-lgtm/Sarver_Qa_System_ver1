@@ -5,6 +5,9 @@ import { Link } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 
 import StatCard from "@/components/common/StatCard";
+import GettingStartedPanel from "@/components/common/GettingStartedPanel";
+import { HelpPopover } from "@/components/common/HelpPopover";
+import WelcomeModal from "@/components/common/WelcomeModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -83,6 +86,9 @@ export default function OverviewPage({ user }) {
 
   return (
     <div className="space-y-4" data-testid="overview-page">
+      <WelcomeModal user={user} />
+      <GettingStartedPanel user={user} />
+
       <Card className="overflow-hidden rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-hero-card">
         <CardContent className="grid gap-4 p-5 lg:grid-cols-[1.3fr_0.7fr] lg:p-6">
           <div>
@@ -122,6 +128,12 @@ export default function OverviewPage({ user }) {
                 <h3 className="font-semibold text-[#111815]">Quick matrix ref</h3>
                 <p className="text-xs text-[#5c6d64]">{rubricMatrices.length} active rubrics across divisions</p>
               </div>
+              <HelpPopover title="Rubric matrices">
+                <p className="mb-2">Each service type has a rubric with <strong>weighted grading categories</strong> that must sum to 1.0.</p>
+                <p className="mb-2"><strong>Pass threshold</strong> — the minimum score % to pass review.</p>
+                <p className="mb-2"><strong>Hard-fail conditions</strong> — if triggered, the submission fails regardless of score.</p>
+                <p>GM and Owner can create, edit, and deactivate rubrics from the <strong>Rubric Editor</strong> page.</p>
+              </HelpPopover>
             </div>
             <Badge className="border-0 bg-[#edf0e7] text-[#243e36]">{matrixOpen ? "Close" : "View"}</Badge>
           </button>
@@ -227,7 +239,16 @@ export default function OverviewPage({ user }) {
               <div className="min-w-0">
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Rapid review</p>
                 <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[#111815]">Mobile swipe lane</h3>
-                <p className="mt-1 text-xs text-[#5c6d64]">Scan or copy to open admin review on phone.</p>
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-[#5c6d64]">
+                  Scan or copy to open admin review on phone.
+                  <HelpPopover title="Rapid review swipe controls" side="left">
+                    <p className="mb-2"><strong>Swipe right</strong> — Standard pass</p>
+                    <p className="mb-2"><strong>Swipe left</strong> — Fail (comment required)</p>
+                    <p className="mb-2"><strong>Swipe up</strong> — Exemplary (comment required)</p>
+                    <p className="mb-2"><strong>Speed alerts</strong> — Reviews under 4 seconds are flagged. 3+ fast reviews in a session triggers an Owner notification.</p>
+                    <p><strong>Concern</strong> — Marks the submission for manual rescore by a senior reviewer.</p>
+                  </HelpPopover>
+                </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 <div className="rounded-[14px] border border-border bg-[#f6f6f2] p-2" data-testid="overview-rapid-review-qr-card">

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { HelpPopover } from "@/components/common/HelpPopover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { authPostForm, publicGet } from "@/lib/api";
@@ -256,7 +257,21 @@ export default function CrewCapturePage() {
           <CardContent className="p-6">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]" data-testid="crew-capture-kicker">Sarver landscape field capture</p>
             <h1 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight" data-testid="crew-capture-title">Capture work proof in one clean pass</h1>
-            <p className="mt-3 text-sm text-white/80" data-testid="crew-capture-description">Enter the job name, confirm the truck, add clear photos, and send the work set to review.</p>
+            <p className="mt-3 flex items-center gap-1.5 text-sm text-white/80" data-testid="crew-capture-description">
+              Enter the job name, confirm the truck, add clear photos, and send the work set to review.
+              <HelpPopover title="Crew submission workflow" side="bottom">
+                <p className="mb-2"><strong>Step-by-step:</strong></p>
+                <ol className="mb-2 list-inside list-decimal space-y-1 text-xs">
+                  <li><strong>GPS</strong> auto-locks when you load this page. Wait for the green "Precise" badge for best accuracy.</li>
+                  <li>Enter or select the <strong>Job name</strong> and confirm the <strong>truck number</strong>.</li>
+                  <li>Take at least <strong>3 photos</strong> — one wide establishing shot, one detail, one street-facing finish.</li>
+                  <li>Add <strong>area tag</strong> and <strong>work date</strong> for accurate tracking.</li>
+                  <li>Use the <strong>Incident/Damage</strong> tab for OSHA-relevant reporting.</li>
+                  <li>Hit <strong>Submit</strong> — management is notified instantly.</li>
+                </ol>
+                <p className="text-xs italic">Tip: Clear sky = better GPS. If accuracy is above 2m, the submission is flagged but still accepted.</p>
+              </HelpPopover>
+            </p>
             {crewLink && (
               <div className="mt-5 flex flex-wrap gap-2">
                 <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-crew-badge">{crewLink.label}</Badge>

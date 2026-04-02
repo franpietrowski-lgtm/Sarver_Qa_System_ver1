@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { HelpPopover } from "@/components/common/HelpPopover";
 import { authGet, authPatch, authPost } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -249,6 +250,21 @@ export default function StandardsLibraryPage() {
           <CardContent className="p-6 lg:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Standards Library</p>
             <h1 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815] lg:text-4xl">Author company standards and turn them into crew-ready training material.</h1>
+            <p className="mt-2 flex items-center gap-1.5 text-sm leading-6 text-[#5c6d64]">
+              Browse, create, and manage visual quality standards.
+              <HelpPopover title="Standards library guide">
+                <p className="mb-2"><strong>What standards do:</strong></p>
+                <p className="mb-2 text-xs">Standards define "what good looks like" for your crews. Each standard includes a title, category, checklist, reference photo, and optional training quiz.</p>
+                <p className="mb-2 font-semibold">Authoring tips:</p>
+                <ul className="mb-2 list-inside list-disc space-y-1 text-xs">
+                  <li>Use <strong>division targets</strong> to control which crews see each standard</li>
+                  <li>The <strong>checklist</strong> field is line-separated — one item per line</li>
+                  <li>Toggle <strong>Training enabled</strong> to make a standard eligible for quiz sessions</li>
+                  <li>For training quizzes, add a <strong>question prompt</strong>, comma-separated <strong>choice options</strong>, and the <strong>correct answer</strong></li>
+                  <li>Use <strong>shoutout</strong> to recognize crews that exemplify this standard</li>
+                </ul>
+              </HelpPopover>
+            </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search standards" className="h-11 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="standards-search-input" />
               <Select value={category} onValueChange={setCategory}>
@@ -267,6 +283,21 @@ export default function StandardsLibraryPage() {
           <CardContent className="p-6 lg:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Training Mode launch</p>
             <h2 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight lg:text-4xl">Generate a no-login crew session from the library.</h2>
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-white/70">
+              Assign quiz sessions to crews based on division standards.
+              <HelpPopover title="Training mode workflow" side="left">
+                <p className="mb-2"><strong>How it works:</strong></p>
+                <ol className="mb-2 list-inside list-decimal space-y-1 text-xs">
+                  <li>Select a <strong>crew</strong> from the dropdown — their division is auto-detected.</li>
+                  <li>Choose how many <strong>quiz items</strong> (1–5) to include.</li>
+                  <li>Click <strong>Generate session</strong> — the system picks training-enabled standards matching the crew's division.</li>
+                  <li>Copy the <strong>session URL</strong> and share it with the crew — no login required.</li>
+                  <li>The crew answers questions, and results are scored automatically.</li>
+                </ol>
+                <p className="mb-2 font-semibold">Making standards training-ready:</p>
+                <p className="text-xs">In the Authoring tab, toggle <strong>"Training enabled"</strong> on any standard. Add a question prompt, choice options, and correct answer. Only training-enabled standards are eligible for sessions.</p>
+              </HelpPopover>
+            </p>
             <div className="mt-5 grid gap-3">
               <Select value={sessionForm.access_code} onValueChange={(value) => setSessionForm((current) => ({ ...current, access_code: value }))}>
                 <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/10 text-white" data-testid="training-session-crew-select"><SelectValue placeholder="Choose crew" /></SelectTrigger>

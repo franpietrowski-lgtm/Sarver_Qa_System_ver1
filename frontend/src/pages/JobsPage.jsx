@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { HelpPopover } from "@/components/common/HelpPopover";
 import { authGet, authPatch, authPost, authPostForm, getApiOrigin } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -168,7 +169,23 @@ export default function JobsPage() {
           <CardContent className="p-6 lg:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Job alignment import</p>
             <h2 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815] lg:text-4xl">Import external job data for admin matching and review alignment.</h2>
-            <p className="mt-3 text-sm leading-6 text-[#5c6d64]">Crews only enter Job Name in the field. Admins can use imported data here to align, match, and review submissions after the fact.</p>
+            <p className="mt-3 flex items-center gap-1.5 text-sm leading-6 text-[#5c6d64]">
+              Crews only enter Job Name in the field. Admins can use imported data here to align, match, and review submissions after the fact.
+              <HelpPopover title="CSV import format">
+                <p className="mb-2"><strong>Required columns:</strong></p>
+                <code className="mb-3 block rounded-lg bg-[#f6f6f2] px-3 py-2 text-xs leading-relaxed">job_id, job_name, property_name, address, service_type, scheduled_date, division, truck_number</code>
+                <p className="mb-2"><strong>Optional:</strong> route, latitude, longitude</p>
+                <p className="mb-2"><strong>Notes:</strong></p>
+                <ul className="mb-2 list-inside list-disc space-y-1 text-xs">
+                  <li><strong>job_id</strong> is the unique key — duplicates update existing records</li>
+                  <li><strong>service_type</strong> must match a rubric (e.g., "bed edging", "spring cleanup")</li>
+                  <li><strong>division</strong> defaults to "General" if blank</li>
+                  <li><strong>scheduled_date</strong> should be ISO format (YYYY-MM-DD)</li>
+                  <li><strong>truck_number</strong> links jobs to crew QR codes</li>
+                </ul>
+                <p className="text-xs italic">Tip: Save as UTF-8 CSV from Excel to avoid encoding issues.</p>
+              </HelpPopover>
+            </p>
             <div className="mt-5 rounded-[24px] border border-dashed border-[#cdd3c8] bg-[#edf0e7] p-5" data-testid="jobs-import-dropzone">
               <div className="flex items-center gap-3 text-[#243e36]"><FileSpreadsheet className="h-5 w-5" /><p className="text-sm font-semibold">Expected columns: Job ID, Job Name, Property Name, Address, Service Type, Scheduled Date, Division, Truck Number, Route.</p></div>
               <Input type="file" accept=".csv" onChange={(event) => setCsvFile(event.target.files?.[0] || null)} className="mt-4 h-12 rounded-2xl border-transparent bg-white" data-testid="jobs-csv-file-input" />
@@ -183,6 +200,20 @@ export default function JobsPage() {
           <CardContent className="p-6 lg:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Crew QR control</p>
             <h2 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight lg:text-4xl">Create or update QR entries for field access.</h2>
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-white/70">
+              Each code links to a truck and division.
+              <HelpPopover title="Crew QR links" side="left">
+                <p className="mb-2">Each crew gets a <strong>unique QR code</strong> tied to their truck number and division.</p>
+                <p className="mb-2"><strong>How it works:</strong></p>
+                <ul className="mb-2 list-inside list-disc space-y-1 text-xs">
+                  <li>Scanning the QR opens the mobile capture portal — no login needed</li>
+                  <li>The portal auto-filters jobs by the linked truck number</li>
+                  <li>Submissions are tagged with crew label and division</li>
+                  <li>Deactivated codes can be re-enabled later</li>
+                </ul>
+                <p className="text-xs italic">Tip: Print QR codes and laminate them for truck dashboards.</p>
+              </HelpPopover>
+            </p>
             <form className="mt-5 grid gap-3" onSubmit={handleCreateCrewLink} data-testid="jobs-create-crew-link-form">
               <Input value={newLink.label} onChange={(event) => setNewLink((c) => ({ ...c, label: event.target.value }))} placeholder="Crew label" className="h-11 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-label-input" />
               <Input value={newLink.truck_number} onChange={(event) => setNewLink((c) => ({ ...c, truck_number: event.target.value }))} placeholder="Truck number" className="h-11 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-truck-input" />

@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { HelpPopover } from "@/components/common/HelpPopover";
 import { authGet, authPatch, authPost } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -263,7 +264,22 @@ export default function RubricEditorPage({ user }) {
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Rubric management</p>
           <h1 className="mt-2 font-[Outfit] text-3xl font-bold tracking-tight text-[#111815]" data-testid="rubric-editor-heading">Rubric matrices</h1>
-          <p className="mt-1 text-sm text-[#5c6d64]">Create, edit, and version grading rubrics by division and task.</p>
+          <p className="mt-1 flex items-center gap-1.5 text-sm text-[#5c6d64]">
+            Create, edit, and version grading rubrics by division and task.
+            <HelpPopover title="How rubric matrices work">
+              <p className="mb-2">Each rubric defines <strong>how submissions are scored</strong> for a service type within a division.</p>
+              <p className="mb-2 font-semibold">Key concepts:</p>
+              <ul className="mb-2 list-inside list-disc space-y-1 text-xs">
+                <li><strong>Categories</strong> — grading factors (e.g., "Depth Consistency"). Each has a weight and max score of 5.</li>
+                <li><strong>Weights</strong> — must sum to 100%. Use the sliders to redistribute. The system auto-balances when you add/remove factors.</li>
+                <li><strong>Pass threshold</strong> — minimum score % to pass (e.g., 80% means the crew must score at least 80 out of 100).</li>
+                <li><strong>Hard-fail conditions</strong> — if any are triggered, the submission fails regardless of numeric score.</li>
+                <li><strong>Min photos</strong> — crew submissions with fewer photos than this will be rejected at upload.</li>
+              </ul>
+              <p className="mb-2 font-semibold">Versioning:</p>
+              <p className="text-xs">Creating a new rubric for the same service type auto-increments the version. Deactivating a rubric does not delete it — historical reviews keep their rubric reference.</p>
+            </HelpPopover>
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={divisionFilter} onValueChange={setDivisionFilter}>
