@@ -1,4 +1,5 @@
 from datetime import datetime
+from random import sample as random_sample
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query
@@ -153,4 +154,145 @@ async def get_analytics_summary(
         ],
         "training_approved_count": len([review for review in owner_reviews if review["training_inclusion"] == "approved"]),
         "calibration_heatmap": calibration_heatmap,
+    }
+
+
+@router.get("/analytics/random-sample")
+async def get_random_sample(
+    user: dict = Depends(require_roles("owner")),
+    size: int = Query(10, ge=1, le=50),
+    crew: str = Query(None),
+    division: str = Query(None),
+    service_type: str = Query(None),
+    period: str = Query("monthly"),
+):
+    period = period if period in ANALYTICS_PERIODS else "monthly"
+    cutoff = get_period_cutoff(period).isoformat()
+    query: dict[str, Any] = {"created_at": {"$gte": cutoff}}
+    if crew:
+        query["crew_label"] = crew
+    if division:
+        query["division"] = division
+    if service_type:
+        query["service_type"] = service_type
+
+    submissions = await deps.db.submissions.find(
+        query,
+        {"_id": 0, "id": 1, "created_at": 1, "crew_label": 1, "division": 1,
+         "service_type": 1, "truck_number": 1, "status": 1, "image_urls": 1},
+    ).to_list(5000)
+
+    sampled = random_sample(submissions, min(size, len(submissions))) if submissions else []
+    sampled_ids = [s["id"] for s in sampled]
+
+    mgmt_reviews = await deps.db.management_reviews.find(
+        {"submission_id": {"$in": sampled_ids or ["__none__"]}},
+        {"_id": 0, "submission_id": 1, "total_score": 1, "overall_rating": 1,
+         "flagged_issues": 1, "reviewer_id": 1},
+    ).to_list(500)
+
+    owner_reviews = await deps.db.owner_reviews.find(
+        {"submission_id": {"$in": sampled_ids or ["__none__"]}},
+        {"_id": 0, "submission_id": 1, "total_score": 1, "training_inclusion": 1,
+         "variance_from_management": 1},
+    ).to_list(500)
+
+    mgmt_lookup = {r["submission_id"]: r for r in mgmt_reviews}
+    owner_lookup = {r["submission_id"]: r for r in owner_reviews}
+
+    results = []
+    for sub in sampled:
+        mgmt = mgmt_lookup.get(sub["id"])
+        owner = owner_lookup.get(sub["id"])
+        results.append({
+            "submission_id": sub["id"],
+            "crew": sub.get("crew_label") or sub.get("truck_number", ""),
+            "division": sub.get("division", ""),
+            "service_type": sub.get("service_type", ""),
+            "status": sub.get("status", ""),
+            "created_at": sub.get("created_at", ""),
+            "image_count": len(sub.get("image_urls") or []),
+            "management_score": mgmt["total_score"] if mgmt else None,
+            "management_rating": mgmt.get("overall_rating") if mgmt else None,
+            "management_issues": mgmt.get("flagged_issues", []) if mgmt else [],
+            "owner_score": owner["total_score"] if owner else None,
+            "owner_training": owner.get("training_inclusion") if owner else None,
+            "variance": owner.get("variance_from_management") if owner else None,
+        })
+
+    # Collect filter options from the full dataset
+    all_crews = await deps.db.submissions.distinct("crew_label", {"created_at": {"$gte": cutoff}})
+    all_divisions = await deps.db.submissions.distinct("division", {"created_at": {"$gte": cutoff}})
+    all_service_types = await deps.db.submissions.distinct("service_type", {"created_at": {"$gte": cutoff}})
+
+    return {
+        "pool_size": len(submissions),
+        "sample_size": len(results),
+        "samples": results,
+        "filter_options": {
+            "crews": sorted([c for c in all_crews if c]),
+            "divisions": sorted([d for d in all_divisions if d]),
+            "service_types": sorted([s for s in all_service_types if s]),
+        },
+    }
+
+
+@router.get("/analytics/variance-drilldown")
+async def get_variance_drilldown(
+    user: dict = Depends(require_roles("owner")),
+    crew: str = Query(...),
+    service_type: str = Query(...),
+    period: str = Query("monthly"),
+):
+    period = period if period in ANALYTICS_PERIODS else "monthly"
+    cutoff = get_period_cutoff(period).isoformat()
+    submissions = await deps.db.submissions.find(
+        {"created_at": {"$gte": cutoff}, "crew_label": crew, "service_type": service_type},
+        {"_id": 0, "id": 1, "created_at": 1, "crew_label": 1, "service_type": 1,
+         "truck_number": 1, "status": 1},
+    ).to_list(1000)
+
+    sub_ids = [s["id"] for s in submissions]
+    mgmt_reviews = await deps.db.management_reviews.find(
+        {"submission_id": {"$in": sub_ids or ["__none__"]}},
+        {"_id": 0, "submission_id": 1, "total_score": 1, "overall_rating": 1,
+         "flagged_issues": 1, "reviewer_id": 1},
+    ).to_list(1000)
+
+    owner_reviews = await deps.db.owner_reviews.find(
+        {"submission_id": {"$in": sub_ids or ["__none__"]}},
+        {"_id": 0, "submission_id": 1, "total_score": 1, "training_inclusion": 1,
+         "variance_from_management": 1, "exclusion_reason": 1},
+    ).to_list(1000)
+
+    mgmt_lookup = {r["submission_id"]: r for r in mgmt_reviews}
+    owner_lookup = {r["submission_id"]: r for r in owner_reviews}
+
+    rows = []
+    for sub in submissions:
+        mgmt = mgmt_lookup.get(sub["id"])
+        owner = owner_lookup.get(sub["id"])
+        if not mgmt and not owner:
+            continue
+        rows.append({
+            "submission_id": sub["id"],
+            "created_at": sub.get("created_at", ""),
+            "status": sub.get("status", ""),
+            "management_score": mgmt["total_score"] if mgmt else None,
+            "management_rating": mgmt.get("overall_rating") if mgmt else None,
+            "management_issues": mgmt.get("flagged_issues", []) if mgmt else [],
+            "owner_score": owner["total_score"] if owner else None,
+            "owner_training": owner.get("training_inclusion") if owner else None,
+            "variance": owner.get("variance_from_management") if owner else None,
+            "exclusion_reason": owner.get("exclusion_reason") if owner else None,
+        })
+
+    rows.sort(key=lambda r: abs(r["variance"] or 0), reverse=True)
+
+    return {
+        "crew": crew,
+        "service_type": service_type,
+        "period": period,
+        "total_reviewed": len(rows),
+        "rows": rows,
     }
