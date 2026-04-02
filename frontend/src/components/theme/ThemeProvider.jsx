@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 
 const ThemeContext = createContext(null);
-const STORAGE_KEY = "field-quality-workspace-theme";
+const THEME_STORAGE_KEY = "field-quality-workspace-theme";
+const FONT_STORAGE_KEY = "field-quality-workspace-font";
 
 export const THEMES = [
   { id: "default", label: "Default", description: "Nature green light mode" },
@@ -24,25 +25,44 @@ const THEME_SWATCHES = {
 
 export { THEME_SWATCHES };
 
+export const FONT_PACKAGES = [
+  { id: "brand", label: "Brand", description: "Cabinet Grotesk + Manrope", sample: "Cabinet Grotesk", family: "'Cabinet Grotesk', sans-serif" },
+  { id: "duckfake", label: "Duckfake", description: "Grungy hand-painted", sample: "Permanent Marker", family: "'Permanent Marker', cursive" },
+  { id: "kindergarten", label: "Kid-Ergarten", description: "Childlike handwriting", sample: "Patrick Hand", family: "'Patrick Hand', cursive" },
+  { id: "hikaru", label: "Hikaru", description: "Chunky cute rounded", sample: "Fredoka", family: "'Fredoka', sans-serif" },
+];
+
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) || "default";
+    const stored = localStorage.getItem(THEME_STORAGE_KEY) || "default";
     if (THEMES.some((t) => t.id === stored)) return stored;
     return "default";
   });
 
+  const [fontPkg, setFontPkg] = useState(() => {
+    const stored = localStorage.getItem(FONT_STORAGE_KEY) || "brand";
+    if (FONT_PACKAGES.some((f) => f.id === stored)) return stored;
+    return "brand";
+  });
+
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem(FONT_STORAGE_KEY, fontPkg);
+  }, [fontPkg]);
 
   const value = useMemo(
     () => ({
       theme,
       setTheme,
       isDark: theme !== "default",
+      fontPkg,
+      setFontPkg,
     }),
-    [theme],
+    [theme, fontPkg],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

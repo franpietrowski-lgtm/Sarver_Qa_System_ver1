@@ -1,4 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
 
 .App {
     min-height: 100vh;
@@ -834,4 +837,72 @@ h4,
     background-color: #80A416 !important;
     border-color: #80A416 !important;
     color: #fff !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   FONT PACKAGES — independent of color theme
+   ══════════════════════════════════════════════════════════════ */
+
+/* Package: Duckfake — grungy hand-painted (Permanent Marker) */
+.workspace-shell.font-duckfake {
+    font-family: 'Permanent Marker', cursive !important;
+    letter-spacing: 0.01em;
+}
+.workspace-shell.font-duckfake .font-\[Cabinet_Grotesk\] {
+    font-family: 'Permanent Marker', cursive !important;
+}
+.workspace-shell.font-duckfake button,
+.workspace-shell.font-duckfake input,
+.workspace-shell.font-duckfake textarea,
+.workspace-shell.font-duckfake select {
+    font-family: 'Permanent Marker', cursive !important;
+}
+.workspace-shell.font-duckfake h1,
+.workspace-shell.font-duckfake h2,
+.workspace-shell.font-duckfake h3 {
+    font-family: 'Permanent Marker', cursive !important;
+    letter-spacing: 0.02em;
+}
+
+/* Package: Kid-Ergarten — childlike handwriting (Patrick Hand) */
+.workspace-shell.font-kindergarten {
+    font-family: 'Patrick Hand', cursive !important;
+    letter-spacing: 0.02em;
+}
+.workspace-shell.font-kindergarten .font-\[Cabinet_Grotesk\] {
+    font-family: 'Patrick Hand', cursive !important;
+}
+.workspace-shell.font-kindergarten button,
+.workspace-shell.font-kindergarten input,
+.workspace-shell.font-kindergarten textarea,
+.workspace-shell.font-kindergarten select {
+    font-family: 'Patrick Hand', cursive !important;
+}
+.workspace-shell.font-kindergarten h1,
+.workspace-shell.font-kindergarten h2,
+.workspace-shell.font-kindergarten h3 {
+    font-family: 'Patrick Hand', cursive !important;
+    font-weight: 400;
+}
+
+/* Package: Hikaru — chunky cute rounded (Fredoka) */
+.workspace-shell.font-hikaru {
+    font-family: 'Fredoka', sans-serif !important;
+    letter-spacing: 0.01em;
+}
+.workspace-shell.font-hikaru .font-\[Cabinet_Grotesk\] {
+    font-family: 'Fredoka', sans-serif !important;
+}
+.workspace-shell.font-hikaru button,
+.workspace-shell.font-hikaru input,
+.workspace-shell.font-hikaru textarea,
+.workspace-shell.font-hikaru select {
+    font-family: 'Fredoka', sans-serif !important;
+}
+.workspace-shell.font-hikaru h1,
+.workspace-shell.font-hikaru h2,
+.workspace-shell.font-hikaru h3 {
+    font-family: 'Fredoka', sans-serif !important;
+    font-weight: 700;
 }
