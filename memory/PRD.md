@@ -25,45 +25,28 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - Equipment Maintenance logs with Red-Tag notification flow
 - Unified login screen, theme toggler, pagination
 
-### 2026-04-01 Session 1
-- Dynamic Rubric Matrix CRUD API (GET/POST/PATCH/DELETE /api/rubric-matrices)
-- Quick Matrix Ref table on dashboard with division filter
-- Crew portal icon tabs (Camera/BookOpen/Wrench)
-- Strict mobile-only Rapid Review (previous version)
-- Dark theme visibility CSS fixes
+### 2026-04-01 Session 1-3
+- Dynamic Rubric Matrix CRUD + Quick Matrix Ref widget
+- Strict mobile Rapid Review with progress bar, timer, speed alerts
+- Rubric Matrix Editor page with visual weight sliders
+- Dashboard tightened to single-page layout
+- Pydantic models extracted to shared/models.py
+- Login Page Admin/Crew split, AppShell simplified, Theme Toggle to Settings
+- Backend seed with standardized lowercased emails
 
-### 2026-04-01 Session 2
-**Phase 1 — Rapid Review Overhaul:**
-- Full-screen immersive image with swipe-only rating
-- Progress bar with branded color + green glow flash
-- Per-image timer, session tracking, speed alerts
-- 8s enforced minimum, suspicious fast-swipe flagging
+### 2026-04-01 Session 4
+- Fixed OverviewPage crash (missing imports/undefined vars)
+- Fixed backend email seeding (lowercased for case-insensitive login)
+- Standards Library rewrite: toggle sections for Authoring/Equipment, horizontal carousel
+- Equipment Records on Standards page under toggle section
+- Repeat Offender threshold description (Watch 3+/Warning 5+/Critical 7+)
 
-**Phase 2 — Rubric Matrix Editor:**
-- New /rubric-editor page with full visual CRUD for GM/Owner
-- Visual weight adjustment via drag sliders
-
-**Phase 3 — Dashboard UI Tightening:**
-- Compact single-page dashboard layout
-- Quick Matrix Ref as clickable widget with popup overlay
-- Lifecycle states shown as compact flow chips
-
-**Phase 4 — Server Refactoring + Cross-links:**
-- Pydantic models extracted to /app/backend/shared/models.py
-- Cross-link navigation cards between Standards, Repeat Offenders, and Rubric Matrices
-
-### 2026-04-01 Session 3
-- Login Page redesigned with Admin/Crew split tabs
-- AppShell simplified, Theme Toggle moved to Settings page
-- Backend seed data updated with standardized email format (lowercased)
-
-### 2026-04-01 Session 4 (Current)
-- **Fixed OverviewPage crash** — Missing imports (FolderInput, UploadCloud) and undefined crewLinks reference removed
-- **Fixed backend email seeding** — Emails now stored lowercase for case-insensitive login matching
-- **Updated test_credentials.md** — All 12 seeded accounts with correct lowercase emails
-- **Standards Library page rewrite** — Toggle sections for Authoring and Equipment Records, horizontal carousel for library items using Framer Motion
-- **Equipment Records on Standards page** — Paginated equipment logs accessible under a toggle section
-- **Repeat Offender threshold description** — Added explanation of Watch (3+), Warning (5+), Critical (7+) levels
+### 2026-04-01 Session 5 (Current)
+- **Role-filtered Dashboard** — Owner Queue and Export Ready stat cards hidden for non-Owner/non-GM roles. Workflow lifecycle steps filtered by role.
+- **Jobs/Alignment page toggles** — Active Crew Links, Inactive Crew Links, and Imported Jobs wrapped in collapsible toggle sections with Framer Motion animation. Active is open by default; others collapsed.
+- **Crew QR Update button** — Each active crew link card has an Edit pencil button that opens an inline update form in the Crew QR Control section. Supports label, truck, division, assignment changes via PATCH endpoint.
+- **Repeat Offenders overhaul** — Heatmap is now collapsible. New "Standard Courses of Action" card showing Watch/Warning/Critical tier definitions. Crew training recommendations displayed as horizontal carousel. Copy Link button removed; workflow directs to Standards Library for link retrieval.
+- **Separate Damage & Incident Reporting (Crew portal)** — Damage reporting (amber): records crew-involved property damage with type selector, location, description, photos. Incident/Accident reporting (red, OSHA-compliant): incident type, date/time, jobsite location, injured person, body part affected, description, treatment given, witness, legal disclaimer notice.
 
 ## Seeded Accounts
 All passwords: SLMCo2026!
@@ -76,10 +59,9 @@ All passwords: SLMCo2026!
 ## Prioritized Backlog
 
 ### P1
-- Continue server.py modularization (extract route handlers into routes/)
 - Reviewer Performance Dashboard (per-reviewer speed trends, accuracy, calibration drift)
+- Continue server.py modularization (extract routes into routes/)
 - Owner random sampling filters and variance drilldowns
-- Rubric version history viewer
 
 ### P2
 - AI-assisted scoring (recommend rubric scores before human confirmation)
