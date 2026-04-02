@@ -10,14 +10,13 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 
 ## Core Requirements
 - Mobile-first crew portal with division-aware tasking, OSHA incident/damage split, equipment logs
-- High-accuracy GPS capture (+/-2m target, soft-warn + flag for reviewers if exceeded)
-- Admin/Management dashboard with role-based visibility
-- Owner dashboard with calibration heatmap, exports, rubric management
+- High-accuracy GPS capture (+/-2m target, soft-warn + flag)
+- Admin/Management/Owner dashboards with role-based visibility
 - Tinder-style Rapid Review for fast mobile QA
 - Supabase Object Storage for images
 - JWT auth with lowercase email standardization
 - Role-specific onboarding (Welcome Modal, Getting Started Panel, Help Popovers)
-- Multi-theme workspace (6 themes with full Tailwind CSS variable system)
+- 6 color themes + 4 font packages (independent of each other)
 - Reviewer Performance Dashboard (owner-only)
 - Closed-loop coaching from repeat-offender thresholds
 
@@ -30,52 +29,34 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 ## Architecture
 ```
 /app/backend/
-  server.py              (slim orchestrator)
-  /shared/deps.py, models.py
-  /routes/               (19 modules)
-    auth.py, system.py, public.py, submissions.py, equipment.py,
-    jobs.py, crew_access.py, users.py, notifications.py, rubrics.py,
-    standards.py, reviews.py, rapid_reviews.py, training.py,
-    analytics.py, exports.py, integrations.py,
-    reviewer_performance.py, coaching.py
+  server.py, /shared/deps.py, /shared/models.py
+  /routes/ (19 modules): auth, system, public, submissions, equipment,
+    jobs, crew_access, users, notifications, rubrics, standards,
+    reviews, rapid_reviews, training, analytics, exports,
+    integrations, reviewer_performance, coaching
 /app/frontend/src/
-  /pages/ (12 pages incl. ReviewerPerformancePage)
-  /components/common/, /components/theme/, /components/layout/, /components/ui/
+  /pages/ (12 pages), /components/common/, /components/theme/,
+  /components/layout/, /components/ui/
 ```
 
 ## What's Been Implemented
-- Full crew submission portal with work_date, incident/damage split
-- GPS accuracy polling (10s watchPosition, color-coded badges, backend flag)
-- Standard and rapid review flows
-- Standards library with pagination/popups
-- Repeat offender tracking with 8-month seeded heatmap
-- Training mode with quiz engine
-- Equipment maintenance logs with red-tag notifications
-- Dynamic rubric matrix management (CRUD)
-- Analytics summary with calibration heatmap
-- Dataset exports (CSV/JSONL)
-- Supabase image storage (fully integrated)
-- Backend modularization (19 route files)
+- Full crew submission portal, standard/rapid review flows
+- Standards library, repeat offender tracking, training mode, equipment logs
+- Dynamic rubric matrix management, calibration heatmap, dataset exports
+- Supabase image storage, backend modularization (19 route files)
 - Role-specific onboarding UI
-- 6-Theme System with full Tailwind CSS variable overrides
-- **Reviewer Performance Dashboard** (Apr 2026):
-  - Owner-only page at /reviewer-performance
-  - Per-reviewer stat cards: sessions, total reviews, avg speed, flagged-fast %
-  - Rating distribution bar chart (fail/concern/standard/exemplary)
-  - Weekly speed trend mini chart
-  - Calibration drift gauge (Low/Moderate/High + Lenient/Strict/Aligned direction)
-  - Configurable lookback period (30d/90d/6mo/1yr)
-  - Backend: aggregates from rapid_reviews, rapid_review_sessions, owner_reviews
-- **Closed-Loop Coaching** (Apr 2026):
-  - Auto-Coach button on Repeat Offenders page
-  - Reads current offender data, auto-generates training sessions for Warning/Critical crews
-  - Critical crews get 5 training items, Warning crews get 3
-  - Idempotent — skips crews with existing active coaching sessions
-  - Shows generated/skipped results with session details
-  - Sends notifications to Owner/GM when sessions are created
-  - Backend: GET /coaching/recommendations + POST /coaching/auto-generate
+- **6 Color Themes**: Default, Dark, Tomboy, Gold, Noir, Neon — with 20+ CSS custom properties per theme + Tailwind variable overrides
+- **4 Font Packages** (Apr 2026):
+  - Brand (Cabinet Grotesk + Manrope — default)
+  - Duckfake (Permanent Marker — grungy hand-painted)
+  - Kid-Ergarten (Patrick Hand — childlike handwriting)
+  - Hikaru (Fredoka — chunky cute rounded)
+  - Independent of color theme, stored in separate localStorage key
+  - Font picker on Settings page with live 'Aa' sample previews
+- **Reviewer Performance Dashboard**: Owner-only, per-reviewer stats, speed trends, calibration drift
+- **Closed-Loop Coaching**: Auto-generate training for Warning/Critical crews
 
-## Backlog (Prioritized)
+## Backlog
 - **P2**: Owner random sampling filters and variance drilldowns
 - **Backlog**: Staff password reset/invite flows
 - **Backlog**: AI-assisted scoring and automated quality checks
