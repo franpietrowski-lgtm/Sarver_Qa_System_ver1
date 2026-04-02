@@ -6,7 +6,7 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 ## User Personas
 - **Crew**: Mobile field workers submitting photos via QR/link (no login)
 - **Management** (Supervisor, PM, AM, GM): Reviews submissions, manages standards
-- **Owner**: Final calibration, dataset approval, system oversight
+- **Owner**: Final calibration, dataset approval, system oversight, reviewer analytics
 
 ## Core Requirements
 - Mobile-first crew portal with division-aware tasking, OSHA incident/damage split, equipment logs
@@ -18,6 +18,8 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - JWT auth with lowercase email standardization
 - Role-specific onboarding (Welcome Modal, Getting Started Panel, Help Popovers)
 - Multi-theme workspace (6 themes with full Tailwind CSS variable system)
+- Reviewer Performance Dashboard (owner-only)
+- Closed-loop coaching from repeat-offender thresholds
 
 ## Tech Stack
 - **Frontend**: React 19 + TailwindCSS + Shadcn/UI + Framer Motion
@@ -30,13 +32,15 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 /app/backend/
   server.py              (slim orchestrator)
   /shared/deps.py, models.py
-  /routes/               (17 modules)
+  /routes/               (19 modules)
+    auth.py, system.py, public.py, submissions.py, equipment.py,
+    jobs.py, crew_access.py, users.py, notifications.py, rubrics.py,
+    standards.py, reviews.py, rapid_reviews.py, training.py,
+    analytics.py, exports.py, integrations.py,
+    reviewer_performance.py, coaching.py
 /app/frontend/src/
-  /pages/                (all page components)
-  /components/common/    (WelcomeModal, GettingStartedPanel, HelpPopover, StatCard)
-  /components/theme/     (ThemeProvider)
-  /components/layout/    (AppShell)
-  /components/ui/        (Shadcn components)
+  /pages/ (12 pages incl. ReviewerPerformancePage)
+  /components/common/, /components/theme/, /components/layout/, /components/ui/
 ```
 
 ## What's Been Implemented
@@ -51,18 +55,27 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - Analytics summary with calibration heatmap
 - Dataset exports (CSV/JSONL)
 - Supabase image storage (fully integrated)
-- Backend modularization (17 route files)
+- Backend modularization (19 route files)
 - Role-specific onboarding UI
-- **Complete 6-Theme System** (Apr 2026):
-  - Default (nature green), Dark (forest), Tomboy (navy+pink), Gold (black+gold), Noir (charcoal+crimson), Neon (green+lime)
-  - **Tailwind CSS variable overrides**: `--card`, `--card-foreground`, `--popover`, `--popover-foreground`, `--border`, `--muted-foreground`, `--input`, `--accent`, `--accent-foreground`, `--ring`, `--primary`, `--destructive` per theme
-  - **Custom CSS variables**: `--status-watch/warning/critical-*`, `--heat-r/g/b`, `--panel-gradient-*`, `--btn-accent`, `--modal-bg`, `--chip-bg`, `--form-card-*`, `--slider-accent`, `--inactive-badge-*`, `--progress-dot-inactive`
-  - All Shadcn Card, Popover, Button (outline), Input, and Badge components fully themed
-  - ~30% distinct color/brightness per theme across accent sections
+- 6-Theme System with full Tailwind CSS variable overrides
+- **Reviewer Performance Dashboard** (Apr 2026):
+  - Owner-only page at /reviewer-performance
+  - Per-reviewer stat cards: sessions, total reviews, avg speed, flagged-fast %
+  - Rating distribution bar chart (fail/concern/standard/exemplary)
+  - Weekly speed trend mini chart
+  - Calibration drift gauge (Low/Moderate/High + Lenient/Strict/Aligned direction)
+  - Configurable lookback period (30d/90d/6mo/1yr)
+  - Backend: aggregates from rapid_reviews, rapid_review_sessions, owner_reviews
+- **Closed-Loop Coaching** (Apr 2026):
+  - Auto-Coach button on Repeat Offenders page
+  - Reads current offender data, auto-generates training sessions for Warning/Critical crews
+  - Critical crews get 5 training items, Warning crews get 3
+  - Idempotent — skips crews with existing active coaching sessions
+  - Shows generated/skipped results with session details
+  - Sends notifications to Owner/GM when sessions are created
+  - Backend: GET /coaching/recommendations + POST /coaching/auto-generate
 
 ## Backlog (Prioritized)
-- **P1**: Reviewer Performance Dashboard (swipe speed trends, accuracy, calibration drift)
-- **P2**: Closed-loop coaching (auto-generated from repeat-offender thresholds)
 - **P2**: Owner random sampling filters and variance drilldowns
 - **Backlog**: Staff password reset/invite flows
 - **Backlog**: AI-assisted scoring and automated quality checks
