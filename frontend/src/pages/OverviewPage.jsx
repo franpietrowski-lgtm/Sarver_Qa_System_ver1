@@ -27,6 +27,8 @@ export default function OverviewPage({ user }) {
   const matrixTimerRef = useRef(null);
   const rapidReviewUrl = useMemo(() => (typeof window !== "undefined" ? `${window.location.origin}/rapid-review/mobile` : ""), []);
 
+  const isOwnerOrGM = user?.role === "owner" || user?.title === "GM";
+
   useEffect(() => {
     if (matrixOpen) {
       if (matrixTimerRef.current) clearTimeout(matrixTimerRef.current);
@@ -61,16 +63,23 @@ export default function OverviewPage({ user }) {
 
   const storage = overview.storage || overview.drive;
   const copyRapidReviewLink = async () => {
-    await navigator.clipboard.writeText(rapidReviewUrl);
-    toast.success("Rapid review link copied.");
+    try {
+      await navigator.clipboard.writeText(rapidReviewUrl);
+      toast.success("Rapid review link copied.");
+    } catch {
+      toast.info(rapidReviewUrl);
+    }
   };
 
-  const stats = [
+  const baseStats = [
     { icon: Activity, label: "Submissions", value: overview.totals.submissions, hint: "All captured proof records", testId: "overview-stat-submissions" },
     { icon: FolderInput, label: "Imported jobs", value: overview.totals.jobs, hint: "Alignment records available for admin review", testId: "overview-stat-jobs" },
+  ];
+  const ownerStats = [
     { icon: ShieldCheck, label: "Owner queue", value: overview.queues.owner, hint: "Items needing final calibration", testId: "overview-stat-owner-queue" },
     { icon: UploadCloud, label: "Export ready", value: overview.queues.export_ready, hint: "Records ready for dataset packaging", testId: "overview-stat-export-ready" },
   ];
+  const stats = isOwnerOrGM ? [...baseStats, ...ownerStats] : baseStats;
 
   return (
     <div className="space-y-4" data-testid="overview-page">
@@ -95,7 +104,7 @@ export default function OverviewPage({ user }) {
         </CardContent>
       </Card>
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className={`grid gap-3 md:grid-cols-2 ${isOwnerOrGM ? "xl:grid-cols-4" : "xl:grid-cols-2"}`}>
         {stats.map((item) => <StatCard key={item.label} {...item} />)}
       </div>
 
@@ -241,7 +250,7 @@ export default function OverviewPage({ user }) {
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Workflow lifecycle</p>
               <h3 className="mt-1 font-[Outfit] text-lg font-bold">Submission states</h3>
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {(user?.role === "owner"
+                {(isOwnerOrGM
                   ? ["Draft", "Submitted", "Pending Match", "Ready for Review", "Mgmt Reviewed", "Owner Reviewed", "Finalized", "Export Ready", "Exported"]
                   : ["Draft", "Submitted", "Pending Match", "Ready for Review", "Mgmt Reviewed", "Owner Reviewed", "Finalized"]
                 ).map((step, index) => (

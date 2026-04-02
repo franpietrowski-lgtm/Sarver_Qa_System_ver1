@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { AlertTriangle, Copy, Radar } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { AlertTriangle, ChevronDown, ChevronLeft, ChevronRight, Radar } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,10 +11,86 @@ import { authGet, authPost } from "@/lib/api";
 import { toast } from "sonner";
 
 
+const STANDARD_ACTIONS = {
+  "Watch": "Monitor — crew flagged for awareness; include in next scheduled training rotation.",
+  "Warning": "Corrective Training Required — auto-generate a focused training session covering the top issue type.",
+  "Critical": "Escalation — suspend solo assignments, require ride-along supervision, and complete full retraining before returning to independent work.",
+};
+
+
+function CrewCarousel({ entries, onCreateTraining }) {
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setCanScrollLeft(scrollLeft > 4);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (el) el.addEventListener("scroll", checkScroll, { passive: true });
+    return () => el?.removeEventListener("scroll", checkScroll);
+  }, [entries]);
+
+  const scroll = (direction) => {
+    if (!scrollRef.current) return;
+    const amount = scrollRef.current.clientWidth * 0.72;
+    scrollRef.current.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" });
+  };
+
+  if (entries.length === 0) {
+    return <p className="py-6 text-center text-sm text-[#5c6d64]" data-testid="crew-carousel-empty">No repeat offenders found in this window.</p>;
+  }
+
+  return (
+    <div className="relative" data-testid="crew-recommendations-carousel">
+      {canScrollLeft && (
+        <button type="button" onClick={() => scroll("left")} className="absolute -left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white shadow-md transition hover:bg-[#edf0e7]" data-testid="crew-carousel-prev"><ChevronLeft className="h-4 w-4 text-[#243e36]" /></button>
+      )}
+      {canScrollRight && (
+        <button type="button" onClick={() => scroll("right")} className="absolute -right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white shadow-md transition hover:bg-[#edf0e7]" data-testid="crew-carousel-next"><ChevronRight className="h-4 w-4 text-[#243e36]" /></button>
+      )}
+      <div ref={scrollRef} className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+        {entries.map((entry) => (
+          <div key={entry.crew} className="w-[320px] flex-shrink-0 snap-start rounded-[28px] border border-border bg-[#f6f6f2] p-5" data-testid={`repeat-offender-card-${entry.crew.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">{entry.division}</p>
+                <h3 className="mt-1 font-[Cabinet_Grotesk] text-xl font-black tracking-tight text-[#111815]">{entry.crew}</h3>
+              </div>
+              <Badge className="border-0 bg-white text-[#243e36]">{entry.incident_count}</Badge>
+            </div>
+            <div className="mt-3 rounded-[16px] border border-[#ead2d2] bg-[#fbf0ef] p-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#7a2323]"><AlertTriangle className="h-3.5 w-3.5" />{entry.level}</div>
+              <p className="mt-1 text-xs text-[#5c6d64]">Top: {entry.top_issue_type}</p>
+            </div>
+            <div className="mt-3 rounded-[16px] border border-border bg-white p-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#5f7464]">Recommended action</p>
+              <p className="mt-1 text-xs leading-relaxed text-[#41534a]">{STANDARD_ACTIONS[entry.level] || STANDARD_ACTIONS["Watch"]}</p>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {Object.entries(entry.issue_types).map(([issue, count]) => <Badge key={issue} className="border-0 bg-white text-[10px] text-[#243e36]">{issue} · {count}</Badge>)}
+            </div>
+            <Button onClick={() => onCreateTraining(entry)} className="mt-4 h-9 w-full rounded-xl bg-[#243e36] text-xs hover:bg-[#1a2c26]" data-testid={`repeat-offender-create-training-${entry.crew.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}>Create training session</Button>
+            <p className="mt-2 text-center text-[10px] text-[#5c6d64]">View generated session in Standards Library.</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 export default function RepeatOffendersPage() {
   const [windowDays, setWindowDays] = useState(30);
   const [summary, setSummary] = useState(null);
-  const [createdLinks, setCreatedLinks] = useState({});
+  const [heatmapOpen, setHeatmapOpen] = useState(false);
+  const navigate = useNavigate();
 
   const loadData = async (nextWindow = windowDays) => {
     const response = await authGet(`/repeat-offenders?window_days=${nextWindow}&threshold_one=3&threshold_two=5&threshold_three=7`);
@@ -26,21 +103,15 @@ export default function RepeatOffendersPage() {
 
   const createTrainingSession = async (entry) => {
     try {
-      const response = await authPost("/training-sessions", {
+      await authPost("/training-sessions", {
         access_code: entry.access_code,
         division: entry.division,
         item_count: 5,
       });
-      setCreatedLinks((current) => ({ ...current, [entry.crew]: response.session_url }));
-      toast.success("Training session created from repeat-offender view.");
+      toast.success("Training session created. Navigate to Standards Library to copy the session link.");
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Unable to create training session");
     }
-  };
-
-  const copyLink = async (value) => {
-    await navigator.clipboard.writeText(value);
-    toast.success("Copied to clipboard.");
   };
 
   if (!summary) {
@@ -48,13 +119,13 @@ export default function RepeatOffendersPage() {
   }
 
   return (
-    <div className="space-y-6" data-testid="repeat-offenders-page">
+    <div className="space-y-5" data-testid="repeat-offenders-page">
       <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="repeat-offenders-hero-card">
-        <CardContent className="p-8">
+        <CardContent className="p-6 lg:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Repeat offender tracking</p>
-              <h1 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Spot recurring quality misses, escalate them, and launch training fast.</h1>
+              <h1 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815] lg:text-4xl">Spot recurring quality misses, escalate them, and launch training fast.</h1>
               <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#5c6d64]">The window below sets the look-back period in days. Incidents within this range are aggregated per crew. Threshold levels (3/5/7) determine escalation tiers: <strong className="text-[#243e36]">Watch</strong> (3+), <strong className="text-[#243e36]">Warning</strong> (5+), and <strong className="text-[#243e36]">Critical</strong> (7+).</p>
             </div>
             <div className="flex items-center gap-3 rounded-[24px] bg-[#edf0e7] px-4 py-3">
@@ -69,58 +140,76 @@ export default function RepeatOffendersPage() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="repeat-offenders-heatmap-card">
-        <CardContent className="p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Heatmap</p>
-          <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3" data-testid="repeat-offenders-heatmap-grid">
-            {summary.heatmap.map((cell) => (
-              <div key={`${cell.crew}-${cell.issue_type}`} className="rounded-[24px] border border-border bg-[#f6f6f2] p-4" data-testid={`repeat-offender-cell-${cell.crew.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-${cell.issue_type.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-[#243e36]">{cell.crew}</p>
-                  <Badge className="border-0 bg-white text-[#243e36]">{cell.count}</Badge>
+      {/* Standard Courses of Action */}
+      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="repeat-offenders-actions-card">
+        <CardContent className="p-6 lg:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Standard courses of action</p>
+          <p className="mt-2 text-sm text-[#5c6d64]">These are the default escalation responses assigned when a crew reaches each threshold tier.</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {Object.entries(STANDARD_ACTIONS).map(([level, description]) => {
+              const colors = { Watch: "border-[#d8e4da] bg-[#edf5ee]", Warning: "border-[#f0ddb4] bg-[#fdf8ed]", Critical: "border-[#ead2d2] bg-[#fbf0ef]" };
+              const textColors = { Watch: "text-[#2d5a27]", Warning: "text-[#8a6d1b]", Critical: "text-[#7a2323]" };
+              return (
+                <div key={level} className={`rounded-[20px] border p-4 ${colors[level]}`} data-testid={`action-tier-${level.toLowerCase()}`}>
+                  <p className={`text-sm font-bold ${textColors[level]}`}>{level}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-[#41534a]">{description}</p>
                 </div>
-                <p className="mt-2 text-sm text-[#5c6d64]">{cell.issue_type}</p>
-                <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8b4c4c]">{cell.level}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        {summary.crew_summaries.map((entry) => (
-          <Card key={entry.crew} className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid={`repeat-offender-card-${entry.crew.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}>
-            <CardContent className="p-8">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">{entry.division}</p>
-                  <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">{entry.crew}</h2>
+      {/* Heatmap — Collapsible */}
+      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="repeat-offenders-heatmap-card">
+        <CardContent className="p-6 lg:p-8">
+          <button type="button" onClick={() => setHeatmapOpen(!heatmapOpen)} className="flex w-full items-center justify-between gap-3 text-left" data-testid="repeat-offenders-heatmap-toggle">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Heatmap</p>
+              <p className="mt-1 text-sm text-[#5c6d64]">{summary.heatmap.length} crew/issue combinations tracked</p>
+            </div>
+            <ChevronDown className={`h-5 w-5 text-[#5c6d64] transition-transform ${heatmapOpen ? "rotate-180" : ""}`} />
+          </button>
+          <AnimatePresence initial={false}>
+            {heatmapOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3" data-testid="repeat-offenders-heatmap-grid">
+                  {summary.heatmap.map((cell) => {
+                    const levelColors = { Watch: "text-[#2d5a27]", Warning: "text-[#8a6d1b]", Critical: "text-[#7a2323]" };
+                    return (
+                      <div key={`${cell.crew}-${cell.issue_type}`} className="rounded-[20px] border border-border bg-[#f6f6f2] p-4" data-testid={`repeat-offender-cell-${cell.crew.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-${cell.issue_type.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}>
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-semibold text-[#243e36]">{cell.crew}</p>
+                          <Badge className="border-0 bg-white text-[#243e36]">{cell.count}</Badge>
+                        </div>
+                        <p className="mt-1.5 text-sm text-[#5c6d64]">{cell.issue_type}</p>
+                        <p className={`mt-1.5 text-xs font-semibold uppercase tracking-[0.2em] ${levelColors[cell.level] || "text-[#8b4c4c]"}`}>{cell.level}</p>
+                      </div>
+                    );
+                  })}
                 </div>
-                <Badge className="border-0 bg-[#edf0e7] text-[#243e36]">{entry.incident_count} incidents</Badge>
-              </div>
-              <div className="mt-4 rounded-[24px] border border-[#ead2d2] bg-[#fbf0ef] p-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-[#7a2323]"><AlertTriangle className="h-4 w-4" />{entry.level}</div>
-                <p className="mt-2 text-sm text-[#5c6d64]">Top issue: {entry.top_issue_type}</p>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {Object.entries(entry.issue_types).map(([issue, count]) => <Badge key={issue} className="border-0 bg-[#edf0e7] text-[#243e36]">{issue} · {count}</Badge>)}
-              </div>
-              <div className="mt-4 rounded-[24px] border border-border bg-[#f6f6f2] p-4">
-                <p className="text-sm font-semibold text-[#243e36]">Related submissions</p>
-                <div className="mt-3 space-y-2">
-                  {entry.related_submissions.map((item) => (
-                    <div key={item.submission_id} className="rounded-2xl bg-white px-3 py-2 text-sm text-[#41534a]" data-testid={`repeat-offender-related-${item.submission_id}`}>{item.label}</div>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Button onClick={() => createTrainingSession(entry)} className="rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid={`repeat-offender-create-training-${entry.crew.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}>Create training session</Button>
-                {createdLinks[entry.crew] && <Button type="button" variant="outline" onClick={() => copyLink(createdLinks[entry.crew])} className="rounded-2xl border-[#243e36]/10 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid={`repeat-offender-copy-training-${entry.crew.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}><Copy className="mr-2 h-4 w-4" />Copy training link</Button>}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </CardContent>
+      </Card>
+
+      {/* Crew Training Recommendations — Carousel */}
+      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="repeat-offenders-recommendations-card">
+        <CardContent className="p-6 lg:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Crew training recommendations</p>
+          <p className="mt-2 text-sm text-[#5c6d64]">Generate sessions here, then navigate to <button type="button" onClick={() => navigate("/standards")} className="font-semibold text-[#243e36] underline">Standards Library</button> to copy the training link.</p>
+          <div className="mt-5">
+            <CrewCarousel entries={summary.crew_summaries} onCreateTraining={createTrainingSession} />
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-3 sm:grid-cols-2" data-testid="repeat-offenders-crosslinks">
         <Link to="/standards" className="rounded-[20px] border border-border bg-[#f6f6f2] p-4 transition hover:bg-white" data-testid="repeat-link-standards">
