@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "@/App.css";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster, toast } from "sonner";
 
 import AppShell from "@/components/layout/AppShell";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
-import { authGet, getStoredToken, loginRequest, logoutRequest, setStoredToken } from "@/lib/api";
+import { authGet, getStoredToken, loginRequest, logoutRequest, setStoredToken, setSessionExpiredHandler } from "@/lib/api";
+import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import AnalyticsPage from "@/pages/AnalyticsPage";
 import CrewCapturePage from "@/pages/CrewCapturePage";
 import ExportsPage from "@/pages/ExportsPage";
@@ -73,8 +74,25 @@ function App() {
   const handleLogout = () => {
     logoutRequest();
     setAuthState({ token: null, user: null, loading: false });
-    toast.success("You’ve been signed out.");
+    toast.success("You've been signed out.");
   };
+
+  const handleIdleLogout = useCallback(() => {
+    logoutRequest();
+    setAuthState({ token: null, user: null, loading: false });
+    toast.warning("Session expired due to inactivity. Please sign in again.");
+  }, []);
+
+  // 401 interceptor handler
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      setAuthState({ token: null, user: null, loading: false });
+      toast.warning("Session expired. Please sign in again.");
+    });
+  }, []);
+
+  // 5-minute idle timeout (only when logged in)
+  useIdleTimeout(handleIdleLogout, !!authState.user);
 
   const pageProps = useMemo(
     () => ({ user: authState.user }),

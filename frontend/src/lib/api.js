@@ -24,6 +24,23 @@ if (bootToken) {
   setStoredToken(bootToken);
 }
 
+// --- 401 interceptor: auto-logout on expired/invalid token ---
+let onSessionExpired = null;
+export const setSessionExpiredHandler = (handler) => {
+  onSessionExpired = handler;
+};
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && getStoredToken()) {
+      setStoredToken(null);
+      if (onSessionExpired) onSessionExpired();
+    }
+    return Promise.reject(error);
+  },
+);
+
 export const loginRequest = async (email, password) => {
   const response = await api.post("/auth/login", { email, password });
   setStoredToken(response.data.token);

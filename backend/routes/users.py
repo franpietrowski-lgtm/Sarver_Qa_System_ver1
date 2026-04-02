@@ -1,3 +1,6 @@
+import secrets
+import string
+
 from fastapi import APIRouter, Depends, HTTPException
 
 import shared.deps as deps
@@ -7,6 +10,11 @@ from shared.deps import (
 from shared.models import UserCreateRequest, UserStatusUpdateRequest
 
 router = APIRouter()
+
+
+def _generate_temp_password(length: int = 10) -> str:
+    chars = string.ascii_letters + string.digits + "!@#$"
+    return "".join(secrets.choice(chars) for _ in range(length))
 
 
 @router.get("/users")
@@ -54,3 +62,27 @@ async def update_user_status(
     if not updated_user:
         raise HTTPException(status_code=404, detail="User not found")
     return updated_user
+
+
+@router.post("/users/{user_id}/reset-password")
+async def reset_user_password(
+    user_id: str,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    target = await deps.db.users.find_one({"id": user_id}, {"_id": 0, "id": 1, "name": 1, "email": 1})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    temp_password = _generate_temp_password()
+    await deps.db.users.update_one(
+        {"id": user_id},
+        {
+            "$set": {"password_hash": get_password_hash(temp_password), "updated_at": now_iso()},
+            "$push": {"audit_history": audit_entry("password_reset", user["id"], f"Admin reset by {user['id']}")},
+        },
+    )
+    return {
+        "message": f"Password reset for {target['name']}",
+        "temp_password": temp_password,
+        "user_email": target["email"],
+    }
+

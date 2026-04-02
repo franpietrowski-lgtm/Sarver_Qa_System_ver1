@@ -58,6 +58,8 @@ export default function SettingsPage() {
     }
   };
 
+  const [tempPassword, setTempPassword] = useState(null);
+
   const toggleUserStatus = async (userId, isActive) => {
     try {
       await authPatch(`/users/${userId}/status`, { is_active: isActive });
@@ -65,6 +67,38 @@ export default function SettingsPage() {
       await loadSettings();
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Unable to update user status");
+    }
+  };
+
+  const resetUserPassword = async (userId, userName) => {
+    if (!window.confirm(`Reset password for ${userName}? This will generate a temporary password.`)) return;
+    try {
+      const result = await authPost(`/users/${userId}/reset-password`);
+      setTempPassword(result);
+      toast.success(`Password reset for ${userName}. Share the temp password below.`);
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Unable to reset password");
+    }
+  };
+
+  const [changePassForm, setChangePassForm] = useState({ current: "", next: "" });
+  const [changingPass, setChangingPass] = useState(false);
+
+  const changeMyPassword = async (event) => {
+    event.preventDefault();
+    if (changePassForm.next.length < 6) {
+      toast.error("New password must be at least 6 characters");
+      return;
+    }
+    setChangingPass(true);
+    try {
+      await authPost("/auth/change-password", { current_password: changePassForm.current, new_password: changePassForm.next });
+      toast.success("Your password has been updated.");
+      setChangePassForm({ current: "", next: "" });
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Unable to change password");
+    } finally {
+      setChangingPass(false);
     }
   };
 
@@ -252,6 +286,19 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Change My Password */}
+      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="settings-change-password-card">
+        <CardContent className="p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Account security</p>
+          <h3 className="mt-2 font-[Cabinet_Grotesk] text-xl font-bold tracking-tight text-[#111815]">Change my password</h3>
+          <form className="mt-4 grid gap-3 max-w-md" onSubmit={changeMyPassword} data-testid="settings-change-password-form">
+            <Input type="password" value={changePassForm.current} onChange={(e) => setChangePassForm((c) => ({ ...c, current: e.target.value }))} placeholder="Current password" className="h-11 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="settings-current-password-input" required />
+            <Input type="password" value={changePassForm.next} onChange={(e) => setChangePassForm((c) => ({ ...c, next: e.target.value }))} placeholder="New password (min 6 characters)" className="h-11 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="settings-new-password-input" required />
+            <Button type="submit" disabled={changingPass} className="h-11 w-fit rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="settings-change-password-button">{changingPass ? "Updating..." : "Update password"}</Button>
+          </form>
+        </CardContent>
+      </Card>
+
       <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="settings-staff-management-card">
         <CardContent className="p-8">
           <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
@@ -293,7 +340,14 @@ export default function SettingsPage() {
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Button type="button" variant="outline" onClick={() => toggleUserStatus(user.id, !user.is_active)} className="h-10 rounded-2xl border-[#243e36]/15 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid={`settings-user-status-button-${user.id}`}>{user.is_active ? "Deactivate" : "Authorize"}</Button>
+                      <Button type="button" variant="outline" onClick={() => resetUserPassword(user.id, user.name)} className="h-10 rounded-2xl border-[#243e36]/15 bg-white text-[#243e36] hover:bg-[#edf0e7]" data-testid={`settings-user-reset-pw-${user.id}`}>Reset password</Button>
                     </div>
+                    {tempPassword && tempPassword.user_email === user.email && (
+                      <div className="mt-3 rounded-2xl border p-3" style={{ backgroundColor: "var(--status-watch-bg)", borderColor: "var(--status-watch-border)" }} data-testid={`settings-temp-pw-${user.id}`}>
+                        <p className="text-xs font-bold" style={{ color: "var(--status-watch-text)" }}>Temp password generated — share with {user.name}:</p>
+                        <p className="mt-1 select-all font-mono text-sm font-bold text-[#243e36]" data-testid={`settings-temp-pw-value-${user.id}`}>{tempPassword.temp_password}</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
