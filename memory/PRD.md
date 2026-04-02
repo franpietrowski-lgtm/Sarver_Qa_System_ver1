@@ -6,50 +6,52 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 ## User Personas
 - **Crew**: Mobile field workers submitting photos via QR/link (no login)
 - **Management** (Supervisor, PM, AM, GM): Reviews, manages standards, coaching
-- **Owner**: Calibration, dataset approval, system oversight, reviewer analytics
+- **Owner**: Calibration, dataset approval, system oversight, reviewer analytics, random sampling
 
 ## Tech Stack
-- **Frontend**: React 19 + TailwindCSS + Shadcn/UI + Framer Motion
-- **Backend**: FastAPI + Motor (async MongoDB) + JWT Auth
-- **Storage**: Supabase Storage (service role)
-- **Database**: MongoDB
+- Frontend: React 19 + TailwindCSS + Shadcn/UI + Framer Motion
+- Backend: FastAPI + Motor (async MongoDB) + JWT Auth
+- Storage: Supabase Storage (service role)
+- Database: MongoDB
 
 ## Architecture
 ```
 /app/backend/
-  server.py, /shared/deps.py, /shared/models.py, auth_utils.py
-  /routes/ (19 modules)
+  server.py, auth_utils.py, /shared/deps.py, /shared/models.py
+  /routes/ (19 modules): auth, system, public, submissions, equipment,
+    jobs, crew_access, users, notifications, rubrics, standards,
+    reviews, rapid_reviews, training, analytics, exports,
+    integrations, reviewer_performance, coaching
 /app/frontend/src/
   /pages/ (12 pages), /hooks/useIdleTimeout.js
   /components/common/, /components/theme/, /components/layout/, /components/ui/
-/app/frontend/public/
-  index.html, manifest.json, icon.svg
+  /public/ manifest.json, icon.svg
 ```
 
-## What's Been Implemented
-- Full crew submission portal with work_date, incident/damage split
-- GPS accuracy polling (10s watchPosition, color-coded badges, backend flag)
-- Standard and rapid review flows
-- Standards library, repeat offender tracking, training mode, equipment logs
-- Dynamic rubric matrix management, calibration heatmap, dataset exports
-- Supabase image storage, backend modularization (19 route files)
-- Role-specific onboarding UI (WelcomeModal, GettingStartedPanel, HelpPopover)
-- 6 Color Themes + 4 Font Packages (independent of each other)
-- Reviewer Performance Dashboard (owner-only)
+## Implemented Features
+- Crew submission portal (work_date, incident/damage split, GPS accuracy polling)
+- Standard + rapid review flows, standards library, repeat offender tracking
+- Training mode, equipment maintenance logs, dynamic rubric matrices
+- Calibration heatmap, dataset exports (CSV/JSONL), Supabase image storage
+- Backend modularization (19 route files), role-specific onboarding UI
+- 6 Color Themes + 4 Font Packages (independent, localStorage-persisted)
+- Reviewer Performance Dashboard (owner-only, speed/drift/rating)
 - Closed-Loop Coaching (auto-generate training for Warning/Critical crews)
-- **Staff Password Management** (Apr 2026):
-  - Admin password reset: POST /api/users/{id}/reset-password (generates temp password, shown inline)
-  - Self-service change: POST /api/auth/change-password (validates current, min 6 chars)
-  - Settings page UI: "Change My Password" card + "Reset password" button per staff row
-- **Session Idle Timeout** (Apr 2026):
-  - 5-minute client-side idle timer tracking mouse/keyboard/touch/scroll
-  - Auto-logout with "Session expired" toast on inactivity
-  - 401 response interceptor clears auth state and redirects to login
-- **PWA Wrapper** (Apr 2026):
-  - manifest.json with standalone display, #243e36 theme
-  - SVG icon (shield + checkmark)
-  - Apple mobile web app meta tags for "Add to Home Screen"
+- Staff password management (admin reset to temp + self-service change)
+- 5-minute idle timeout + 401 interceptor, PWA manifest/meta tags
+- **Owner Random Sampling** (Apr 2026):
+  - Draw random subsets of submissions for spot-check review
+  - Filter by crew, division, service type; configurable sample size (5-50)
+  - Results table with color-coded variance (red/yellow/green)
+  - Backend: GET /api/analytics/random-sample
+- **Variance Drilldown** (Apr 2026):
+  - Clickable heatmap cells expand to show individual submission-level details
+  - Per-submission table: date, mgmt score, owner score, variance, rating, training status, issues
+  - Sorted by largest variance for quick identification of calibration gaps
+  - Backend: GET /api/analytics/variance-drilldown
+- **AI-Assisted Scoring Placeholder** (Apr 2026):
+  - Coming Soon card with Auto-grading, Anomaly Detection, Calibration Drift Alerts badges
+  - Static placeholder — no backend logic yet
 
 ## Backlog
-- **P2**: Owner random sampling filters and variance drilldowns
-- **Backlog**: AI-assisted scoring and automated quality checks
+- **Backlog**: AI-assisted scoring backend implementation (when ready to integrate LLM)
