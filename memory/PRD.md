@@ -58,6 +58,9 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
   - Visual theme picker grid on Settings page with swatch previews
   - localStorage persistence, toast feedback, active indicator
   - Full CSS override system for backgrounds, text, borders, inputs, dropdowns, tables, badges
+- **Theme-aware status tiers & heatmaps** (Apr 2026):
+  - Watch/Warning/Critical tier cards, crew training recommendation level badges, and heatmap cells now use CSS custom properties (--status-*-bg/border/text, --heat-r/g/b) that adapt per theme
+  - Analytics calibration heatmap color key dots and cell intensity also theme-aware
 
 ## Backlog (Prioritized)
 - **P1**: Reviewer Performance Dashboard (swipe speed trends, accuracy, calibration drift)
