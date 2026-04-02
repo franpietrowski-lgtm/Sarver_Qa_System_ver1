@@ -118,6 +118,23 @@ h4,
     --chip-bg: #243e36;
 }
 
+.workspace-shell.theme-dark {
+    --card: 130 12% 12%;
+    --card-foreground: 107 19% 95%;
+    --popover: 130 12% 12%;
+    --popover-foreground: 107 19% 95%;
+    --border: 135 15% 20%;
+    --muted-foreground: 115 11% 66%;
+    --primary: 140 32% 30%;
+    --primary-foreground: 0 0% 100%;
+    --input: 135 15% 20%;
+    --accent: 130 14% 18%;
+    --accent-foreground: 107 19% 95%;
+    --ring: 140 32% 30%;
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 0 0% 100%;
+}
+
 .workspace-shell.theme-dark [class*='bg-white/95'],
 .workspace-shell.theme-dark [class*='bg-white/90'],
 .workspace-shell.theme-dark [class*='bg-[#f6f6f2]'],
@@ -260,6 +277,23 @@ h4,
     --chip-bg: #35424e;
 }
 
+.workspace-shell.theme-tomboy {
+    --card: 206 23% 21%;
+    --card-foreground: 210 17% 93%;
+    --popover: 206 23% 21%;
+    --popover-foreground: 210 17% 93%;
+    --border: 206 21% 29%;
+    --muted-foreground: 210 14% 62%;
+    --primary: 335 95% 52%;
+    --primary-foreground: 0 0% 100%;
+    --input: 206 21% 29%;
+    --accent: 206 20% 26%;
+    --accent-foreground: 210 17% 93%;
+    --ring: 335 95% 52%;
+    --destructive: 340 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+}
+
 .workspace-shell.theme-tomboy [class*='bg-white/95'],
 .workspace-shell.theme-tomboy [class*='bg-white/90'],
 .workspace-shell.theme-tomboy [class*='bg-white/85'],
@@ -391,6 +425,23 @@ h4,
     --modal-bg: #2f2921;
     --modal-header-bg: #9e8123;
     --chip-bg: #3d3422;
+}
+
+.workspace-shell.theme-gold {
+    --card: 34 18% 16%;
+    --card-foreground: 40 40% 89%;
+    --popover: 34 18% 16%;
+    --popover-foreground: 40 40% 89%;
+    --border: 30 24% 24%;
+    --muted-foreground: 35 17% 52%;
+    --primary: 45 64% 38%;
+    --primary-foreground: 0 0% 100%;
+    --input: 30 24% 24%;
+    --accent: 32 20% 22%;
+    --accent-foreground: 40 40% 89%;
+    --ring: 45 64% 38%;
+    --destructive: 15 70% 45%;
+    --destructive-foreground: 0 0% 100%;
 }
 
 .workspace-shell.theme-gold [class*='bg-white/95'],
@@ -525,6 +576,23 @@ h4,
     --chip-bg: #454a4b;
 }
 
+.workspace-shell.theme-noir {
+    --card: 189 6% 21%;
+    --card-foreground: 37 52% 85%;
+    --popover: 189 6% 21%;
+    --popover-foreground: 37 52% 85%;
+    --border: 218 5% 31%;
+    --muted-foreground: 30 11% 58%;
+    --primary: 5 85% 46%;
+    --primary-foreground: 0 0% 100%;
+    --input: 218 5% 31%;
+    --accent: 200 4% 27%;
+    --accent-foreground: 37 52% 85%;
+    --ring: 5 85% 46%;
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 100%;
+}
+
 .workspace-shell.theme-noir [class*='bg-white/95'],
 .workspace-shell.theme-noir [class*='bg-white/90'],
 .workspace-shell.theme-noir [class*='bg-white/85'],
@@ -655,6 +723,23 @@ h4,
     --modal-bg: #0d3d2a;
     --modal-header-bg: #08652C;
     --chip-bg: #155230;
+}
+
+.workspace-shell.theme-neon {
+    --card: 156 65% 15%;
+    --card-foreground: 93 40% 89%;
+    --popover: 156 65% 15%;
+    --popover-foreground: 93 40% 89%;
+    --border: 153 51% 21%;
+    --muted-foreground: 103 22% 58%;
+    --primary: 76 76% 36%;
+    --primary-foreground: 0 0% 100%;
+    --input: 153 51% 21%;
+    --accent: 153 45% 18%;
+    --accent-foreground: 93 40% 89%;
+    --ring: 76 76% 36%;
+    --destructive: 0 60% 40%;
+    --destructive-foreground: 0 0% 100%;
 }
 
 .workspace-shell.theme-neon [class*='bg-white/95'],

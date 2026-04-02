@@ -17,7 +17,7 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - Supabase Object Storage for images
 - JWT auth with lowercase email standardization
 - Role-specific onboarding (Welcome Modal, Getting Started Panel, Help Popovers)
-- Multi-theme workspace (6 themes with full CSS variable system)
+- Multi-theme workspace (6 themes with full Tailwind CSS variable system)
 
 ## Tech Stack
 - **Frontend**: React 19 + TailwindCSS + Shadcn/UI + Framer Motion
@@ -25,18 +25,18 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - **Storage**: Supabase Storage (service role)
 - **Database**: MongoDB
 
-## Architecture (Post-Modularization)
+## Architecture
 ```
 /app/backend/
-  server.py              (790 lines — app setup, seed data, router orchestration)
-  /shared/
-    deps.py              (516 lines — DB, helpers, constants)
-    models.py            (170 lines — Pydantic schemas)
-  /routes/               (17 modules, ~1980 total lines)
-    auth.py, system.py, public.py, submissions.py, equipment.py,
-    jobs.py, crew_access.py, users.py, notifications.py, rubrics.py,
-    standards.py, reviews.py, rapid_reviews.py, training.py,
-    analytics.py, exports.py, integrations.py
+  server.py              (slim orchestrator)
+  /shared/deps.py, models.py
+  /routes/               (17 modules)
+/app/frontend/src/
+  /pages/                (all page components)
+  /components/common/    (WelcomeModal, GettingStartedPanel, HelpPopover, StatCard)
+  /components/theme/     (ThemeProvider)
+  /components/layout/    (AppShell)
+  /components/ui/        (Shadcn components)
 ```
 
 ## What's Been Implemented
@@ -51,22 +51,14 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - Analytics summary with calibration heatmap
 - Dataset exports (CSV/JSONL)
 - Supabase image storage (fully integrated)
-- Backend modularization Phase 1 + Phase 2 — COMPLETE
-- Role-specific onboarding UI (WelcomeModal, GettingStartedPanel, HelpPopover)
-- **6-Theme System** (Apr 2026):
+- Backend modularization (17 route files)
+- Role-specific onboarding UI
+- **Complete 6-Theme System** (Apr 2026):
   - Default (nature green), Dark (forest), Tomboy (navy+pink), Gold (black+gold), Noir (charcoal+crimson), Neon (green+lime)
-  - 20+ CSS custom properties per theme:
-    - Status tiers: `--status-watch/warning/critical-bg/border/text`
-    - Heatmap: `--heat-r/g/b`, `--heat-empty`
-    - UI panels: `--panel-gradient-from/to`, `--panel-border`
-    - Buttons: `--btn-accent`, `--btn-accent-hover`
-    - Forms: `--form-card-bg/border`, `--slider-accent`
-    - Badges: `--inactive-badge-bg/text`, `--chip-bg`
-    - Modals: `--modal-bg`, `--modal-header-bg`
-    - Progress: `--progress-dot-inactive`
-    - Text: `--tier-desc-text`
-  - Each theme provides ~30% different color/brightness in accent sections
-  - Visual theme picker on Settings page with swatch previews
+  - **Tailwind CSS variable overrides**: `--card`, `--card-foreground`, `--popover`, `--popover-foreground`, `--border`, `--muted-foreground`, `--input`, `--accent`, `--accent-foreground`, `--ring`, `--primary`, `--destructive` per theme
+  - **Custom CSS variables**: `--status-watch/warning/critical-*`, `--heat-r/g/b`, `--panel-gradient-*`, `--btn-accent`, `--modal-bg`, `--chip-bg`, `--form-card-*`, `--slider-accent`, `--inactive-badge-*`, `--progress-dot-inactive`
+  - All Shadcn Card, Popover, Button (outline), Input, and Badge components fully themed
+  - ~30% distinct color/brightness per theme across accent sections
 
 ## Backlog (Prioritized)
 - **P1**: Reviewer Performance Dashboard (swipe speed trends, accuracy, calibration drift)

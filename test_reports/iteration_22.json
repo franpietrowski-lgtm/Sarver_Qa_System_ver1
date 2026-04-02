@@ -1,0 +1,127 @@
+{
+  "summary": "Frontend testing PASSED for Shadcn Card CSS variable overrides bug fix. All 6 themes (Default, Gold, Tomboy, Noir, Neon, Dark) correctly apply --card HSL values to rubric matrix cards. The user-reported issue of white card backgrounds in Gold theme making text illegible is FIXED. Cards now have dark themed backgrounds with light readable text in all non-default themes.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/screenshots_iter22/rubric-default-theme.jpeg",
+    "/app/test_reports/screenshots_iter22/rubric-gold-theme.jpeg",
+    "/app/test_reports/screenshots_iter22/rubric-tomboy-theme.jpeg",
+    "/app/test_reports/screenshots_iter22/rubric-noir-theme.jpeg",
+    "/app/test_reports/screenshots_iter22/rubric-neon-theme.jpeg",
+    "/app/test_reports/screenshots_iter22/rubric-dark-theme.jpeg",
+    "/app/test_reports/screenshots_iter22/rubric-default-final.jpeg",
+    "/app/test_reports/screenshots_iter22/gold-theme-rubric-cards-verified.jpeg"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend-only test)",
+    "frontend": "100% - All theme-specific card backgrounds working correctly"
+  },
+  "test_credentials": "Owner: sadam.owner@slmco.local / SLMCo2026!",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 22 verified the Shadcn Card CSS variable overrides fix. The root cause was that Shadcn Card components use bg-card class which maps to hsl(var(--card)) - set to white in index.css and never overridden by theme CSS. The fix adds --card, --card-foreground, --popover, --popover-foreground, --border, --muted-foreground, --input, --accent, --accent-foreground, --ring, --primary, --destructive HSL overrides to each theme block in App.css.",
+  "features_tested": {
+    "rubric_matrix_cards": {
+      "default_theme": {
+        "card_bg": "rgb(255, 255, 255)",
+        "card_text": "rgb(36, 62, 54)",
+        "card_css_var": "0 0% 100%",
+        "badge_visible": true,
+        "badge_bg": "rgb(237, 240, 231)",
+        "chips_readable": true,
+        "buttons_visible": true,
+        "is_white_as_expected": true
+      },
+      "gold_theme": {
+        "card_bg": "rgb(48, 42, 33)",
+        "card_text": "rgb(240, 232, 216)",
+        "card_css_var": "34 18% 16%",
+        "badge_visible": true,
+        "badge_bg": "rgb(47, 41, 33)",
+        "badge_color": "rgb(240, 232, 216)",
+        "version_color": "rgb(240, 232, 216)",
+        "pass_text_color": "rgb(240, 232, 216)",
+        "chip_bg": "rgb(61, 52, 34)",
+        "chip_color": "rgb(192, 184, 160)",
+        "dropdown_bg": "rgb(47, 41, 33)",
+        "buttons_border": "rgb(76, 61, 47)",
+        "is_NOT_white": true,
+        "text_readable": true
+      },
+      "tomboy_theme": {
+        "card_bg": "rgb(41, 55, 66)",
+        "card_text": "rgb(232, 236, 240)",
+        "card_css_var": "206 23% 21%",
+        "badge_visible": true,
+        "chips_readable": true,
+        "is_NOT_white": true,
+        "text_readable": true
+      },
+      "noir_theme": {
+        "card_bg": "rgb(50, 56, 57)",
+        "card_text": "rgb(239, 223, 197)",
+        "card_css_var": "189 6% 21%",
+        "badge_visible": true,
+        "chips_readable": true,
+        "is_NOT_white": true,
+        "text_readable": true
+      },
+      "neon_theme": {
+        "card_bg": "rgb(13, 63, 43)",
+        "card_text": "rgb(229, 240, 216)",
+        "card_css_var": "156 65% 15%",
+        "badge_visible": true,
+        "chips_readable": true,
+        "is_NOT_white": true,
+        "text_readable": true
+      },
+      "dark_theme": {
+        "card_bg": "rgb(27, 34, 28)",
+        "card_text": "rgb(228, 235, 226)",
+        "card_css_var": "130 12% 12%",
+        "badge_visible": true,
+        "chips_readable": true,
+        "is_NOT_white": true,
+        "text_readable": true
+      }
+    },
+    "default_theme_regression": {
+      "no_regression": true,
+      "final_card_bg": "rgb(255, 255, 255)",
+      "final_card_text": "rgb(36, 62, 54)",
+      "matches_expected": true
+    }
+  },
+  "css_variables_verified": {
+    "--card": "Changes per theme (white for default, dark brown for gold, dark slate for tomboy, dark charcoal for noir, deep green for neon, dark forest for dark)",
+    "--card-foreground": "Changes per theme (light/cream text colors)",
+    "--popover": "Changes per theme",
+    "--popover-foreground": "Changes per theme",
+    "--border": "Changes per theme",
+    "--muted-foreground": "Changes per theme",
+    "--input": "Changes per theme",
+    "--accent": "Changes per theme",
+    "--accent-foreground": "Changes per theme",
+    "--ring": "Changes per theme",
+    "--primary": "Changes per theme",
+    "--destructive": "Changes per theme"
+  },
+  "bug_fix_verification": {
+    "original_issue": "User reported rubric matrix cards with white backgrounds in Gold theme making text completely illegible",
+    "root_cause": "Shadcn Card components use bg-card class which maps to hsl(var(--card)) - set to white (0 0% 100%) in index.css and never overridden by theme CSS",
+    "fix_applied": "Added --card, --card-foreground, --popover, --popover-foreground, --border, --muted-foreground, --input, --accent, --accent-foreground, --ring, --primary, --destructive HSL overrides to each theme block in App.css",
+    "fix_verified": true,
+    "all_themes_working": true
+  }
+}
