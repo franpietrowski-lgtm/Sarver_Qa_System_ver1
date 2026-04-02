@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Camera, Crosshair, MapPinned, Upload, Wrench } from "lucide-react";
+import { BookOpen, Camera, Crosshair, MapPinned, Upload, Wrench, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -86,6 +86,7 @@ export default function CrewCapturePage() {
   // Equipment State
   const [equipmentLog, setEquipmentLog] = useState({ equipment_number: "", general_note: "", red_tag_note: "", pre_photo: null, post_photo: null });
   const [equipmentSubmitting, setEquipmentSubmitting] = useState(false);
+  const [selectedStandard, setSelectedStandard] = useState(null);
 
   const availableTasks = DIVISION_TASKS[crewLink?.division] || DIVISION_TASKS.Maintenance;
 
@@ -392,21 +393,45 @@ export default function CrewCapturePage() {
                 <div className="space-y-4">
                   <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4">
                     <p className="text-sm font-semibold text-[#243e36]">Crew standards library</p>
-                    <p className="mt-1 text-sm text-[#5c6d64]">Open this tab before you shoot a proof set when you want a fast reminder of what clean work should look like.</p>
+                    <p className="mt-1 text-sm text-[#5c6d64]">Tap a standard for full details. Review before shooting a proof set.</p>
                   </div>
                   {STANDARDS_HIGHLIGHTS.map((item) => (
-                    <div key={item.id} className="overflow-hidden rounded-[24px] border border-border bg-[#f6f6f2]" data-testid={`crew-standard-card-${item.id}`}>
+                    <button key={item.id} type="button" onClick={() => setSelectedStandard(item)} className="w-full overflow-hidden rounded-[24px] border border-border bg-[#f6f6f2] text-left transition hover:border-[#243e36]/30 hover:shadow-md" data-testid={`crew-standard-card-${item.id}`}>
                       <div className="aspect-[5/3] overflow-hidden bg-[#dde4d6]"><img src={item.image} alt={item.title} className="h-full w-full object-cover" /></div>
                       <div className="space-y-2 p-4">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-sm font-semibold text-[#243e36]">{item.title}</p>
                           <Badge className="border-0 bg-white text-[#243e36]" data-testid={`crew-standard-category-${item.id}`}>{item.category}</Badge>
                         </div>
-                        <p className="text-sm text-[#5c6d64]">{item.note}</p>
+                        <p className="text-sm text-[#5c6d64] line-clamp-2">{item.note}</p>
+                        <p className="text-xs font-semibold text-[#243e36]">Tap to view full details</p>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
+                {selectedStandard && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setSelectedStandard(null)} data-testid="crew-standard-detail-overlay">
+                    <div className="max-h-[85vh] w-full max-w-md overflow-hidden rounded-[28px] border border-border/80 bg-white shadow-2xl" onClick={(e) => e.stopPropagation()} data-testid="crew-standard-detail-popup">
+                      <div className="aspect-[5/3] bg-[#dbe3d7]"><img src={selectedStandard.image} alt={selectedStandard.title} className="h-full w-full object-cover" /></div>
+                      <div className="max-h-[45vh] overflow-y-auto p-5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <Badge className="border-0 bg-[#edf0e7] text-xs text-[#243e36]">{selectedStandard.category}</Badge>
+                            <h3 className="mt-2 font-[Cabinet_Grotesk] text-xl font-black tracking-tight text-[#111815]">{selectedStandard.title}</h3>
+                          </div>
+                          <button type="button" onClick={() => setSelectedStandard(null)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#edf0e7] text-[#243e36] hover:bg-[#dbe3d7]" data-testid="crew-standard-detail-close"><X className="h-4 w-4" /></button>
+                        </div>
+                        <p className="mt-3 text-sm leading-relaxed text-[#41534a]">{selectedStandard.note}</p>
+                        {selectedStandard.checklist && (
+                          <div className="mt-4 rounded-[16px] bg-[#f6f6f2] p-4">
+                            <p className="text-xs font-bold uppercase tracking-widest text-[#5f7464]">Checklist</p>
+                            <ul className="mt-2 space-y-1">{selectedStandard.checklist.map((c, i) => <li key={i} className="text-sm text-[#41534a]">- {c}</li>)}</ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="equipment" data-testid="crew-equipment-tab-panel">
