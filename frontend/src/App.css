@@ -40,6 +40,21 @@ body {
     --heat-b: 95;
     --heat-empty: #f6f6f2;
     --tier-desc-text: #41534a;
+
+    --panel-gradient-from: #edf0e7;
+    --panel-gradient-to: #f6f6f2;
+    --panel-border: #d8f3dc;
+    --btn-accent: #2d5a27;
+    --btn-accent-hover: #22441d;
+    --slider-accent: #2d5a27;
+    --form-card-bg: #f9faf8;
+    --form-card-border: rgba(74, 124, 89, 0.3);
+    --inactive-badge-bg: #fde8e8;
+    --inactive-badge-text: #b91c1c;
+    --progress-dot-inactive: #dde4d6;
+    --modal-bg: #ffffff;
+    --modal-header-bg: #243e36;
+    --chip-bg: #edf0e7;
 }
 
 h1,
@@ -86,6 +101,21 @@ h4,
     --heat-b: 130;
     --heat-empty: #1a211b;
     --tier-desc-text: #c0cfc0;
+
+    --panel-gradient-from: #1a2e1f;
+    --panel-gradient-to: #1a211b;
+    --panel-border: #2b472d;
+    --btn-accent: #3a6b34;
+    --btn-accent-hover: #2d5a27;
+    --slider-accent: #4a8a42;
+    --form-card-bg: #1a2e1f;
+    --form-card-border: rgba(74, 124, 89, 0.25);
+    --inactive-badge-bg: #3a1e1e;
+    --inactive-badge-text: #e07a7a;
+    --progress-dot-inactive: #2b372d;
+    --modal-bg: #1a211b;
+    --modal-header-bg: #0f1712;
+    --chip-bg: #243e36;
 }
 
 .workspace-shell.theme-dark [class*='bg-white/95'],
@@ -213,6 +243,21 @@ h4,
     --heat-b: 108;
     --heat-empty: #2a3843;
     --tier-desc-text: #b0bcc8;
+
+    --panel-gradient-from: #2e1a2a;
+    --panel-gradient-to: #2a3843;
+    --panel-border: #5a2a4a;
+    --btn-accent: #d4087a;
+    --btn-accent-hover: #b00060;
+    --slider-accent: #ff096c;
+    --form-card-bg: #2e2035;
+    --form-card-border: rgba(255, 9, 108, 0.2);
+    --inactive-badge-bg: #40202a;
+    --inactive-badge-text: #ff80a8;
+    --progress-dot-inactive: #3a4d5a;
+    --modal-bg: #2a3843;
+    --modal-header-bg: #ff096c;
+    --chip-bg: #35424e;
 }
 
 .workspace-shell.theme-tomboy [class*='bg-white/95'],
@@ -331,6 +376,21 @@ h4,
     --heat-b: 35;
     --heat-empty: #2f2921;
     --tier-desc-text: #c0b8a0;
+
+    --panel-gradient-from: #332a18;
+    --panel-gradient-to: #2f2921;
+    --panel-border: #6a5520;
+    --btn-accent: #9e8123;
+    --btn-accent-hover: #7d6618;
+    --slider-accent: #c4a030;
+    --form-card-bg: #33291a;
+    --form-card-border: rgba(158, 129, 35, 0.25);
+    --inactive-badge-bg: #3a2520;
+    --inactive-badge-text: #e09060;
+    --progress-dot-inactive: #4a3f2e;
+    --modal-bg: #2f2921;
+    --modal-header-bg: #9e8123;
+    --chip-bg: #3d3422;
 }
 
 .workspace-shell.theme-gold [class*='bg-white/95'],
@@ -448,6 +508,21 @@ h4,
     --heat-b: 17;
     --heat-empty: #33393a;
     --tier-desc-text: #c0b8a8;
+
+    --panel-gradient-from: #35201e;
+    --panel-gradient-to: #33393a;
+    --panel-border: #6a2520;
+    --btn-accent: #c41a10;
+    --btn-accent-hover: #a0150d;
+    --slider-accent: #DC2011;
+    --form-card-bg: #38221e;
+    --form-card-border: rgba(220, 32, 17, 0.2);
+    --inactive-badge-bg: #4a2222;
+    --inactive-badge-text: #f07060;
+    --progress-dot-inactive: #4C4F54;
+    --modal-bg: #33393a;
+    --modal-header-bg: #8F0B13;
+    --chip-bg: #454a4b;
 }
 
 .workspace-shell.theme-noir [class*='bg-white/95'],
@@ -565,6 +640,21 @@ h4,
     --heat-b: 22;
     --heat-empty: #0d3d2a;
     --tier-desc-text: #b0d0a0;
+
+    --panel-gradient-from: #0a3520;
+    --panel-gradient-to: #0d3d2a;
+    --panel-border: #30752a;
+    --btn-accent: #6a8c14;
+    --btn-accent-hover: #558010;
+    --slider-accent: #80A416;
+    --form-card-bg: #0e3a24;
+    --form-card-border: rgba(128, 164, 22, 0.25);
+    --inactive-badge-bg: #2a1e1e;
+    --inactive-badge-text: #e07a7a;
+    --progress-dot-inactive: #1a5238;
+    --modal-bg: #0d3d2a;
+    --modal-header-bg: #08652C;
+    --chip-bg: #155230;
 }
 
 .workspace-shell.theme-neon [class*='bg-white/95'],

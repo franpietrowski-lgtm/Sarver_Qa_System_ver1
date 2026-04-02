@@ -58,11 +58,11 @@ export default function GettingStartedPanel({ user }) {
   };
 
   return (
-    <div className="rounded-[24px] border border-[#d8f3dc] bg-gradient-to-r from-[#edf0e7] to-[#f6f6f2] shadow-sm" data-testid="getting-started-panel">
+    <div className="rounded-[24px] border shadow-sm" style={{ borderColor: 'var(--panel-border)', background: `linear-gradient(to right, var(--panel-gradient-from), var(--panel-gradient-to))` }} data-testid="getting-started-panel">
       <div className="flex items-center justify-between gap-3 px-5 py-4">
         <button type="button" onClick={() => setExpanded(!expanded)} className="flex flex-1 items-center gap-3 text-left" data-testid="getting-started-toggle">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#243e36]">
-            <Lightbulb className="h-4 w-4 text-[#d8f3dc]" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: 'var(--btn-accent)' }}>
+            <Lightbulb className="h-4 w-4 text-white" />
           </div>
           <div className="min-w-0">
             <h3 className="font-semibold text-[#111815]">{guide.title}</h3>
@@ -82,9 +82,9 @@ export default function GettingStartedPanel({ user }) {
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: "easeInOut" }} className="overflow-hidden">
             <div className="grid gap-3 px-5 pb-5 sm:grid-cols-2">
               {guide.sections.map((section, i) => (
-                <div key={i} className="rounded-2xl border border-border/60 bg-white p-4" data-testid={`getting-started-section-${i}`}>
+                <div key={i} className="rounded-2xl border border-border/60 p-4" style={{ backgroundColor: 'var(--modal-bg)' }} data-testid={`getting-started-section-${i}`}>
                   <div className="flex items-center gap-2">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#243e36] text-[10px] font-bold text-white">{i + 1}</span>
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ backgroundColor: 'var(--btn-accent)' }}>{i + 1}</span>
                     <h4 className="text-sm font-semibold text-[#111815]">{section.heading}</h4>
                   </div>
                   <p className="mt-2 text-xs leading-relaxed text-[#5c6d64]">{section.text}</p>

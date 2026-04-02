@@ -63,8 +63,8 @@ export default function WelcomeModal({ user }) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4" data-testid="welcome-modal-overlay">
-      <div className="w-full max-w-md overflow-hidden rounded-[28px] border border-border/80 bg-white shadow-2xl" data-testid="welcome-modal">
-        <div className="relative bg-[#243e36] px-6 py-5 text-white">
+      <div className="w-full max-w-md overflow-hidden rounded-[28px] border border-border/80 shadow-2xl" style={{ backgroundColor: 'var(--modal-bg)' }} data-testid="welcome-modal">
+        <div className="relative px-6 py-5 text-white" style={{ backgroundColor: 'var(--modal-header-bg)' }}>
           <button type="button" onClick={dismiss} className="absolute right-4 top-4 rounded-full p-1 text-white/60 transition hover:text-white" data-testid="welcome-modal-close">
             <X className="h-4 w-4" />
           </button>
@@ -75,7 +75,7 @@ export default function WelcomeModal({ user }) {
 
         <div className="px-6 py-5">
           <div className="flex items-start gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#243e36] text-xs font-bold text-white">{step + 1}</span>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: 'var(--btn-accent)' }}>{step + 1}</span>
             <div>
               <h3 className="font-semibold text-[#111815]">{current.title}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-[#5c6d64]">{current.description}</p>
@@ -84,7 +84,7 @@ export default function WelcomeModal({ user }) {
 
           <div className="mt-5 flex items-center gap-1.5">
             {steps.map((_, i) => (
-              <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i <= step ? "bg-[#243e36]" : "bg-[#dde4d6]"}`} />
+              <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors`} style={{ backgroundColor: i <= step ? 'var(--btn-accent)' : 'var(--progress-dot-inactive)' }} />
             ))}
           </div>
         </div>
@@ -100,11 +100,11 @@ export default function WelcomeModal({ user }) {
               </Button>
             )}
             {isLast ? (
-              <Button type="button" onClick={dismiss} className="rounded-xl bg-[#243e36] text-sm hover:bg-[#1a2c26]" data-testid="welcome-modal-finish">
+              <Button type="button" onClick={dismiss} className="rounded-xl text-sm text-white hover:opacity-90" style={{ backgroundColor: 'var(--btn-accent)' }} data-testid="welcome-modal-finish">
                 <CheckCircle2 className="mr-1.5 h-4 w-4" />Get started
               </Button>
             ) : (
-              <Button type="button" onClick={() => setStep(step + 1)} className="rounded-xl bg-[#243e36] text-sm hover:bg-[#1a2c26]" data-testid="welcome-modal-next">
+              <Button type="button" onClick={() => setStep(step + 1)} className="rounded-xl text-sm text-white hover:opacity-90" style={{ backgroundColor: 'var(--btn-accent)' }} data-testid="welcome-modal-next">
                 Next<ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
             )}

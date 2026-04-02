@@ -175,7 +175,7 @@ export default function RubricEditorPage({ user }) {
         </Button>
       </div>
       {form.categories.map((cat, index) => (
-        <div key={index} className="flex items-center gap-2 rounded-xl border border-border/60 bg-[#f6f6f2] p-3" data-testid={`rubric-editor-factor-${index}`}>
+        <div key={index} className="flex items-center gap-2 rounded-xl border border-border/60 p-3" style={{ backgroundColor: 'var(--heat-empty)' }} data-testid={`rubric-editor-factor-${index}`}>
           <GripVertical className="h-4 w-4 shrink-0 text-[#5f7464]/50" />
           <Input
             value={cat.label}
@@ -191,7 +191,8 @@ export default function RubricEditorPage({ user }) {
               max={99}
               value={Math.round(cat.weight * 100)}
               onChange={(e) => updateCategoryWeight(form, setForm, index, parseInt(e.target.value) / 100)}
-              className="h-1 w-20 cursor-pointer accent-[#2d5a27]"
+              className="h-1 w-20 cursor-pointer"
+              style={{ accentColor: 'var(--slider-accent)' }}
               data-testid={`rubric-editor-factor-weight-${index}`}
             />
             <span className="w-10 text-right text-xs font-semibold text-[#243e36]">{Math.round(cat.weight * 100)}%</span>
@@ -298,13 +299,13 @@ export default function RubricEditorPage({ user }) {
       </div>
 
       {creating && newForm && (
-        <Card className="rounded-[24px] border-2 border-[#4a7c59]/30 bg-[#f9faf8] shadow-sm" data-testid="rubric-editor-create-form">
+        <Card className="rounded-[24px] border-2 shadow-sm" style={{ backgroundColor: 'var(--form-card-bg)', borderColor: 'var(--form-card-border)' }} data-testid="rubric-editor-create-form">
           <CardContent className="p-6">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-[Outfit] text-lg font-semibold text-[#111815]">New rubric matrix</h3>
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={() => { setCreating(false); setNewForm(null); }} className="h-8 rounded-lg text-xs" data-testid="rubric-editor-create-cancel"><X className="mr-1 h-3 w-3" />Cancel</Button>
-                <Button type="button" disabled={saving} onClick={saveCreate} className="h-8 rounded-lg bg-[#2d5a27] text-xs hover:bg-[#22441d]" data-testid="rubric-editor-create-save"><Save className="mr-1 h-3 w-3" />Create</Button>
+                <Button type="button" disabled={saving} onClick={saveCreate} className="h-8 rounded-lg text-xs text-white hover:opacity-90" style={{ backgroundColor: 'var(--btn-accent)' }} data-testid="rubric-editor-create-save"><Save className="mr-1 h-3 w-3" />Create</Button>
               </div>
             </div>
             {renderFormFields(newForm, setNewForm, true)}
@@ -322,7 +323,7 @@ export default function RubricEditorPage({ user }) {
                     <h3 className="font-[Outfit] text-lg font-semibold capitalize text-[#111815]">{rubric.service_type}</h3>
                     <div className="flex gap-2">
                       <Button type="button" variant="outline" onClick={cancelEdit} className="h-8 rounded-lg text-xs" data-testid="rubric-editor-edit-cancel"><X className="mr-1 h-3 w-3" />Cancel</Button>
-                      <Button type="button" disabled={saving} onClick={saveEdit} className="h-8 rounded-lg bg-[#2d5a27] text-xs hover:bg-[#22441d]" data-testid="rubric-editor-edit-save"><Save className="mr-1 h-3 w-3" />Save</Button>
+                      <Button type="button" disabled={saving} onClick={saveEdit} className="h-8 rounded-lg text-xs text-white hover:opacity-90" style={{ backgroundColor: 'var(--btn-accent)' }} data-testid="rubric-editor-edit-save"><Save className="mr-1 h-3 w-3" />Save</Button>
                     </div>
                   </div>
                   {renderFormFields(editForm, setEditForm)}
@@ -334,12 +335,12 @@ export default function RubricEditorPage({ user }) {
                       <h3 className="font-semibold capitalize text-[#243e36]">{rubric.service_type}</h3>
                       <Badge className="border-0 bg-[#edf0e7] text-[#243e36]" data-testid={`rubric-badge-division-${rubric.id}`}>{rubric.division || "General"}</Badge>
                       <span className="text-xs text-[#5c6d64]">v{rubric.version}</span>
-                      {rubric.is_active === false && <Badge className="border-0 bg-red-100 text-red-700">Inactive</Badge>}
+                      {rubric.is_active === false && <Badge className="border-0" style={{ backgroundColor: 'var(--inactive-badge-bg)', color: 'var(--inactive-badge-text)' }}>Inactive</Badge>}
                     </div>
                     <p className="mt-1 text-sm text-[#5c6d64]">{rubric.title} &middot; Pass: {rubric.pass_threshold}% &middot; Min photos: {rubric.min_photos}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {(rubric.categories || []).map((cat) => (
-                        <span key={cat.key} className="inline-block rounded-lg bg-[#edf0e7] px-2 py-0.5 text-xs font-medium text-[#5c6d64]">{cat.label} ({Math.round(cat.weight * 100)}%)</span>
+                        <span key={cat.key} className="inline-block rounded-lg px-2 py-0.5 text-xs font-medium" style={{ backgroundColor: 'var(--chip-bg)', color: 'var(--tier-desc-text)' }}>{cat.label} ({Math.round(cat.weight * 100)}%)</span>
                       ))}
                     </div>
                   </div>

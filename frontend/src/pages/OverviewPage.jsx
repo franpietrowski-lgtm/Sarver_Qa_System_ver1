@@ -142,7 +142,7 @@ export default function OverviewPage({ user }) {
 
       {matrixOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" data-testid="overview-rubric-widget-overlay" onClick={() => setMatrixOpen(false)}>
-          <div className="max-h-[80vh] w-full max-w-3xl overflow-hidden rounded-[28px] border border-border/80 bg-white shadow-2xl" onClick={(e) => e.stopPropagation()} data-testid="overview-rubric-widget">
+          <div className="max-h-[80vh] w-full max-w-3xl overflow-hidden rounded-[28px] border border-border/80 shadow-2xl" style={{ backgroundColor: 'var(--modal-bg)' }} onClick={(e) => e.stopPropagation()} data-testid="overview-rubric-widget">
             <div className="flex items-center justify-between gap-4 border-b border-border/60 px-6 py-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Quick matrix ref</p>
@@ -180,7 +180,7 @@ export default function OverviewPage({ user }) {
                         <td className="py-2.5 pr-4">
                           <div className="flex flex-wrap gap-1">
                             {(rubric.categories || []).map((cat) => (
-                              <span key={cat.key} className="inline-block rounded bg-[#edf0e7] px-1.5 py-0.5 text-[11px] font-medium text-[#5c6d64]">{cat.label} ({Math.round(cat.weight * 100)}%)</span>
+                              <span key={cat.key} className="inline-block rounded px-1.5 py-0.5 text-[11px] font-medium" style={{ backgroundColor: 'var(--chip-bg)', color: 'var(--tier-desc-text)' }}>{cat.label} ({Math.round(cat.weight * 100)}%)</span>
                             ))}
                           </div>
                         </td>
