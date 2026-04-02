@@ -66,9 +66,9 @@ function CrewCarousel({ entries, onCreateTraining }) {
               </div>
               <Badge className="border-0 bg-white text-[#243e36]">{entry.incident_count}</Badge>
             </div>
-            <div className="mt-3 rounded-[16px] border border-[#ead2d2] bg-[#fbf0ef] p-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#7a2323]"><AlertTriangle className="h-3.5 w-3.5" />{entry.level}</div>
-              <p className="mt-1 text-xs text-[#5c6d64]">Top: {entry.top_issue_type}</p>
+            <div className="mt-3 rounded-[16px] border p-3" style={{ borderColor: `var(--status-${(entry.level || 'watch').toLowerCase()}-border)`, backgroundColor: `var(--status-${(entry.level || 'watch').toLowerCase()}-bg)` }}>
+              <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: `var(--status-${(entry.level || 'watch').toLowerCase()}-text)` }}><AlertTriangle className="h-3.5 w-3.5" />{entry.level}</div>
+              <p className="mt-1 text-xs" style={{ color: 'var(--tier-desc-text)' }}>Top: {entry.top_issue_type}</p>
             </div>
             <div className="mt-3 rounded-[16px] border border-border bg-white p-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-[#5f7464]">Recommended action</p>
@@ -161,16 +161,15 @@ export default function RepeatOffendersPage() {
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Standard courses of action</p>
           <p className="mt-2 text-sm text-[#5c6d64]">These are the default escalation responses assigned when a crew reaches each threshold tier.</p>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {Object.entries(STANDARD_ACTIONS).map(([level, description]) => {
-              const colors = { Watch: "border-[#d8e4da] bg-[#edf5ee]", Warning: "border-[#f0ddb4] bg-[#fdf8ed]", Critical: "border-[#ead2d2] bg-[#fbf0ef]" };
-              const textColors = { Watch: "text-[#2d5a27]", Warning: "text-[#8a6d1b]", Critical: "text-[#7a2323]" };
-              return (
-                <div key={level} className={`rounded-[20px] border p-4 ${colors[level]}`} data-testid={`action-tier-${level.toLowerCase()}`}>
-                  <p className={`text-sm font-bold ${textColors[level]}`}>{level}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-[#41534a]">{description}</p>
+            {Object.entries(STANDARD_ACTIONS).map(([level, description]) => (
+                <div key={level} className="rounded-[20px] border p-4" style={{
+                  backgroundColor: `var(--status-${level.toLowerCase()}-bg)`,
+                  borderColor: `var(--status-${level.toLowerCase()}-border)`,
+                }} data-testid={`action-tier-${level.toLowerCase()}`}>
+                  <p className="text-sm font-bold" style={{ color: `var(--status-${level.toLowerCase()}-text)` }}>{level}</p>
+                  <p className="mt-2 text-xs leading-relaxed" style={{ color: 'var(--tier-desc-text)' }}>{description}</p>
                 </div>
-              );
-            })}
+              ))}
           </div>
         </CardContent>
       </Card>
@@ -195,19 +194,16 @@ export default function RepeatOffendersPage() {
                 className="overflow-hidden"
               >
                 <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3" data-testid="repeat-offenders-heatmap-grid">
-                  {summary.heatmap.map((cell) => {
-                    const levelColors = { Watch: "text-[#2d5a27]", Warning: "text-[#8a6d1b]", Critical: "text-[#7a2323]" };
-                    return (
-                      <div key={`${cell.crew}-${cell.issue_type}`} className="rounded-[20px] border border-border bg-[#f6f6f2] p-4" data-testid={`repeat-offender-cell-${cell.crew.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-${cell.issue_type.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}>
+                  {summary.heatmap.map((cell) => (
+                      <div key={`${cell.crew}-${cell.issue_type}`} className="rounded-[20px] border border-border p-4" style={{ backgroundColor: 'var(--heat-empty)' }} data-testid={`repeat-offender-cell-${cell.crew.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-${cell.issue_type.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}>
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-sm font-semibold text-[#243e36]">{cell.crew}</p>
                           <Badge className="border-0 bg-white text-[#243e36]">{cell.count}</Badge>
                         </div>
                         <p className="mt-1.5 text-sm text-[#5c6d64]">{cell.issue_type}</p>
-                        <p className={`mt-1.5 text-xs font-semibold uppercase tracking-[0.2em] ${levelColors[cell.level] || "text-[#8b4c4c]"}`}>{cell.level}</p>
+                        <p className="mt-1.5 text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: `var(--status-${(cell.level || 'watch').toLowerCase()}-text)` }}>{cell.level}</p>
                       </div>
-                    );
-                  })}
+                    ))}
                 </div>
               </motion.div>
             )}

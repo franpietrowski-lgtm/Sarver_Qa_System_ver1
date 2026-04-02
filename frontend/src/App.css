@@ -23,6 +23,25 @@ body {
     color: #1a1f18;
 }
 
+/* ─── Theme CSS variables (status tiers, heatmap) ─── */
+.workspace-shell,
+.workspace-shell.theme-default {
+    --status-watch-bg: #edf5ee;
+    --status-watch-border: #d8e4da;
+    --status-watch-text: #2d5a27;
+    --status-warning-bg: #fdf8ed;
+    --status-warning-border: #f0ddb4;
+    --status-warning-text: #8a6d1b;
+    --status-critical-bg: #fbf0ef;
+    --status-critical-border: #ead2d2;
+    --status-critical-text: #7a2323;
+    --heat-r: 224;
+    --heat-g: 122;
+    --heat-b: 95;
+    --heat-empty: #f6f6f2;
+    --tier-desc-text: #41534a;
+}
+
 h1,
 h2,
 h3,
@@ -53,6 +72,20 @@ h4,
 .workspace-shell.theme-dark {
     background: linear-gradient(180deg, #0d120e 0%, #141a15 100%);
     color: #f0f4ef;
+    --status-watch-bg: #1a2e1f;
+    --status-watch-border: #2b472d;
+    --status-watch-text: #6abf6a;
+    --status-warning-bg: #2e2a18;
+    --status-warning-border: #4a3f1e;
+    --status-warning-text: #d4a830;
+    --status-critical-bg: #2e1a1a;
+    --status-critical-border: #4a2525;
+    --status-critical-text: #e07a7a;
+    --heat-r: 124;
+    --heat-g: 169;
+    --heat-b: 130;
+    --heat-empty: #1a211b;
+    --tier-desc-text: #c0cfc0;
 }
 
 .workspace-shell.theme-dark [class*='bg-white/95'],
@@ -166,6 +199,20 @@ h4,
 .workspace-shell.theme-tomboy {
     background: linear-gradient(180deg, #192731 0%, #1e2e3a 100%);
     color: #e8ecf0;
+    --status-watch-bg: #1e3035;
+    --status-watch-border: #2a4550;
+    --status-watch-text: #6abeaa;
+    --status-warning-bg: #2e2c30;
+    --status-warning-border: #4a4535;
+    --status-warning-text: #d4a840;
+    --status-critical-bg: #35202a;
+    --status-critical-border: #5a2a3a;
+    --status-critical-text: #ff6090;
+    --heat-r: 255;
+    --heat-g: 9;
+    --heat-b: 108;
+    --heat-empty: #2a3843;
+    --tier-desc-text: #b0bcc8;
 }
 
 .workspace-shell.theme-tomboy [class*='bg-white/95'],
@@ -270,6 +317,20 @@ h4,
 .workspace-shell.theme-gold {
     background: linear-gradient(180deg, #19171b 0%, #1f1d21 100%);
     color: #f0e8d8;
+    --status-watch-bg: #262320;
+    --status-watch-border: #3a3525;
+    --status-watch-text: #a0b050;
+    --status-warning-bg: #2e2818;
+    --status-warning-border: #4a3f1e;
+    --status-warning-text: #d4b040;
+    --status-critical-bg: #2e1e1e;
+    --status-critical-border: #4a2a20;
+    --status-critical-text: #e09060;
+    --heat-r: 158;
+    --heat-g: 129;
+    --heat-b: 35;
+    --heat-empty: #2f2921;
+    --tier-desc-text: #c0b8a0;
 }
 
 .workspace-shell.theme-gold [class*='bg-white/95'],
@@ -373,6 +434,20 @@ h4,
 .workspace-shell.theme-noir {
     background: linear-gradient(180deg, #252B2B 0%, #2a3030 100%);
     color: #EFDFC5;
+    --status-watch-bg: #252e2e;
+    --status-watch-border: #3a4545;
+    --status-watch-text: #70b090;
+    --status-warning-bg: #302a22;
+    --status-warning-border: #4a4030;
+    --status-warning-text: #d4a840;
+    --status-critical-bg: #35201e;
+    --status-critical-border: #5a2520;
+    --status-critical-text: #f05040;
+    --heat-r: 220;
+    --heat-g: 32;
+    --heat-b: 17;
+    --heat-empty: #33393a;
+    --tier-desc-text: #c0b8a8;
 }
 
 .workspace-shell.theme-noir [class*='bg-white/95'],
@@ -476,6 +551,20 @@ h4,
 .workspace-shell.theme-neon {
     background: linear-gradient(180deg, #032820 0%, #062e25 100%);
     color: #e5f0d8;
+    --status-watch-bg: #0a3520;
+    --status-watch-border: #155230;
+    --status-watch-text: #80c040;
+    --status-warning-bg: #1a2818;
+    --status-warning-border: #2a4520;
+    --status-warning-text: #c5c764;
+    --status-critical-bg: #2a1a1a;
+    --status-critical-border: #4a2525;
+    --status-critical-text: #e07a7a;
+    --heat-r: 128;
+    --heat-g: 164;
+    --heat-b: 22;
+    --heat-empty: #0d3d2a;
+    --tier-desc-text: #b0d0a0;
 }
 
 .workspace-shell.theme-neon [class*='bg-white/95'],

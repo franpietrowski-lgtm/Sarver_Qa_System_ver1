@@ -1,0 +1,120 @@
+{
+  "summary": "Frontend testing PASSED for theme-specific status tier colors and heatmap colors bug fix. All 6 themes (Default, Dark, Tomboy, Gold, Noir, Neon) correctly apply CSS custom properties (--status-watch-bg, --status-warning-bg, --status-critical-bg, --heat-r/g/b, --tier-desc-text) to status tier cards and heatmap elements. No hardcoded colors fighting theme options. All sections are legible in all themes.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/screenshots_iter20/default-repeat-offenders.jpeg",
+    "/app/test_reports/screenshots_iter20/tomboy-repeat-offenders.jpeg",
+    "/app/test_reports/screenshots_iter20/gold-repeat-offenders.jpeg",
+    "/app/test_reports/screenshots_iter20/noir-repeat-offenders.jpeg",
+    "/app/test_reports/screenshots_iter20/neon-repeat-offenders.jpeg",
+    "/app/test_reports/screenshots_iter20/tomboy-heatmap-expanded.jpeg",
+    "/app/test_reports/screenshots_iter20/gold-analytics-heatmap-final.jpeg",
+    "/app/test_reports/screenshots_iter20/tomboy-analytics-heatmap-final.jpeg",
+    "/app/test_reports/screenshots_iter20/default-final-verification.jpeg"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend-only test)",
+    "frontend": "100% - All theme-specific colors working correctly"
+  },
+  "test_credentials": "Owner: sadam.owner@slmco.local / SLMCo2026!",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 20 verified the bug fix for illegible status tiers and heatmap in non-default themes. The fix uses CSS custom properties defined per theme in App.css. All 6 themes now correctly apply distinct colors to Watch/Warning/Critical tier cards and heatmap elements.",
+  "features_tested": {
+    "standard_courses_of_action_section": {
+      "data_testid": "repeat-offenders-actions-card",
+      "default_theme": {
+        "watch": {"bg": "rgb(237, 245, 238)", "text": "rgb(45, 90, 39)"},
+        "warning": {"bg": "rgb(253, 248, 237)", "text": "rgb(138, 109, 27)"},
+        "critical": {"bg": "rgb(251, 240, 239)", "text": "rgb(122, 35, 35)"},
+        "distinct_backgrounds": true,
+        "readable": true
+      },
+      "tomboy_theme": {
+        "watch": {"bg": "rgb(30, 48, 53)", "text": "rgb(106, 190, 170)"},
+        "warning": {"bg": "rgb(46, 44, 48)", "text": "rgb(212, 168, 64)"},
+        "critical": {"bg": "rgb(53, 32, 42)", "text": "rgb(255, 96, 144)"},
+        "distinct_backgrounds": true,
+        "readable": true
+      },
+      "gold_theme": {
+        "watch": {"bg": "rgb(38, 35, 32)", "text": "rgb(160, 176, 80)"},
+        "warning": {"bg": "rgb(46, 40, 24)", "text": "rgb(212, 176, 64)"},
+        "critical": {"bg": "rgb(46, 30, 30)", "text": "rgb(224, 144, 96)"},
+        "distinct_backgrounds": true,
+        "readable": true
+      },
+      "noir_theme": {
+        "watch": {"bg": "rgb(37, 46, 46)", "text": "rgb(112, 176, 144)"},
+        "warning": {"bg": "rgb(48, 42, 34)", "text": "rgb(212, 168, 64)"},
+        "critical": {"bg": "rgb(53, 32, 30)", "text": "rgb(240, 80, 64)"},
+        "distinct_backgrounds": true,
+        "readable": true
+      },
+      "neon_theme": {
+        "watch": {"bg": "rgb(10, 53, 32)", "text": "rgb(128, 192, 64)"},
+        "warning": {"bg": "rgb(26, 40, 24)", "text": "rgb(197, 199, 100)"},
+        "critical": {"bg": "rgb(42, 26, 26)", "text": "rgb(224, 122, 122)"},
+        "distinct_backgrounds": true,
+        "readable": true
+      }
+    },
+    "crew_training_recommendations_carousel": {
+      "data_testid": "repeat-offenders-recommendations-card",
+      "level_badge_uses_theme_colors": true,
+      "tomboy_theme_level_text_color": "rgb(106, 190, 170)",
+      "readable_in_all_themes": true
+    },
+    "heatmap_section": {
+      "data_testid": "repeat-offenders-heatmap-card",
+      "toggle_testid": "repeat-offenders-heatmap-toggle",
+      "level_text_uses_theme_colors": true,
+      "tomboy_watch_level_color": "rgb(106, 190, 170)",
+      "readable_in_all_themes": true
+    },
+    "analytics_calibration_heatmap": {
+      "data_testid": "analytics-heatmap-card",
+      "legend_testid": "analytics-heatmap-legend",
+      "gold_theme_legend_dots": ["rgba(158, 129, 35, 0.18)", "rgba(158, 129, 35, 0.42)", "rgba(158, 129, 35, 0.72)"],
+      "tomboy_theme_legend_dots": ["rgba(255, 9, 108, 0.18)", "rgba(255, 9, 108, 0.42)", "rgba(255, 9, 108, 0.72)"],
+      "neon_theme_legend_dots": ["rgba(128, 164, 22, 0.18)", "rgba(128, 164, 22, 0.42)", "rgba(128, 164, 22, 0.72)"],
+      "uses_theme_heat_colors": true,
+      "not_hardcoded_coral": true
+    },
+    "default_theme_regression": {
+      "no_regression": true,
+      "final_watch_bg": "rgb(237, 245, 238)",
+      "final_warning_bg": "rgb(253, 248, 237)",
+      "final_critical_bg": "rgb(251, 240, 239)",
+      "matches_expected": true
+    }
+  },
+  "css_variables_verified": {
+    "--status-watch-bg": "Changes per theme",
+    "--status-watch-border": "Changes per theme",
+    "--status-watch-text": "Changes per theme",
+    "--status-warning-bg": "Changes per theme",
+    "--status-warning-border": "Changes per theme",
+    "--status-warning-text": "Changes per theme",
+    "--status-critical-bg": "Changes per theme",
+    "--status-critical-border": "Changes per theme",
+    "--status-critical-text": "Changes per theme",
+    "--heat-r": "Changes per theme (RGB component)",
+    "--heat-g": "Changes per theme (RGB component)",
+    "--heat-b": "Changes per theme (RGB component)",
+    "--heat-empty": "Changes per theme",
+    "--tier-desc-text": "Changes per theme"
+  }
+}

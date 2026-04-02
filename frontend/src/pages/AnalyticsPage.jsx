@@ -204,11 +204,11 @@ export default function AnalyticsPage() {
         <CardContent className="p-8">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Calibration heatmap</p>
           <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Where reviewer calibration varies by crew and service</h3>
-          <div className="mt-5 grid gap-4 rounded-[24px] border border-border bg-[#f6f6f2] p-5 lg:grid-cols-[1fr_1fr]" data-testid="analytics-heatmap-legend">
+          <div className="mt-5 grid gap-4 rounded-[24px] border border-border p-5 lg:grid-cols-[1fr_1fr]" style={{ backgroundColor: 'var(--heat-empty)' }} data-testid="analytics-heatmap-legend">
             <div>
               <p className="text-sm font-semibold text-[#243e36]">Metric key</p>
               <div className="mt-3 space-y-2 text-sm text-[#5c6d64]">
-                <p>Δ = average variance between management and owner scores</p>
+                <p>&#916; = average variance between management and owner scores</p>
                 <p>M = management score average</p>
                 <p>O = owner score average</p>
                 <p>Samples = total reviewed records in that crew/service group</p>
@@ -217,9 +217,9 @@ export default function AnalyticsPage() {
             <div>
               <p className="text-sm font-semibold text-[#243e36]">Color key</p>
               <div className="mt-3 flex flex-wrap gap-3 text-sm text-[#5c6d64]">
-                <div className="flex items-center gap-2"><span className="h-4 w-4 rounded-full bg-[rgba(224,122,95,0.18)]" />Low variance</div>
-                <div className="flex items-center gap-2"><span className="h-4 w-4 rounded-full bg-[rgba(224,122,95,0.42)]" />Moderate variance</div>
-                <div className="flex items-center gap-2"><span className="h-4 w-4 rounded-full bg-[rgba(224,122,95,0.72)]" />High variance</div>
+                <div className="flex items-center gap-2"><span className="h-4 w-4 rounded-full" style={{ backgroundColor: `rgba(var(--heat-r),var(--heat-g),var(--heat-b),0.18)` }} />Low variance</div>
+                <div className="flex items-center gap-2"><span className="h-4 w-4 rounded-full" style={{ backgroundColor: `rgba(var(--heat-r),var(--heat-g),var(--heat-b),0.42)` }} />Moderate variance</div>
+                <div className="flex items-center gap-2"><span className="h-4 w-4 rounded-full" style={{ backgroundColor: `rgba(var(--heat-r),var(--heat-g),var(--heat-b),0.72)` }} />High variance</div>
               </div>
             </div>
           </div>
@@ -235,7 +235,9 @@ export default function AnalyticsPage() {
                   {heatmapColumns.map((column, columnIndex) => {
                     const cell = getHeatCell(crew, column);
                     const intensity = cell ? Math.min((cell.variance_average || 0) / maxVariance, 1) : 0;
-                    const background = cell ? `rgba(224, 122, 95, ${0.12 + intensity * 0.6})` : "#f6f6f2";
+                    const background = cell
+                      ? `rgba(var(--heat-r),var(--heat-g),var(--heat-b),${(0.12 + intensity * 0.6).toFixed(2)})`
+                      : 'var(--heat-empty)';
                     return (
                       <div key={`${crew}-${column}-${columnIndex}`} className="rounded-2xl border border-border px-3 py-4 text-sm" style={{ background }} data-testid={`analytics-heatmap-cell-${crew.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-${column.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}>
                         {cell ? (
