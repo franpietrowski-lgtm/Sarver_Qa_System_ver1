@@ -51,7 +51,8 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
     - Training (parent crew's training sessions)
     - History (individual submission tracking via member_code)
   - Crew leader invite card on CrewCapturePage with copy link button
-  - Backend: `crew_members` collection, 5 public API endpoints
+  - Crew leader "My Team" panel — collapsible list of registered members with submission counts, training completion %, and quick-view links
+  - Backend: `crew_members` collection, 6 public API endpoints
   - Submissions tagged with `member_code` for individual tracking
 
 ## Backlog

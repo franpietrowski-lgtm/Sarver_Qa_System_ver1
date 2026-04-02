@@ -139,3 +139,33 @@ async def get_crew_member_submissions(code: str, page: int = Query(1, ge=1), lim
             "created_at": s.get("created_at", ""),
         })
     return {"submissions": items, "total": total, "page": page, "limit": limit}
+
+
+@router.get("/public/crew-member-stats/{parent_access_code}")
+async def get_crew_member_stats(parent_access_code: str):
+    parent = await deps.db.crew_access_links.find_one(
+        {"code": parent_access_code, "enabled": True}, {"_id": 0}
+    )
+    if not parent:
+        raise HTTPException(status_code=404, detail="Crew link not found")
+    members = await deps.db.crew_members.find(
+        {"parent_access_code": parent_access_code, "active": True}, {"_id": 0}
+    ).to_list(100)
+    result = []
+    for m in members:
+        sub_count = await deps.db.submissions.count_documents({"member_code": m["code"]})
+        training_sessions = await deps.db.training_sessions.find(
+            {"access_code": parent_access_code}, {"_id": 0, "status": 1}
+        ).to_list(100)
+        total_training = len(training_sessions)
+        completed_training = sum(1 for t in training_sessions if t.get("status") == "completed")
+        result.append({
+            "code": m["code"],
+            "name": m["name"],
+            "division": m.get("division", ""),
+            "submission_count": sub_count,
+            "training_total": total_training,
+            "training_completed": completed_training,
+            "created_at": m.get("created_at", ""),
+        })
+    return {"members": result, "crew_label": parent.get("label", "")}

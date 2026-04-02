@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Camera, Copy, Crosshair, MapPinned, Upload, UserPlus, Wrench, X } from "lucide-react";
+import { BookOpen, Camera, ChevronDown, ChevronUp, Copy, Crosshair, ExternalLink, MapPinned, Upload, UserPlus, Users, Wrench, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -96,6 +96,8 @@ export default function CrewCapturePage() {
   const [equipmentLog, setEquipmentLog] = useState({ equipment_number: "", general_note: "", red_tag_note: "", pre_photo: null, post_photo: null });
   const [equipmentSubmitting, setEquipmentSubmitting] = useState(false);
   const [selectedStandard, setSelectedStandard] = useState(null);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [teamOpen, setTeamOpen] = useState(false);
 
   const availableTasks = DIVISION_TASKS[crewLink?.division] || DIVISION_TASKS.Maintenance;
 
@@ -111,6 +113,13 @@ export default function CrewCapturePage() {
   };
 
   useEffect(() => { loadCrewContext(); }, [code]);
+
+  useEffect(() => {
+    if (!code) return;
+    publicGet(`/public/crew-member-stats/${code}`)
+      .then((res) => setTeamMembers(res.members || []))
+      .catch(() => {});
+  }, [code]);
 
   const stopGpsPolling = () => {
     if (watchIdRef.current !== null) {
@@ -319,6 +328,44 @@ export default function CrewCapturePage() {
                   <UserPlus className="mr-1.5 h-4 w-4" /> Copy link
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {teamMembers.length > 0 && (
+          <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="crew-team-panel-card">
+            <CardContent className="p-5">
+              <button type="button" onClick={() => setTeamOpen((v) => !v)} className="flex w-full items-center justify-between gap-3" data-testid="crew-team-toggle">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-[#243e36]" />
+                  <p className="text-sm font-semibold text-[#243e36]">My Team <span className="ml-1 text-xs font-normal text-[#5c6d64]">({teamMembers.length})</span></p>
+                </div>
+                {teamOpen ? <ChevronUp className="h-4 w-4 text-[#5c6d64]" /> : <ChevronDown className="h-4 w-4 text-[#5c6d64]" />}
+              </button>
+              {teamOpen && (
+                <div className="mt-4 space-y-3" data-testid="crew-team-list">
+                  {teamMembers.map((m) => {
+                    const trainingPct = m.training_total > 0 ? Math.round((m.training_completed / m.training_total) * 100) : 0;
+                    return (
+                      <div key={m.code} className="flex items-center justify-between gap-3 rounded-[22px] border border-border bg-[#f6f6f2] px-4 py-3" data-testid={`crew-team-member-${m.code}`}>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-[#243e36]">{m.name}</p>
+                          <p className="mt-0.5 text-xs text-[#5c6d64]">{m.submission_count} submission{m.submission_count !== 1 ? "s" : ""} · Training {trainingPct}%</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="shrink-0 rounded-xl text-[#243e36] hover:bg-[#edf0e7]"
+                          onClick={() => window.open(`/member/${m.code}`, "_blank")}
+                          data-testid={`crew-team-view-${m.code}`}
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
