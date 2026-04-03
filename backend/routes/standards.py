@@ -103,3 +103,33 @@ async def update_standard_item(
     await deps.db.standards_library.update_one({"id": standard_id}, {"$set": update})
     standard = await deps.db.standards_library.find_one({"id": standard_id}, {"_id": 0})
     return standard
+
+
+
+DEFAULT_CATEGORIES = [
+    "Bed Edging", "Mulching", "Spring Cleanup", "Fall Cleanup", "Property Maintenance",
+    "Pruning", "Weeding", "Softscape", "Hardscape", "Tree/Plant Install",
+    "Tree/Plant Removal", "Drainage/Trenching", "Lighting", "Stump Grinding",
+    "Fert & Chem Treatment", "Air Spade", "Dormant Pruning", "Deer Fencing",
+    "Snow Removal", "Plowing", "Salting", "Damage Prevention", "Safety",
+    "Tool/Equipment Care", "Client Communication", "Site Prep", "Irrigation",
+]
+
+
+@router.get("/standard-categories")
+async def get_standard_categories(user: dict = Depends(require_roles("management", "owner"))):
+    db_categories = await deps.db.standards_library.distinct("category")
+    merged = sorted(set(DEFAULT_CATEGORIES + [c for c in db_categories if c]))
+    return {"categories": merged}
+
+
+@router.delete("/standards/{standard_id}")
+async def delete_standard_item(
+    standard_id: str,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    existing = await deps.db.standards_library.find_one({"id": standard_id}, {"_id": 0, "id": 1})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Standard item not found")
+    await deps.db.standards_library.delete_one({"id": standard_id})
+    return {"deleted": True, "id": standard_id}

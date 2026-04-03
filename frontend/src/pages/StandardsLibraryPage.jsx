@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronLeft, ChevronRight, Copy, LibraryBig, Plus, Wrench, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Copy, LibraryBig, Pencil, Plus, Trash2, Wrench, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -11,16 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { HelpPopover } from "@/components/common/HelpPopover";
-import { authGet, authPatch, authPost } from "@/lib/api";
+import { authGet, authPatch, authPost, authDelete } from "@/lib/api";
 import { copyToClipboard } from "@/lib/clipboard";
 import { toast } from "sonner";
 
 
 const DIVISIONS = ["Maintenance", "Install", "Tree", "Plant Healthcare", "Winter Services"];
-const CATEGORIES = ["Edging", "Mulch", "Cleanup", "Pruning", "Damage Prevention"];
 
 const emptyForm = {
-  title: "", category: CATEGORIES[0], audience: "crew", division_targets: [],
+  title: "", category: "", audience: "crew", division_targets: [],
   checklistText: "", notes: "", owner_notes: "", shoutout: "", image_url: "",
   training_enabled: true, question_type: "multiple_choice", question_prompt: "",
   choice_options_text: "", correct_answer: "", is_active: true,
@@ -53,13 +52,14 @@ function ToggleSection({ title, subtitle, icon: Icon, defaultOpen = false, testI
 }
 
 
-function StandardDetailPopup({ item, onClose }) {
+function StandardDetailPopup({ item, onClose, onEdit, onDelete }) {
+  const [confirming, setConfirming] = useState(false);
   if (!item) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose} data-testid="standard-detail-overlay">
-      <div className="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-[28px] border border-border/80 bg-white shadow-2xl" onClick={(e) => e.stopPropagation()} data-testid="standard-detail-popup">
-        {item.image_url && <div className="aspect-[5/3] bg-[#dbe3d7]"><img src={item.image_url} alt={item.title} className="h-full w-full object-cover" /></div>}
-        <div className="max-h-[55vh] overflow-y-auto p-6">
+      <div className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-[28px] border border-border/80 bg-white shadow-2xl" onClick={(e) => e.stopPropagation()} data-testid="standard-detail-popup">
+        {item.image_url && <div className="aspect-[5/2] shrink-0 bg-[#dbe3d7]"><img src={item.image_url} alt={item.title} className="h-full w-full object-cover" /></div>}
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">{item.category}</p>
@@ -89,6 +89,14 @@ function StandardDetailPopup({ item, onClose }) {
             </div>
           )}
           {item.shoutout && <p className="mt-3 text-sm text-[#5c6d64]">Shoutout: {item.shoutout}</p>}
+        </div>
+        <div className="flex shrink-0 gap-2 border-t border-border/50 p-4">
+          <Button type="button" onClick={() => { onEdit(item); onClose(); }} className="h-10 flex-1 rounded-2xl bg-[#243e36] text-white hover:bg-[#1a2c26]" data-testid="standard-detail-edit-btn"><Pencil className="mr-2 h-4 w-4" />Edit</Button>
+          {confirming ? (
+            <Button type="button" onClick={() => { onDelete(item.id); onClose(); }} className="h-10 flex-1 rounded-2xl bg-red-600 text-white hover:bg-red-700" data-testid="standard-detail-confirm-delete-btn"><Trash2 className="mr-2 h-4 w-4" />Confirm delete</Button>
+          ) : (
+            <Button type="button" variant="outline" onClick={() => setConfirming(true)} className="h-10 rounded-2xl border-red-200 text-red-600 hover:bg-red-50" data-testid="standard-detail-delete-btn"><Trash2 className="h-4 w-4" /></Button>
+          )}
         </div>
       </div>
     </div>
@@ -148,6 +156,9 @@ export default function StandardsLibraryPage() {
   const [sessionForm, setSessionForm] = useState({ access_code: "", division: "use-crew-division", item_count: 5 });
   const [sessionUrl, setSessionUrl] = useState("");
   const [detailItem, setDetailItem] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [customCategory, setCustomCategory] = useState("");
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
 
   const loadPage = async (standardsPage = 1) => {
     const [standardsResponse, crewResponse, sessionsResponse, eqResponse] = await Promise.all([
@@ -179,6 +190,12 @@ export default function StandardsLibraryPage() {
 
   useEffect(() => { loadPage(1); }, [search, category, division]);
 
+  useEffect(() => {
+    authGet("/standard-categories")
+      .then((res) => setCategories(res.categories || []))
+      .catch(() => {});
+  }, []);
+
   const selectedCrew = useMemo(() => crewLinks.find((item) => item.code === sessionForm.access_code), [crewLinks, sessionForm.access_code]);
 
   const toggleDivision = (targetDivision) => {
@@ -204,14 +221,18 @@ export default function StandardsLibraryPage() {
       };
       if (editingId) { await authPatch(`/standards/${editingId}`, payload); toast.success("Standard updated."); }
       else { await authPost("/standards", payload); toast.success("Standard added to the library."); }
-      setEditingId(""); setForm(emptyForm); setSessionUrl("");
+      setEditingId(""); setForm(emptyForm); setSessionUrl(""); setShowCustomCategory(false); setCustomCategory("");
       await loadPage(1);
+      authGet("/standard-categories").then((res) => setCategories(res.categories || [])).catch(() => {});
     } catch (error) { toast.error(error?.response?.data?.detail || "Unable to save standard item"); }
     finally { setCreating(false); }
   };
 
   const handleEdit = (item) => {
     setEditingId(item.id);
+    const isCustom = item.category && !categories.includes(item.category);
+    setShowCustomCategory(isCustom);
+    setCustomCategory(isCustom ? item.category : "");
     setForm({
       title: item.title, category: item.category, audience: item.audience,
       division_targets: item.division_targets || [],
@@ -242,9 +263,19 @@ export default function StandardsLibraryPage() {
     catch { toast.info(value); }
   };
 
+  const handleDelete = async (standardId) => {
+    try {
+      await authDelete(`/standards/${standardId}`);
+      toast.success("Standard deleted.");
+      await loadPage(1);
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Unable to delete standard");
+    }
+  };
+
   return (
     <div className="space-y-5" data-testid="standards-library-page">
-      <AnimatePresence>{detailItem && <StandardDetailPopup item={detailItem} onClose={() => setDetailItem(null)} />}</AnimatePresence>
+      <AnimatePresence>{detailItem && <StandardDetailPopup item={detailItem} onClose={() => setDetailItem(null)} onEdit={handleEdit} onDelete={handleDelete} />}</AnimatePresence>
 
       <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
         <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="standards-library-hero-card">
@@ -270,7 +301,7 @@ export default function StandardsLibraryPage() {
               <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search standards" className="h-11 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="standards-search-input" />
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="h-11 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="standards-category-filter"><SelectValue placeholder="Category" /></SelectTrigger>
-                <SelectContent><SelectItem value="all">All categories</SelectItem>{CATEGORIES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent>
+                <SelectContent><SelectItem value="all">All categories</SelectItem>{categories.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent>
               </Select>
               <Select value={division} onValueChange={setDivision}>
                 <SelectTrigger className="h-11 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="standards-division-filter"><SelectValue placeholder="Division" /></SelectTrigger>
@@ -339,10 +370,25 @@ export default function StandardsLibraryPage() {
               <form className="space-y-4" onSubmit={handleSubmit} data-testid="standards-author-form">
                 <Input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Title" className="h-11 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="standards-title-input" />
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Select value={form.category} onValueChange={(value) => setForm((current) => ({ ...current, category: value }))}>
-                    <SelectTrigger className="h-11 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="standards-form-category-select"><SelectValue /></SelectTrigger>
-                    <SelectContent>{CATEGORIES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <Select value={showCustomCategory ? "__custom__" : form.category} onValueChange={(value) => { if (value === "__custom__") { setShowCustomCategory(true); setCustomCategory(""); } else { setShowCustomCategory(false); setCustomCategory(""); setForm((c) => ({ ...c, category: value })); } }}>
+                      <SelectTrigger className="h-11 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="standards-form-category-select"><SelectValue placeholder="Select category" /></SelectTrigger>
+                      <SelectContent>
+                        {categories.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+                        <SelectItem value="__custom__">+ Custom category</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {showCustomCategory && (
+                      <Input
+                        value={customCategory}
+                        onChange={(e) => { setCustomCategory(e.target.value); setForm((c) => ({ ...c, category: e.target.value })); }}
+                        placeholder="Type custom category name"
+                        className="h-11 rounded-2xl border-transparent bg-[#edf0e7]"
+                        autoFocus
+                        data-testid="standards-custom-category-input"
+                      />
+                    )}
+                  </div>
                   <Select value={form.audience} onValueChange={(value) => setForm((current) => ({ ...current, audience: value }))}>
                     <SelectTrigger className="h-11 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="standards-form-audience-select"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="crew">Crew-facing</SelectItem><SelectItem value="internal">Internal</SelectItem><SelectItem value="both">Both</SelectItem></SelectContent>
