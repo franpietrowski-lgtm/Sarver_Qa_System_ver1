@@ -50,11 +50,18 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
     - Standards (read-only, division-filtered from standards library)
     - Training (parent crew's training sessions)
     - History (individual submission tracking via member_code)
+
+## Backlog
   - Crew leader invite card on CrewCapturePage with copy link button
   - Crew leader "My Team" panel — collapsible list of registered members with submission counts, training completion %, and quick-view links
   - Backend: `crew_members` collection, 6 public API endpoints
   - Submissions tagged with `member_code` for individual tracking
 
-## Backlog
+- **Standards Library Dynamic Categories & CRUD** (Apr 2026):
+  - Replaced 5 hardcoded categories with 30 dynamic categories covering all landscaping division tasks
+  - Added "+ Custom category" option — users type a custom name, which is saved and appears in future dropdowns
+  - Added Edit and Delete buttons to standard detail popup (delete requires 2-click confirmation)
+  - Backend: `GET /api/standard-categories` (dynamic merge of defaults + DB), `DELETE /api/standards/{id}`
+  - Category filter also uses the dynamic list
 - **Backlog**: AI-assisted scoring backend implementation (when ready to integrate LLM)
 - **Backlog**: Coaching completion report (closes loop back to offender tracker)
