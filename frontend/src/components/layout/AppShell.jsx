@@ -11,7 +11,7 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 const navigationByRole = {
   management: [
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
-    { to: "/jobs", label: "Alignment & QR", icon: FolderInput },
+    { to: "/jobs", label: "QJA", icon: FolderInput },
     { to: "/team-members", label: "Team Members", icon: Users },
     { to: "/review", label: "Review Queue", icon: ClipboardCheck },
     { to: "/rubric-editor", label: "Rubric Matrices", icon: Grid3X3 },
