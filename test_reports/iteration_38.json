@@ -1,0 +1,69 @@
+{
+  "summary": "Iteration 38 - Verification of PDF Export, Onboarding Progress Tracker, Coaching Loop features. All 21 backend tests passed (100%). Frontend verified: Owner sees Onboarding Tracker widget with 4 crews showing progress bars (67%, 83%, 83%, 83%) and 6 milestone badges per crew. AM Report widget with Export PDF button works - download triggers successfully and produces valid PDF. Coaching Loop widget renders with 0 offenders and shows empty state message 'No repeat offenders detected in the last 180 days.'",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration37_new_features.py",
+    "/app/test_reports/pytest/pytest_results_iter38.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (21/21 tests passed)",
+    "frontend": "100% (all verified features working)"
+  },
+  "test_credentials": {
+    "owner": "sadam.owner@slmco.local / SLMCo2026!"
+  },
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 38 verified all requested features: 1) PDF Export at /api/exports/am-report-pdf returns valid PDF with proper headers (tested with days=90 default and days=180), 2) Onboarding Progress at /api/onboarding/progress returns crews with 6 milestones (first_submission, first_review, training_started, training_completed, equipment_check, five_submissions), 3) Coaching Loop at /api/coaching/loop-report returns report and summary (0 offenders currently - crews need 2+ flagged issues to appear), 4) Coaching assign/complete endpoints work correctly. Frontend widgets all render correctly: widget-onboarding-tracker shows 4 crews with progress bars and milestone badges, widget-coaching-loop shows empty state with 0 offenders, widget-am-report has Export PDF button that triggers download.",
+  "verified_features": {
+    "backend_health": "GET /api/health returns 200 with status=ok",
+    "backend_auth": "POST /api/auth/login returns token for owner credentials",
+    "backend_pdf_export_default": "GET /api/exports/am-report-pdf returns 200 with content-type application/pdf and valid PDF bytes",
+    "backend_pdf_export_180_days": "GET /api/exports/am-report-pdf?days=180 returns 200 with valid PDF",
+    "backend_pdf_export_content_disposition": "PDF has Content-Disposition header with attachment and filename",
+    "backend_pdf_export_auth_required": "PDF export requires authentication (401/403 without token)",
+    "backend_pdf_export_pm_access": "PM (management role) can access PDF export",
+    "backend_onboarding_all": "GET /api/onboarding/progress?division=all returns crews with milestones",
+    "backend_onboarding_structure": "Each crew has crew_label, leader_name, division, milestones, completed_count, total_milestones, progress_pct",
+    "backend_onboarding_install_filter": "GET /api/onboarding/progress?division=Install filters correctly",
+    "backend_onboarding_auth_required": "Onboarding progress requires authentication",
+    "backend_coaching_loop_report": "GET /api/coaching/loop-report?division=all returns report array and summary object with total_offenders, open_loops, in_progress, closed_loops",
+    "backend_coaching_assign": "POST /api/coaching/assign creates coaching action with crew_code, issue_tags, notes and returns id",
+    "backend_coaching_assign_validation": "POST /api/coaching/assign requires crew_code",
+    "backend_coaching_complete": "PATCH /api/coaching/{action_id}/complete marks action as completed",
+    "backend_coaching_complete_invalid": "PATCH /api/coaching/{invalid_id}/complete returns error",
+    "backend_coaching_auth_required": "Coaching loop report requires authentication",
+    "backend_weekly_digest_regression": "GET /api/metrics/weekly-digest still returns 200",
+    "backend_crew_leader_performance_regression": "GET /api/metrics/crew-leader-performance?division=all still returns 200",
+    "backend_dashboard_overview_regression": "GET /api/dashboard/overview still returns 200",
+    "backend_submissions_regression": "GET /api/submissions still returns 200",
+    "backend_rubric_matrices_regression": "GET /api/rubric-matrices still returns 200",
+    "frontend_onboarding_tracker_widget": "Owner sees widget-onboarding-tracker with 4 crew progress bars (67%, 83%, 83%, 83%) and 6 milestone badges per crew",
+    "frontend_coaching_loop_widget": "Owner sees widget-coaching-loop with 0 offenders and empty state message",
+    "frontend_am_report_widget": "Owner sees widget-am-report with Client Quality Report table",
+    "frontend_export_pdf_button": "Export PDF button (data-testid='am-export-pdf-btn') visible and triggers download",
+    "frontend_pdf_download_works": "Clicking Export PDF downloads SarverLandscape_ClientReport.pdf (valid PDF starting with %PDF-1.3)"
+  },
+  "screenshots": [
+    "/app/test_reports/screenshots_iter38/owner-overview-top.jpeg",
+    "/app/test_reports/screenshots_iter38/owner-overview-middle.jpeg",
+    "/app/test_reports/screenshots_iter38/owner-overview-bottom.jpeg",
+    "/app/test_reports/screenshots_iter38/owner-overview-very-bottom.jpeg"
+  ],
+  "notes": {
+    "coaching_loop_widget": "The widget-coaching-loop now always renders when data is loaded (even with 0 offenders). It shows the summary stats (0 Repeat Offenders, 0 Open Loops, 0 In Progress, 0 Closed) and displays the empty state message 'No repeat offenders detected in the last 180 days.'",
+    "pdf_export": "PDF export includes per-submission detail grouped by property with clickable photo links, field reports, GPS data, reviews, and equipment logs. Demo data has empty photo_urls so there may be 0 URI links in the PDF."
+  }
+}

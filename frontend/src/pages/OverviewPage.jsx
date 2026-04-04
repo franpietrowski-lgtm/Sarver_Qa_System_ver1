@@ -824,7 +824,7 @@ export default function OverviewPage({ user }) {
         )}
 
         {/* Coaching Loop Report */}
-        {coachingLoop && (coachingLoop.report?.length > 0 || coachingLoop.summary?.total_offenders > 0) && (
+        {coachingLoop && (
           <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="widget-coaching-loop">
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-4">
