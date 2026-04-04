@@ -247,9 +247,16 @@ async def get_division_hierarchy(user: dict = Depends(require_roles("management"
             members.append(mp)
         division_map[div].append({"lead": lead, "members": members})
 
+    # Build PM-to-division mapping
+    pm_division_map = {}
+    for u in real_users:
+        if u.get("title") == "Production Manager" and u.get("division"):
+            pm_division_map.setdefault(u["division"], []).append(user_profile(u))
+
     divisions = []
     for div_name, teams in sorted(division_map.items()):
-        divisions.append({"name": div_name, "teams": teams})
+        pms_for_div = pm_division_map.get(div_name, [])
+        divisions.append({"name": div_name, "teams": teams, "production_managers": pms_for_div})
 
     return {
         "owners": owners,
@@ -276,9 +283,28 @@ async def upload_avatar(
     content = await file.read()
     if len(content) > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File too large (max 5MB)")
-    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "jpg"
+
+    # Background removal
+    try:
+        from io import BytesIO
+        from PIL import Image
+        from rembg import remove as rembg_remove
+        img = Image.open(BytesIO(content))
+        if img.mode == "CMYK":
+            img = img.convert("RGB")
+        if img.width > 1200 or img.height > 1200:
+            img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+        processed = rembg_remove(img)
+        buf = BytesIO()
+        processed.save(buf, format="PNG", optimize=True)
+        content = buf.getvalue()
+        ext = "png"
+        ct = "image/png"
+    except Exception:
+        ext = file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "jpg"
+        ct = file.content_type or f"image/{ext}"
+
     path = f"avatars/{profile_id}.{ext}"
-    ct = file.content_type or f"image/{ext}"
     await upload_bytes_to_storage(path, content, ct)
     import os
     bucket = get_storage_bucket()

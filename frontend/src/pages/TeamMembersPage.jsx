@@ -422,32 +422,38 @@ function DivisionHierarchyView({ hierarchy, onCardClick }) {
         <div className="flex flex-wrap justify-center gap-4">
           {hierarchy.general_managers.map(p => <OrgCard key={p.profile_id} profile={p} onClick={onCardClick} />)}
         </div>
-        <VLine h={24} color={accent("GM").bar} />
 
-        {/* Production & Account Managers — side by side, cross-lateral */}
-        <div className="flex items-start justify-center gap-4 lg:gap-12">
-          {/* Production Managers */}
-          <div className="flex flex-col items-center">
+        {/* GM → PM/AM split with visible lines */}
+        <div className="relative flex w-full justify-center">
+          <VLine h={32} color={accent("GM").bar} />
+        </div>
+
+        {/* Horizontal rail connecting PM and AM groups */}
+        <div className="relative flex w-full items-start justify-center gap-0">
+          {/* LEFT branch: Production Managers with direct GM lines */}
+          <div className="flex flex-col items-center flex-1 max-w-[500px]">
             <p className="rounded-xl bg-[var(--accent)] px-4 py-1.5 text-xs font-bold text-[var(--foreground)]">Production Managers</p>
-            <VLine h={14} color={accent("Production Manager").bar} />
+            <VLine h={10} color={accent("Production Manager").bar} />
             <div className="flex flex-wrap justify-center gap-3">
-              {hierarchy.production_managers.map(p => <OrgCard key={p.profile_id} profile={{...p, role: "Production Manager"}} onClick={onCardClick} compact />)}
+              {hierarchy.production_managers.map(p => (
+                <OrgCard key={p.profile_id} profile={{...p, role: "Production Manager"}} onClick={onCardClick} compact />
+              ))}
             </div>
           </div>
 
-          {/* Cross-lateral indicator */}
-          <div className="flex flex-col items-center justify-center pt-6">
-            <div className="flex items-center gap-1">
-              <HLine color="var(--border)" />
-              <span className="whitespace-nowrap rounded-full bg-[var(--accent)] px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">cross-lateral</span>
-              <HLine color="var(--border)" />
+          {/* CENTER: cross-lateral indicator */}
+          <div className="flex flex-col items-center justify-center pt-5 px-4 shrink-0">
+            <div className="flex items-center gap-1 min-w-[90px]">
+              <div className="h-[2px] flex-1 border-t-2 border-dashed border-[var(--border)]" />
+              <span className="whitespace-nowrap rounded-full bg-[var(--accent)] px-2 py-0.5 text-[7px] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">cross-lateral</span>
+              <div className="h-[2px] flex-1 border-t-2 border-dashed border-[var(--border)]" />
             </div>
           </div>
 
-          {/* Account Managers */}
-          <div className="flex flex-col items-center">
+          {/* RIGHT branch: Account Managers */}
+          <div className="flex flex-col items-center flex-1 max-w-[400px]">
             <p className="rounded-xl bg-[var(--accent)] px-4 py-1.5 text-xs font-bold text-[var(--foreground)]">Account Managers</p>
-            <VLine h={14} color={accent("Account Manager").bar} dashed />
+            <VLine h={10} color={accent("Account Manager").bar} dashed />
             <div className="flex flex-wrap justify-center gap-3">
               {hierarchy.account_managers.map(p => <OrgCard key={p.profile_id} profile={p} onClick={onCardClick} compact />)}
             </div>
@@ -456,39 +462,63 @@ function DivisionHierarchyView({ hierarchy, onCardClick }) {
 
         <VLine h={20} color={accent("Supervisor").bar} />
 
-        {/* Supervisors — answer to both AM and PM */}
+        {/* Supervisors */}
         <div className="flex flex-col items-center">
           <p className="rounded-xl bg-[var(--accent)] px-4 py-1.5 text-xs font-bold text-[var(--foreground)]">Supervisors</p>
-          <VLine h={14} color={accent("Supervisor").bar} dashed />
+          <VLine h={10} color={accent("Supervisor").bar} dashed />
           <div className="flex flex-wrap justify-center gap-3">
             {hierarchy.supervisors.map(p => <OrgCard key={p.profile_id} profile={p} onClick={onCardClick} compact />)}
           </div>
         </div>
 
-        <VLine h={20} color={accent("Crew Leader").bar} />
+        <VLine h={24} color={accent("Crew Leader").bar} />
 
-        {/* Divisions with Crew Leaders & Members flowing from PMs */}
-        {hierarchy.divisions.map(div => (
-          <div key={div.name} className="mt-4 flex flex-col items-center w-full">
-            <p className="rounded-xl px-4 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: accent("Crew Leader").bar }}>{div.name} Division</p>
-            <VLine h={14} color={accent("Crew Leader").bar} />
-            <div className="flex flex-wrap justify-center gap-6">
-              {div.teams.map(team => (
-                <div key={team.lead.profile_id} className="flex flex-col items-center">
-                  <OrgCard profile={team.lead} onClick={onCardClick} compact />
-                  {team.members.length > 0 && (
-                    <>
-                      <VLine h={12} color={accent("Crew Member").bar} dashed />
-                      <div className="flex gap-2">
-                        {team.members.map(m => <OrgCard key={m.profile_id} profile={m} onClick={onCardClick} compact />)}
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
+        {/* Divisions — each with their PM flowing to teams */}
+        <div className="w-full space-y-6">
+          {hierarchy.divisions.map(div => (
+            <div key={div.name} className="flex flex-col items-center" data-testid={`hierarchy-division-${div.name.toLowerCase()}`}>
+              <p className="rounded-xl px-4 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: accent("Crew Leader").bar }}>{div.name} Division</p>
+
+              {/* PMs assigned to this division — direct path */}
+              {div.production_managers?.length > 0 && (
+                <>
+                  <VLine h={10} color={accent("Production Manager").bar} />
+                  <div className="flex items-center gap-2 rounded-2xl bg-[var(--accent)]/60 px-3 py-1.5">
+                    {div.production_managers.map(pm => (
+                      <button key={pm.profile_id} type="button" onClick={() => onCardClick(pm)} className="flex items-center gap-2 rounded-xl bg-[var(--card)] px-2 py-1 shadow-sm ring-1 ring-[var(--border)] transition hover:shadow-md" data-testid={`hierarchy-pm-link-${pm.profile_id}`}>
+                        <div style={{ padding: 2, clipPath: HEX_CLIP, backgroundColor: accent("Production Manager").bar }}>
+                          <HexAvatar name={pm.name} url={pm.avatar_url} size={28} />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-[10px] font-semibold text-[var(--foreground)] leading-tight">{pm.name}</p>
+                          <p className="text-[8px] font-bold uppercase" style={{ color: accent("Production Manager").text }}>PM</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* PM → Teams direct paths */}
+              <VLine h={12} color={accent("Crew Leader").bar} />
+              <div className="flex flex-wrap justify-center gap-6">
+                {div.teams.map(team => (
+                  <div key={team.lead.profile_id} className="flex flex-col items-center">
+                    <OrgCard profile={team.lead} onClick={onCardClick} compact />
+                    {team.members.length > 0 && (
+                      <>
+                        <VLine h={10} color={accent("Crew Member").bar} dashed />
+                        <div className="flex flex-wrap justify-center gap-2">
+                          {team.members.map(m => <OrgCard key={m.profile_id} profile={m} onClick={onCardClick} compact />)}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

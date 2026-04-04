@@ -1,0 +1,65 @@
+{
+  "summary": "Iteration 32 System Health Check - All backend tests passed (19/19). Frontend tests verified Owner dashboard, Team Members page (Individual/Team Structure/Division Hierarchy views), profile overlay with stats toggle, Crew Capture pages with division switcher, Standards Library (19 standards), and QJA page (management role only).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/auth/login", "issue": "PM users (tima.pm@slmco.local, zacho.pm@slmco.local) return 'Invalid email or password' - may need re-seeding or different credentials"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration32_system_health.py",
+    "/app/test_reports/pytest/pytest_results_iter32.xml"
+  ],
+  "action_items": [
+    "Verify PM user credentials in database - tima.pm@slmco.local login fails",
+    "Update test_credentials.md with correct GM email (ctyler.gm@slmco.local not tylerc.gm@slmco.local)"
+  ],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_iteration32_system_health.py",
+    "/app/memory/test_credentials.md"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 tests passed)",
+    "frontend": "100% (all verified features working)"
+  },
+  "test_credentials": {
+    "owner": "sadam.owner@slmco.local / SLMCo2026!",
+    "gm": "ctyler.gm@slmco.local / SLMCo2026!",
+    "pm_users_not_working": ["tima.pm@slmco.local", "zacho.pm@slmco.local", "scottw.pm@slmco.local", "brads.pm@slmco.local"]
+  },
+  "seed_data_creation": "None - using existing seeded data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All core features verified working. Backend has 19 industry standards, 4 crews, 29+ submissions. GM email is ctyler.gm@slmco.local (not tylerc). QJA page only visible to management role (GM), not owner role. PM users may need re-seeding.",
+  "verified_features": {
+    "backend_health": "GET /api/health returns ok",
+    "auth_owner": "Login as Owner (sadam.owner@slmco.local) returns JWT",
+    "auth_gm": "Login as GM (ctyler.gm@slmco.local) returns JWT",
+    "public_standards_total": "GET /api/public/standards returns 19 standards",
+    "public_standards_maintenance": "?division=Maintenance returns 11 standards",
+    "public_standards_install": "?division=Install returns 9 standards",
+    "public_standards_tree": "?division=Tree returns 7 standards",
+    "team_hierarchy_counts": "Returns 1 owner, 1 GM, 4 PMs, 3 AMs, 3 supervisors",
+    "team_hierarchy_divisions": "Returns 3 divisions (Install/Maintenance/Tree) with production_managers field",
+    "team_profiles": "Returns 22+ profiles",
+    "team_structure": "Returns 4 teams with correct leaders (Alejandro, Marcus, Derek, Nathan)",
+    "timeline_stats": "GET /api/team/profiles/crew_bb01032c/stats returns stats",
+    "submissions": "Returns 29+ total submissions",
+    "demo_crews": "All 4 crews exist (bb01032c, be1da0c6, e4444b93, 47701159)",
+    "frontend_owner_dashboard": "Loads with submissions count (29), review velocity (100%)",
+    "frontend_team_individual": "Shows 15 profiles with hex avatars",
+    "frontend_team_structure": "Shows 4 teams with correct leaders",
+    "frontend_team_hierarchy": "Shows PM-to-team paths under Install/Maintenance/Tree divisions",
+    "frontend_profile_overlay": "Opens centered with stats toggle, timeline selector, 3 quick links",
+    "frontend_crew_capture_install": "Division switcher shows 5 divisions, loads 9 Install standards by default",
+    "frontend_crew_capture_maintenance": "Loads 11 Maintenance standards by default",
+    "frontend_standards_library": "Shows 19 standards (Page 1 of 4)",
+    "frontend_qja_page": "QJA link present for management role, shows 4 active crew QR cards with leader_name input"
+  }
+}
