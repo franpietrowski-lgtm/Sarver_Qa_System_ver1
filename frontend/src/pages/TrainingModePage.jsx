@@ -97,10 +97,10 @@ export default function TrainingModePage() {
       <div className="min-h-screen bg-[linear-gradient(180deg,_#edf0e7_0%,_#f7f8f6_100%)] px-4 py-8" data-testid="training-mode-complete-screen">
         <div className="mx-auto max-w-xl rounded-[36px] border border-border bg-white p-8 text-center shadow-sm">
           <CheckCircle2 className="mx-auto h-12 w-12 text-[#2d5a27]" />
-          <h1 className="mt-4 font-[Outfit] text-4xl font-semibold text-[#111815]">Session complete</h1>
-          <p className="mt-4 text-sm text-[#5c6d64]">Accuracy: {summary.score_percent}% · Completion: {summary.completion_rate}% · Avg time: {summary.average_time_seconds}s</p>
+          <h1 className="mt-4 font-[Outfit] text-4xl font-semibold text-[var(--foreground)]">Session complete</h1>
+          <p className="mt-4 text-sm text-[var(--muted-foreground)]">Accuracy: {summary.score_percent}% · Completion: {summary.completion_rate}% · Avg time: {summary.average_time_seconds}s</p>
           <p className="mt-4 text-sm text-[#41534a]">{summary.owner_message}</p>
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-[#5f7464]">Close this screen when you’re ready.</p>
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--muted-foreground)]">Close this screen when you’re ready.</p>
         </div>
       </div>
     );
@@ -110,8 +110,8 @@ export default function TrainingModePage() {
     return (
       <div className="min-h-screen bg-[linear-gradient(180deg,_#edf0e7_0%,_#f7f8f6_100%)] px-4 py-8" data-testid="training-mode-error-state">
         <div className="mx-auto max-w-xl rounded-[36px] border border-border bg-white p-8 text-center shadow-sm">
-          <h1 className="font-[Outfit] text-4xl font-semibold text-[#111815]">Training session unavailable</h1>
-          <p className="mt-4 text-sm text-[#5c6d64]">{loadError || "This link is invalid or the session has already been completed."}</p>
+          <h1 className="font-[Outfit] text-4xl font-semibold text-[var(--foreground)]">Training session unavailable</h1>
+          <p className="mt-4 text-sm text-[var(--muted-foreground)]">{loadError || "This link is invalid or the session has already been completed."}</p>
         </div>
       </div>
     );

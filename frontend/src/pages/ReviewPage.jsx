@@ -127,12 +127,12 @@ export default function ReviewPage() {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[360px_1fr]" data-testid="review-page">
-      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="review-queue-card">
+      <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="review-queue-card">
         <CardContent className="p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Management review queue</p>
-              <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Pending proof sets</h2>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Management review queue</p>
+              <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)]">Pending proof sets</h2>
             </div>
             <ClipboardList className="h-6 w-6 text-[#243e36]" />
           </div>
@@ -144,7 +144,7 @@ export default function ReviewPage() {
             <option value="flagged">Flagged submissions</option>
           </select>
 
-          <div className="mt-4 flex items-center justify-between gap-3 text-sm text-[#5c6d64]">
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm text-[var(--muted-foreground)]">
             <p data-testid="review-queue-pagination-label">Page {queuePagination.page} of {queuePagination.pages} · {queuePagination.total} records</p>
             <div className="flex gap-2">
               <Button type="button" variant="outline" disabled={!queuePagination.has_prev} onClick={() => loadPage(filterBy, Math.max(queuePagination.page - 1, 1), false)} className="h-9 rounded-2xl" data-testid="review-queue-prev-button">Prev</Button>
@@ -158,33 +158,33 @@ export default function ReviewPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-[#243e36]">{submission.job_name_input || submission.job_id || submission.submission_code}</p>
-                    <p className="mt-1 text-sm text-[#5c6d64]">{submission.crew_label} · {submission.truck_number}{submission.work_date ? ` · ${submission.work_date}` : ""}</p>
+                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">{submission.crew_label} · {submission.truck_number}{submission.work_date ? ` · ${submission.work_date}` : ""}</p>
                   </div>
                   <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]">{submission.status}</Badge>
                 </div>
               </button>
             ))}
-            {submissions.length === 0 && <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4 text-sm text-[#5c6d64]" data-testid="review-queue-empty-state">No management-review items match this page yet.</div>}
+            {submissions.length === 0 && <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4 text-sm text-[var(--muted-foreground)]" data-testid="review-queue-empty-state">No management-review items match this page yet.</div>}
           </div>
         </CardContent>
       </Card>
 
       {detail ? (
         <div className="space-y-6">
-          <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="review-detail-card">
+          <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="review-detail-card">
             <CardContent className="p-8">
               {detail.rapid_review && (
                 <div className="mb-6 rounded-[24px] border border-[#d7e3d9] bg-[#edf0e7] p-4" data-testid="review-rapid-summary-card">
-                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Rapid review summary</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Rapid review summary</p>
                   <p className="mt-2 text-sm font-semibold text-[#243e36]">{detail.rapid_review.overall_rating} · rubric sum {detail.rapid_review.rubric_sum_percent}%</p>
-                  <p className="mt-1 text-sm text-[#5c6d64]">{detail.rapid_review.comment || "No comment attached."}</p>
+                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">{detail.rapid_review.comment || "No comment attached."}</p>
                 </div>
               )}
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Reviewing submission</p>
-                  <h2 className="mt-2 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]" data-testid="review-detail-title">{detail.submission.job_name_input || detail.submission.job_id || detail.submission.submission_code}</h2>
-                  <p className="mt-2 text-sm text-[#5c6d64]" data-testid="review-detail-meta">{detail.submission.crew_label} · {selectedServiceType || "service type pending"} · Confidence {Math.round((detail.submission.match_confidence || 0) * 100)}%{detail.submission.work_date ? ` · Work date: ${detail.submission.work_date}` : ""}</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Reviewing submission</p>
+                  <h2 className="mt-2 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[var(--foreground)]" data-testid="review-detail-title">{detail.submission.job_name_input || detail.submission.job_id || detail.submission.submission_code}</h2>
+                  <p className="mt-2 text-sm text-[var(--muted-foreground)]" data-testid="review-detail-meta">{detail.submission.crew_label} · {selectedServiceType || "service type pending"} · Confidence {Math.round((detail.submission.match_confidence || 0) * 100)}%{detail.submission.work_date ? ` · Work date: ${detail.submission.work_date}` : ""}</p>
                 </div>
                 <Badge className="border-0 bg-[#edf0e7] px-3 py-1 text-[#243e36]" data-testid="review-match-status-badge">{detail.submission.match_status}</Badge>
               </div>
@@ -200,7 +200,7 @@ export default function ReviewPage() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="review-scoring-card">
+          <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="review-scoring-card">
             <CardContent className="p-8">
               <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
                 <div className="space-y-4">
@@ -218,7 +218,7 @@ export default function ReviewPage() {
 
                   <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4">
                     <p className="text-sm font-semibold text-[#243e36]">Submission metadata</p>
-                    <div className="mt-3 space-y-2 text-sm text-[#5c6d64]">
+                    <div className="mt-3 space-y-2 text-sm text-[var(--muted-foreground)]">
                       <p data-testid="review-metadata-truck">Truck: {detail.submission.truck_number}</p>
                       <p data-testid="review-metadata-area">Area: {detail.submission.area_tag || "Not tagged"}</p>
                       <p data-testid="review-metadata-note">Note: {detail.submission.note || "No note"}</p>
@@ -228,7 +228,7 @@ export default function ReviewPage() {
                   {detail.submission.field_report?.reported && (
                     <div className="rounded-[24px] border border-[#f2c9bc] bg-[#fff6f1] p-4" data-testid="review-field-report-card">
                       <p className="text-sm font-semibold text-[#243e36]">Crew issue / damage report</p>
-                      <div className="mt-3 space-y-2 text-sm text-[#5c6d64]">
+                      <div className="mt-3 space-y-2 text-sm text-[var(--muted-foreground)]">
                         <p data-testid="review-field-report-type">Type: {detail.submission.field_report.type || "General field report"}</p>
                         <p data-testid="review-field-report-notes">Notes: {detail.submission.field_report.notes || "No extra details"}</p>
                       </div>
@@ -259,7 +259,7 @@ export default function ReviewPage() {
                       <div key={category.key} className="rounded-[24px] border border-border bg-[#f6f6f2] p-4" data-testid={`review-score-card-${category.key}`}>
                         <label className="text-sm font-semibold text-[#243e36]">{category.label}</label>
                         <Input type="number" min="0" max={category.max_score} step="0.5" value={scores[category.key] ?? ""} onChange={(event) => setScores((current) => ({ ...current, [category.key]: Number(event.target.value) }))} className="mt-3 h-11 rounded-2xl border-transparent bg-white" data-testid={`rubric-score-input-${category.key}`} />
-                        <p className="mt-2 text-xs text-[#5c6d64]">Weight {Math.round(category.weight * 100)}% · Max {category.max_score}</p>
+                        <p className="mt-2 text-xs text-[var(--muted-foreground)]">Weight {Math.round(category.weight * 100)}% · Max {category.max_score}</p>
                       </div>
                     ))}
                   </div>
@@ -284,7 +284,7 @@ export default function ReviewPage() {
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-[#243e36]">Reviewer comments</label>
                     <Textarea value={comments} onChange={(event) => setComments(event.target.value)} className="min-h-[110px] rounded-2xl border-transparent bg-[#edf0e7]" data-testid="review-comments-input" />
-                    <p className="mt-2 text-xs text-[#5c6d64]" data-testid="review-followup-hint">Choosing correction required or insufficient evidence automatically creates a crew-facing re-upload notification.</p>
+                    <p className="mt-2 text-xs text-[var(--muted-foreground)]" data-testid="review-followup-hint">Choosing correction required or insufficient evidence automatically creates a crew-facing re-upload notification.</p>
                   </div>
 
                   <Button type="submit" disabled={saving} className="h-12 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="review-submit-button"><Flag className="mr-2 h-4 w-4" />{saving ? "Saving review..." : "Save management review"}</Button>

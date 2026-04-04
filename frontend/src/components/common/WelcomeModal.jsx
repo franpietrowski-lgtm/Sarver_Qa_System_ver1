@@ -77,8 +77,8 @@ export default function WelcomeModal({ user }) {
           <div className="flex items-start gap-3">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: 'var(--btn-accent)' }}>{step + 1}</span>
             <div>
-              <h3 className="font-semibold text-[#111815]">{current.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-[#5c6d64]">{current.description}</p>
+              <h3 className="font-semibold text-[var(--foreground)]">{current.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">{current.description}</p>
             </div>
           </div>
 
@@ -90,7 +90,7 @@ export default function WelcomeModal({ user }) {
         </div>
 
         <div className="flex items-center justify-between border-t border-border/60 px-6 py-4">
-          <Button type="button" variant="ghost" onClick={dismiss} className="text-sm text-[#5c6d64]" data-testid="welcome-modal-skip">
+          <Button type="button" variant="ghost" onClick={dismiss} className="text-sm text-[var(--muted-foreground)]" data-testid="welcome-modal-skip">
             Skip tour
           </Button>
           <div className="flex gap-2">

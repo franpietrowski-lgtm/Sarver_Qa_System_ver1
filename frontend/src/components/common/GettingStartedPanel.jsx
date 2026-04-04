@@ -65,13 +65,13 @@ export default function GettingStartedPanel({ user }) {
             <Lightbulb className="h-4 w-4 text-white" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-[#111815]">{guide.title}</h3>
-            <p className="text-xs text-[#5c6d64]">{expanded ? "Click to collapse" : `${guide.sections.length} tips to get you up to speed`}</p>
+            <h3 className="font-semibold text-[var(--foreground)]">{guide.title}</h3>
+            <p className="text-xs text-[var(--muted-foreground)]">{expanded ? "Click to collapse" : `${guide.sections.length} tips to get you up to speed`}</p>
           </div>
         </button>
         <div className="flex items-center gap-1.5">
-          <ChevronDown className={`h-4 w-4 text-[#5c6d64] transition-transform ${expanded ? "rotate-180" : ""}`} />
-          <button type="button" onClick={dismiss} className="rounded-full p-1 text-[#5c6d64] transition hover:bg-[#243e36]/10 hover:text-[#243e36]" data-testid="getting-started-dismiss" aria-label="Dismiss guide">
+          <ChevronDown className={`h-4 w-4 text-[var(--muted-foreground)] transition-transform ${expanded ? "rotate-180" : ""}`} />
+          <button type="button" onClick={dismiss} className="rounded-full p-1 text-[var(--muted-foreground)] transition hover:bg-[#243e36]/10 hover:text-[#243e36]" data-testid="getting-started-dismiss" aria-label="Dismiss guide">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -85,9 +85,9 @@ export default function GettingStartedPanel({ user }) {
                 <div key={i} className="rounded-2xl border border-border/60 p-4" style={{ backgroundColor: 'var(--modal-bg)' }} data-testid={`getting-started-section-${i}`}>
                   <div className="flex items-center gap-2">
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ backgroundColor: 'var(--btn-accent)' }}>{i + 1}</span>
-                    <h4 className="text-sm font-semibold text-[#111815]">{section.heading}</h4>
+                    <h4 className="text-sm font-semibold text-[var(--foreground)]">{section.heading}</h4>
                   </div>
-                  <p className="mt-2 text-xs leading-relaxed text-[#5c6d64]">{section.text}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-[var(--muted-foreground)]">{section.text}</p>
                 </div>
               ))}
             </div>

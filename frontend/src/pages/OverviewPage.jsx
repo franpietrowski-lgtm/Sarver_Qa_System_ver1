@@ -1,4 +1,4 @@
-import { Activity, Boxes, Copy, FolderInput, Grid3X3, ShieldCheck, Smartphone, UploadCloud, X } from "lucide-react";
+import { Activity, Boxes, Copy, FolderInput, Grid3X3, ShieldCheck, Smartphone, TrendingUp, UploadCloud, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -30,6 +30,9 @@ export default function OverviewPage({ user }) {
   const [matrixOpen, setMatrixOpen] = useState(false);
   const matrixTimerRef = useRef(null);
   const rapidReviewUrl = useMemo(() => (typeof window !== "undefined" ? `${window.location.origin}/rapid-review/mobile` : ""), []);
+  const [divQuality, setDivQuality] = useState(null);
+  const [compliance, setCompliance] = useState(null);
+  const [funnel, setFunnel] = useState(null);
 
   const isOwnerOrGM = user?.role === "owner" || user?.title === "GM";
 
@@ -57,12 +60,16 @@ export default function OverviewPage({ user }) {
       setOverview(overviewResponse);
       setRubricMatrices(matricesResponse || []);
       await loadSubmissions(1);
+      // Load metrics
+      authGet("/metrics/division-quality-trend").then(setDivQuality).catch(() => {});
+      authGet("/metrics/standards-compliance").then(setCompliance).catch(() => {});
+      authGet("/metrics/training-funnel").then(setFunnel).catch(() => {});
     };
     load();
   }, []);
 
   if (!overview) {
-    return <div className="rounded-[28px] border border-border bg-white p-10 text-center text-[#243e36]" data-testid="overview-loading-state">Loading overview...</div>;
+    return <div className="rounded-[28px] border border-border bg-[var(--card)] p-10 text-center text-[var(--foreground)]" data-testid="overview-loading-state">Loading overview...</div>;
   }
 
   const storage = overview.storage || overview.drive;
@@ -90,22 +97,22 @@ export default function OverviewPage({ user }) {
       <WelcomeModal user={user} />
       <GettingStartedPanel user={user} />
 
-      <Card className="overflow-hidden rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-hero-card">
+      <Card className="overflow-hidden rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="overview-hero-card">
         <CardContent className="grid gap-4 p-5 lg:grid-cols-[1.3fr_0.7fr] lg:p-6">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]" data-testid="overview-kicker-text">Operations pulse</p>
-            <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815] lg:text-4xl" data-testid="overview-title">Crews fast. Labels consistent. Data clean.</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#5c6d64]" data-testid="overview-description">Capture volume, review queues, storage status, and export momentum at a glance.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]" data-testid="overview-kicker-text">Operations pulse</p>
+            <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)] lg:text-4xl" data-testid="overview-title">Crews fast. Labels consistent. Data clean.</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--muted-foreground)]" data-testid="overview-description">Capture volume, review queues, storage status, and export momentum at a glance.</p>
           </div>
-          <div className="grid gap-3 rounded-[20px] border border-border bg-[#edf0e7] p-4" data-testid="overview-workflow-health-card">
+          <div className="grid gap-3 rounded-[20px] border border-border bg-[var(--accent)] p-4" data-testid="overview-workflow-health-card">
             <div>
-              <p className="text-sm font-semibold text-[#243e36]">Review velocity</p>
-              <p className="mt-1 font-[Cabinet_Grotesk] text-4xl font-black text-[#111815]" data-testid="overview-review-velocity-value">{overview.workflow_health.review_velocity_percent}%</p>
-              <p className="mt-1 text-xs text-[#5c6d64]" data-testid="overview-review-velocity-hint">Captured work moving through review and export.</p>
+              <p className="text-sm font-semibold text-[var(--foreground)]">Review velocity</p>
+              <p className="mt-1 font-[Cabinet_Grotesk] text-4xl font-black text-[var(--foreground)]" data-testid="overview-review-velocity-value">{overview.workflow_health.review_velocity_percent}%</p>
+              <p className="mt-1 text-xs text-[var(--muted-foreground)]" data-testid="overview-review-velocity-hint">Captured work moving through review and export.</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge className="border-0 bg-white px-2 py-0.5 text-xs text-[#243e36]" data-testid="overview-drive-config-badge">Storage: {storage?.configured ? "OK" : "N/A"}</Badge>
-              <Badge className="border-0 bg-white px-2 py-0.5 text-xs text-[#243e36]" data-testid="overview-drive-connected-badge">Ready: {storage?.connected ? "Yes" : "No"}</Badge>
+              <Badge className="border-0 bg-[var(--accent)] px-2 py-0.5 text-xs text-[var(--foreground)]" data-testid="overview-drive-config-badge">Storage: {storage?.configured ? "OK" : "N/A"}</Badge>
+              <Badge className="border-0 bg-[var(--accent)] px-2 py-0.5 text-xs text-[var(--foreground)]" data-testid="overview-drive-connected-badge">Ready: {storage?.connected ? "Yes" : "No"}</Badge>
             </div>
           </div>
         </CardContent>
@@ -124,10 +131,10 @@ export default function OverviewPage({ user }) {
             data-testid="overview-rubric-toggle"
           >
             <div className="flex items-center gap-3">
-              <Grid3X3 className="h-5 w-5 text-[#243e36]" />
+              <Grid3X3 className="h-5 w-5 text-[var(--foreground)]" />
               <div>
-                <h3 className="font-semibold text-[#111815]">Quick matrix ref</h3>
-                <p className="text-xs text-[#5c6d64]">{rubricMatrices.length} active rubrics across divisions</p>
+                <h3 className="font-semibold text-[var(--foreground)]">Quick matrix ref</h3>
+                <p className="text-xs text-[var(--muted-foreground)]">{rubricMatrices.length} active rubrics across divisions</p>
               </div>
               <HelpPopover title="Rubric matrices">
                 <p className="mb-2">Each service type has a rubric with <strong>weighted grading categories</strong> that must sum to 1.0.</p>
@@ -136,7 +143,7 @@ export default function OverviewPage({ user }) {
                 <p>GM and Owner can create, edit, and deactivate rubrics from the <strong>Rubric Editor</strong> page.</p>
               </HelpPopover>
             </div>
-            <Badge className="border-0 bg-[#edf0e7] text-[#243e36]">{matrixOpen ? "Close" : "View"}</Badge>
+            <Badge className="border-0 bg-[var(--accent)] text-[var(--foreground)]">{matrixOpen ? "Close" : "View"}</Badge>
           </button>
         </CardContent>
       </Card>
@@ -146,12 +153,12 @@ export default function OverviewPage({ user }) {
           <div className="max-h-[80vh] w-full max-w-3xl overflow-hidden rounded-[28px] border border-border/80 shadow-2xl" style={{ backgroundColor: 'var(--modal-bg)' }} onClick={(e) => e.stopPropagation()} data-testid="overview-rubric-widget">
             <div className="flex items-center justify-between gap-4 border-b border-border/60 px-6 py-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Quick matrix ref</p>
-                <h3 className="mt-1 font-[Outfit] text-xl font-bold text-[#111815]">Rubric grading factors</h3>
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Quick matrix ref</p>
+                <h3 className="mt-1 font-[Outfit] text-xl font-bold text-[var(--foreground)]">Rubric grading factors</h3>
               </div>
               <div className="flex items-center gap-2">
                 <Select value={matrixDivisionFilter} onValueChange={setMatrixDivisionFilter}>
-                  <SelectTrigger className="h-9 w-[160px] rounded-xl border-transparent bg-[#edf0e7] text-sm" data-testid="overview-matrix-division-filter"><SelectValue placeholder="All divisions" /></SelectTrigger>
+                  <SelectTrigger className="h-9 w-[160px] rounded-xl border-transparent bg-[var(--accent)] text-sm" data-testid="overview-matrix-division-filter"><SelectValue placeholder="All divisions" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All divisions</SelectItem>
                     {DIVISIONS.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
@@ -164,11 +171,11 @@ export default function OverviewPage({ user }) {
               <table className="w-full text-left text-sm" data-testid="overview-rubric-matrix-table">
                 <thead>
                   <tr className="border-b border-border/60">
-                    <th className="pb-2 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Task</th>
-                    <th className="pb-2 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Division</th>
-                    <th className="pb-2 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Factors</th>
-                    <th className="pb-2 pr-4 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Pass</th>
-                    <th className="pb-2 text-xs font-bold uppercase tracking-wider text-[#5f7464]">Ver</th>
+                    <th className="pb-2 pr-4 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Task</th>
+                    <th className="pb-2 pr-4 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Division</th>
+                    <th className="pb-2 pr-4 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Factors</th>
+                    <th className="pb-2 pr-4 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Pass</th>
+                    <th className="pb-2 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Ver</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -176,8 +183,8 @@ export default function OverviewPage({ user }) {
                     .filter((item) => matrixDivisionFilter === "all" || item.division === matrixDivisionFilter)
                     .map((rubric) => (
                       <tr key={rubric.id} className="border-b border-border/30" data-testid={`overview-rubric-row-${rubric.id}`}>
-                        <td className="py-2.5 pr-4 font-semibold capitalize text-[#243e36]">{rubric.service_type}</td>
-                        <td className="py-2.5 pr-4"><Badge className="border-0 bg-[#edf0e7] text-xs text-[#243e36]">{rubric.division || "General"}</Badge></td>
+                        <td className="py-2.5 pr-4 font-semibold capitalize text-[var(--foreground)]">{rubric.service_type}</td>
+                        <td className="py-2.5 pr-4"><Badge className="border-0 bg-[var(--accent)] text-xs text-[var(--foreground)]">{rubric.division || "General"}</Badge></td>
                         <td className="py-2.5 pr-4">
                           <div className="flex flex-wrap gap-1">
                             {(rubric.categories || []).map((cat) => (
@@ -185,14 +192,14 @@ export default function OverviewPage({ user }) {
                             ))}
                           </div>
                         </td>
-                        <td className="py-2.5 pr-4 font-semibold text-[#243e36]">{rubric.pass_threshold}%</td>
-                        <td className="py-2.5 text-[#5c6d64]">v{rubric.version}</td>
+                        <td className="py-2.5 pr-4 font-semibold text-[var(--foreground)]">{rubric.pass_threshold}%</td>
+                        <td className="py-2.5 text-[var(--muted-foreground)]">v{rubric.version}</td>
                       </tr>
                     ))}
                 </tbody>
               </table>
               {rubricMatrices.filter((item) => matrixDivisionFilter === "all" || item.division === matrixDivisionFilter).length === 0 && (
-                <p className="mt-4 text-center text-sm text-[#5c6d64]" data-testid="overview-rubric-empty">No rubric matrices found.</p>
+                <p className="mt-4 text-center text-sm text-[var(--muted-foreground)]" data-testid="overview-rubric-empty">No rubric matrices found.</p>
               )}
             </div>
           </div>
@@ -200,31 +207,31 @@ export default function OverviewPage({ user }) {
       )}
 
       <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card className="rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-recent-submissions-card">
+        <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="overview-recent-submissions-card">
           <CardContent className="p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Recent submissions</p>
-                <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[#111815]">Current field activity</h3>
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Recent submissions</p>
+                <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[var(--foreground)]">Current field activity</h3>
               </div>
-              <Boxes className="h-5 w-5 text-[#243e36]" />
+              <Boxes className="h-5 w-5 text-[var(--foreground)]" />
             </div>
             <div className="mt-4 space-y-2">
               {submissions.map((submission) => (
-                <div key={submission.id} className="rounded-[16px] border border-border bg-[#f6f6f2] px-4 py-3" data-testid={`overview-submission-card-${submission.id}`}>
+                <div key={submission.id} className="rounded-[16px] border border-border bg-[var(--accent)] px-4 py-3" data-testid={`overview-submission-card-${submission.id}`}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-[#243e36]" data-testid={`overview-submission-job-${submission.id}`}>{submission.job_name_input || submission.job_id || submission.submission_code}</p>
-                      <p className="mt-0.5 truncate text-xs text-[#5c6d64]" data-testid={`overview-submission-meta-${submission.id}`}>{submission.crew_label} · {submission.service_type}{submission.work_date ? ` · ${submission.work_date}` : ""}</p>
+                      <p className="truncate text-sm font-semibold text-[var(--foreground)]" data-testid={`overview-submission-job-${submission.id}`}>{submission.job_name_input || submission.job_id || submission.submission_code}</p>
+                      <p className="mt-0.5 truncate text-xs text-[var(--muted-foreground)]" data-testid={`overview-submission-meta-${submission.id}`}>{submission.crew_label} · {submission.service_type}{submission.work_date ? ` · ${submission.work_date}` : ""}</p>
                     </div>
-                    <Badge className="shrink-0 border-0 bg-white px-2 py-0.5 text-xs text-[#243e36]" data-testid={`overview-submission-status-${submission.id}`}>{submission.status}</Badge>
+                    <Badge className="shrink-0 border-0 bg-[var(--accent)] px-2 py-0.5 text-xs text-[var(--foreground)]" data-testid={`overview-submission-status-${submission.id}`}>{submission.status}</Badge>
                   </div>
                 </div>
               ))}
             </div>
             {submissionTotal > 4 && (
               <div className="mt-3 flex items-center justify-between" data-testid="overview-submissions-pagination">
-                <span className="text-xs text-[#5c6d64]">Page {submissionPage} of {Math.ceil(submissionTotal / 4)}</span>
+                <span className="text-xs text-[var(--muted-foreground)]">Page {submissionPage} of {Math.ceil(submissionTotal / 4)}</span>
                 <div className="flex gap-1.5">
                   <Button type="button" variant="outline" size="sm" disabled={submissionPage <= 1} onClick={() => loadSubmissions(submissionPage - 1)} className="h-7 rounded-lg text-xs" data-testid="overview-submissions-prev">Prev</Button>
                   <Button type="button" variant="outline" size="sm" disabled={submissionPage >= Math.ceil(submissionTotal / 4)} onClick={() => loadSubmissions(submissionPage + 1)} className="h-7 rounded-lg text-xs" data-testid="overview-submissions-next">Next</Button>
@@ -235,12 +242,12 @@ export default function OverviewPage({ user }) {
         </Card>
 
         <div className="space-y-4">
-          <Card className="rounded-[24px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-rapid-review-launch-card">
+          <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="overview-rapid-review-launch-card">
             <CardContent className="flex items-center justify-between gap-4 p-5">
               <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Rapid review</p>
-                <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[#111815]">Mobile swipe lane</h3>
-                <p className="mt-1 flex items-center gap-1.5 text-xs text-[#5c6d64]">
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Rapid review</p>
+                <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[var(--foreground)]">Mobile swipe lane</h3>
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]">
                   Scan or copy to open admin review on phone.
                   <HelpPopover title="Rapid review swipe controls" side="left">
                     <p className="mb-2"><strong>Swipe right</strong> — Standard pass</p>
@@ -252,14 +259,14 @@ export default function OverviewPage({ user }) {
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <div className="rounded-[14px] border border-border bg-[#f6f6f2] p-2" data-testid="overview-rapid-review-qr-card">
+                <div className="rounded-[14px] border border-border bg-[var(--accent)] p-2" data-testid="overview-rapid-review-qr-card">
                   <QRCodeSVG value={rapidReviewUrl} size={72} bgColor="transparent" fgColor="#243e36" />
                 </div>
                 <div className="space-y-1.5">
                   <Button asChild size="sm" className="h-8 w-full rounded-xl bg-[#243e36] text-xs hover:bg-[#1a2c26]" data-testid="overview-open-mobile-rapid-review-button">
                     <Link to="/rapid-review/mobile"><Smartphone className="mr-1.5 h-3 w-3" />Open</Link>
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={copyRapidReviewLink} className="h-8 w-full rounded-xl border-[#243e36]/15 text-xs text-[#243e36]" data-testid="overview-copy-rapid-review-link-button">
+                  <Button type="button" variant="outline" size="sm" onClick={copyRapidReviewLink} className="h-8 w-full rounded-xl border-[#243e36]/15 text-xs text-[var(--foreground)]" data-testid="overview-copy-rapid-review-link-button">
                     <Copy className="mr-1.5 h-3 w-3" />Copy link
                   </Button>
                 </div>
@@ -284,6 +291,93 @@ export default function OverviewPage({ user }) {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* ─── METRICS WIDGETS ROW ─── */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="metrics-widgets-row">
+
+          {/* Division Quality Trend */}
+          {divQuality && (
+            <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="metric-division-quality">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-[#38a89d]" />
+                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Division Quality Trend</p>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {["30d", "60d", "90d"].map(period => (
+                    <div key={period}>
+                      <p className="text-[10px] font-bold uppercase text-[var(--muted-foreground)]">{period}</p>
+                      <div className="mt-1 flex flex-wrap gap-1.5">
+                        {divQuality.trends[period] && Object.entries(divQuality.trends[period]).map(([div, score]) => (
+                          <span key={div} className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)] px-2 py-0.5 text-[10px] font-semibold text-[var(--foreground)]">
+                            {div}: <strong>{score}</strong>
+                          </span>
+                        ))}
+                        {(!divQuality.trends[period] || Object.keys(divQuality.trends[period]).length === 0) && (
+                          <span className="text-[10px] text-[var(--muted-foreground)]">No data</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Standards Compliance */}
+          {compliance && compliance.standards?.length > 0 && (
+            <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="metric-standards-compliance">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-[#34d399]" />
+                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Standards Compliance</p>
+                </div>
+                <div className="mt-3 max-h-[180px] overflow-y-auto space-y-1.5">
+                  {compliance.standards.map(s => (
+                    <div key={s.standard} className="flex items-center justify-between gap-2 rounded-[10px] bg-[var(--accent)] px-2.5 py-1.5">
+                      <p className="text-[10px] font-medium text-[var(--foreground)] truncate flex-1" title={s.standard}>{s.standard}</p>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="h-1.5 w-16 rounded-full bg-[var(--border)] overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${s.compliance_pct}%`, backgroundColor: s.compliance_pct >= 70 ? "#34d399" : s.compliance_pct >= 40 ? "#f59e0b" : "#ef4444" }} />
+                        </div>
+                        <span className="text-[10px] font-bold text-[var(--foreground)] w-9 text-right">{s.compliance_pct}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Training Funnel */}
+          {funnel && (
+            <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="metric-training-funnel">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-[#9b7cd8]" />
+                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Training Funnel</p>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {[
+                    { label: "Total People", value: funnel.total_people, pct: 100, color: "#243e36" },
+                    { label: "Attempted Training", value: funnel.attempted_training, pct: funnel.funnel_pct?.attempted || 0, color: "#38a89d" },
+                    { label: "Passed Training", value: funnel.passed_training, pct: funnel.funnel_pct?.passed || 0, color: "#34d399" },
+                  ].map(step => (
+                    <div key={step.label}>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-[10px] font-semibold text-[var(--foreground)]">{step.label}</p>
+                        <p className="text-xs font-black text-[var(--foreground)]">{step.value} <span className="font-normal text-[var(--muted-foreground)]">({step.pct}%)</span></p>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-[var(--border)] overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${step.pct}%`, backgroundColor: step.color }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

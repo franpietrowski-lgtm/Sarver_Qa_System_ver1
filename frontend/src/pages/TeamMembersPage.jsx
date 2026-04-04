@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { authGet } from "@/lib/api";
+import { authPostForm } from "@/lib/api";
 import { toast } from "sonner";
 
 /* ── Accent colours by role ── */
@@ -125,37 +126,27 @@ function VLine({ h = 28, color = "var(--border)", dashed = false }) {
   return <div className="mx-auto" style={{ width: 2, height: h, backgroundColor: dashed ? "transparent" : color, borderLeft: dashed ? `2px dashed ${color}` : "none" }} />;
 }
 
-/* ── GRID CARD (Individual) — proper CSS grid, hover stats ABOVE ── */
-function GridCard({ profile, onClick }) {
-  const [hovered, setHovered] = useState(false);
+/* ── GRID CARD (Individual) — no hover tooltip, selection highlights ── */
+function GridCard({ profile, onClick, isSelected }) {
   const a = accent(profile.role);
   return (
-    <div
-      className="relative"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+    <button
+      type="button"
+      onClick={() => onClick(profile)}
+      className={`group flex w-full flex-col items-center rounded-[22px] bg-[var(--card)] p-4 shadow-md ring-1 transition hover:scale-[1.03] hover:shadow-lg ${isSelected ? "ring-2 ring-[#243e36] shadow-lg" : "ring-[var(--border)]"}`}
+      data-testid={`profile-card-${profile.profile_id}`}
     >
-      <AnimatePresence>
-        {hovered && <HoverStats profileId={profile.profile_id} />}
-      </AnimatePresence>
-      <button
-        type="button"
-        onClick={() => onClick(profile)}
-        className="group flex w-full flex-col items-center rounded-[22px] bg-[var(--card)] p-4 shadow-md ring-1 ring-[var(--border)] transition hover:scale-[1.03] hover:shadow-lg"
-        data-testid={`profile-card-${profile.profile_id}`}
-      >
-        <div style={{ padding: 3, clipPath: HEX_CLIP, backgroundColor: a.bar }}>
-          <HexAvatar name={profile.name} url={profile.avatar_url} size={56} />
-        </div>
-        <p className="mt-2 w-full truncate text-center text-sm font-semibold text-[var(--foreground)]">{profile.name}</p>
-        <div className="mt-1 h-[3px] w-12 rounded-full" style={{ backgroundColor: a.bar }} />
-        <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: a.text }}>{profile.role}</p>
-        {profile.crew_label && profile.crew_label !== profile.name && (
-          <p className="mt-0.5 text-[9px] text-[var(--muted-foreground)]">{profile.crew_label}</p>
-        )}
-        {profile.division && <p className="text-[9px] text-[var(--muted-foreground)]">{profile.division}</p>}
-      </button>
-    </div>
+      <div style={{ padding: 3, clipPath: HEX_CLIP, backgroundColor: a.bar }}>
+        <HexAvatar name={profile.name} url={profile.avatar_url} size={56} />
+      </div>
+      <p className="mt-2 w-full truncate text-center text-sm font-semibold text-[var(--foreground)]">{profile.name}</p>
+      <div className="mt-1 h-[3px] w-12 rounded-full" style={{ backgroundColor: a.bar }} />
+      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: a.text }}>{profile.role}</p>
+      {profile.crew_label && profile.crew_label !== profile.name && (
+        <p className="mt-0.5 text-[9px] text-[var(--muted-foreground)]">{profile.crew_label}</p>
+      )}
+      {profile.division && <p className="text-[9px] text-[var(--muted-foreground)]">{profile.division}</p>}
+    </button>
   );
 }
 
@@ -186,12 +177,14 @@ function ProfileOverlay({ profile, onClose, onAvatarDone }) {
     setUploading(true);
     try {
       const fd = new FormData(); fd.append("file", file);
-      const r = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/team/profiles/${d.profile_id}/avatar`, { method: "POST", headers: { Authorization: `Bearer ${localStorage.getItem("auth_token")}` }, body: fd });
-      const data = await r.json(); if (!r.ok) throw new Error(data.detail);
+      const data = await authPostForm(`/team/profiles/${d.profile_id}/avatar`, fd);
       toast.success("Avatar uploaded!");
       setDetail(prev => prev ? { ...prev, avatar_url: data.avatar_url } : prev);
       onAvatarDone?.(d.profile_id, data.avatar_url);
-    } catch (err) { toast.error(err.message || "Upload failed"); }
+    } catch (err) {
+      const msg = err?.response?.data?.detail || err?.message || "Upload failed";
+      toast.error(msg);
+    }
     finally { setUploading(false); }
   };
 
@@ -296,31 +289,121 @@ function ProfileOverlay({ profile, onClose, onAvatarDone }) {
   );
 }
 
-/* ═══════ INDIVIDUAL VIEW — CSS grid for proper alignment ═══════ */
-const PER_PAGE = 15;
+/* ── Bottom Stats Panel — fixed in bottom 1/3 of Individual view ── */
+function BottomStatsPanel({ profile }) {
+  const [months, setMonths] = useState(3);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const a = accent(profile.role);
+
+  useEffect(() => {
+    setLoading(true);
+    setStats(null);
+    authGet(`/team/profiles/${profile.profile_id}/stats?months=${months}`)
+      .then(setStats)
+      .catch(() => setStats(null))
+      .finally(() => setLoading(false));
+  }, [profile.profile_id, months]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      className="rounded-[20px] border border-[var(--border)] bg-[var(--card)] p-4 shadow-lg"
+      data-testid={`bottom-stats-panel-${profile.profile_id}`}
+    >
+      <div className="flex items-center gap-3 mb-3">
+        <div style={{ padding: 2, clipPath: HEX_CLIP, backgroundColor: a.bar }}>
+          <HexAvatar name={profile.name} url={profile.avatar_url} size={36} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-[var(--foreground)] truncate">{profile.name}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: a.text }}>{profile.role}{profile.division ? ` — ${profile.division}` : ""}</p>
+        </div>
+        <div className="flex gap-1" data-testid="bottom-stats-timeline">
+          {TIMELINES.map(m => (
+            <button key={m} type="button" onClick={() => setMonths(m)}
+              className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition ${months === m ? "bg-[#243e36] text-white" : "bg-[var(--accent)] text-[var(--muted-foreground)] hover:bg-[var(--border)]"}`}
+              data-testid={`bottom-timeline-${m}m`}>{m}mo</button>
+          ))}
+        </div>
+      </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-3"><p className="text-xs text-[var(--muted-foreground)] animate-pulse">Loading stats...</p></div>
+      ) : stats ? (
+        <div className="grid grid-cols-4 gap-2" data-testid="bottom-stats-grid">
+          {[
+            ["Reviews", stats.review_count],
+            ["Submissions", stats.submission_count],
+            ["Avg Score", stats.avg_review_score || "—"],
+            ["Training", `${stats.training_completed}/${stats.training_total}`],
+          ].map(([label, val]) => (
+            <div key={label} className="rounded-[12px] bg-[var(--accent)] px-3 py-2 text-center">
+              <p className="text-lg font-black text-[var(--foreground)]">{val}</p>
+              <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{label}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-center text-[var(--muted-foreground)] py-3">No data for this period</p>
+      )}
+    </motion.div>
+  );
+}
+
+/* ═══════ INDIVIDUAL VIEW — 2 rows x 5 cols, bottom stats panel ═══════ */
+const PER_PAGE = 10;
 function IndividualView({ profiles, onCardClick }) {
   const [page, setPage] = useState(1);
+  const [hoveredProfile, setHoveredProfile] = useState(null);
+  const hoverTimer = useRef(null);
   const total = Math.max(1, Math.ceil(profiles.length / PER_PAGE));
   const vis = profiles.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
+  const handleHover = (profile) => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    setHoveredProfile(profile);
+  };
+  const handleLeave = () => {
+    hoverTimer.current = setTimeout(() => setHoveredProfile(null), 300);
+  };
+
   return (
     <div className="flex h-full flex-col" data-testid="individual-view">
-      <div
-        className="flex-1 overflow-y-auto py-2"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))",
-          gap: "1rem",
-          alignContent: "start",
-        }}
-      >
-        {vis.map(p => <GridCard key={p.profile_id} profile={p} onClick={onCardClick} />)}
+      {/* 2 rows x 5 cols grid — top 2/3 */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <div
+          className="grid h-full gap-3 content-start py-1"
+          style={{ gridTemplateColumns: "repeat(5, 1fr)", gridTemplateRows: "1fr 1fr" }}
+        >
+          {vis.map(p => (
+            <div key={p.profile_id} onMouseEnter={() => handleHover(p)} onMouseLeave={handleLeave}>
+              <GridCard profile={p} onClick={onCardClick} isSelected={hoveredProfile?.profile_id === p.profile_id} />
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Bottom stats panel — bottom 1/3 */}
+      <div className="shrink-0 pt-3" style={{ minHeight: "140px" }}>
+        <AnimatePresence mode="wait">
+          {hoveredProfile ? (
+            <BottomStatsPanel key={hoveredProfile.profile_id} profile={hoveredProfile} />
+          ) : (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex h-full items-center justify-center rounded-[20px] border border-dashed border-[var(--border)] bg-[var(--accent)]/30 px-6 py-4">
+              <p className="text-sm text-[var(--muted-foreground)]">Hover over a team member to view their performance stats</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Pagination */}
       {total > 1 && (
-        <div className="flex shrink-0 items-center justify-center gap-3 pt-4" data-testid="grid-pagination">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded-xl"><ChevronLeft className="h-4 w-4" /></Button>
+        <div className="flex shrink-0 items-center justify-center gap-3 pt-3" data-testid="grid-pagination">
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => { setPage(page - 1); setHoveredProfile(null); }} className="rounded-xl"><ChevronLeft className="h-4 w-4" /></Button>
           <span className="text-sm font-semibold text-[var(--foreground)]">{page} / {total}</span>
-          <Button variant="outline" size="sm" disabled={page >= total} onClick={() => setPage(page + 1)} className="rounded-xl"><ChevronRight className="h-4 w-4" /></Button>
+          <Button variant="outline" size="sm" disabled={page >= total} onClick={() => { setPage(page + 1); setHoveredProfile(null); }} className="rounded-xl"><ChevronRight className="h-4 w-4" /></Button>
         </div>
       )}
     </div>

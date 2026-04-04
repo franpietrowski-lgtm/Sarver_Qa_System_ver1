@@ -34,11 +34,11 @@ function ToggleSection({ title, subtitle, icon: Icon, defaultOpen = false, testI
         <div className="flex items-center gap-3">
           {Icon && <Icon className="h-5 w-5 text-[#243e36]" />}
           <div>
-            <p className="text-sm font-semibold text-[#111815]">{title}</p>
-            {subtitle && <p className="text-xs text-[#5c6d64]">{subtitle}</p>}
+            <p className="text-sm font-semibold text-[var(--foreground)]">{title}</p>
+            {subtitle && <p className="text-xs text-[var(--muted-foreground)]">{subtitle}</p>}
           </div>
         </div>
-        <ChevronDown className={`h-4 w-4 text-[#5c6d64] transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`h-4 w-4 text-[var(--muted-foreground)] transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       <AnimatePresence initial={false}>
         {open && (
@@ -62,8 +62,8 @@ function StandardDetailPopup({ item, onClose, onEdit, onDelete }) {
         <div className="min-h-0 flex-1 overflow-y-auto p-6">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">{item.category}</p>
-              <h2 className="mt-2 font-[Cabinet_Grotesk] text-2xl font-black tracking-tight text-[#111815]">{item.title}</h2>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">{item.category}</p>
+              <h2 className="mt-2 font-[Cabinet_Grotesk] text-2xl font-black tracking-tight text-[var(--foreground)]">{item.title}</h2>
             </div>
             <button type="button" onClick={onClose} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#edf0e7] text-[#243e36] hover:bg-[#dbe3d7]" data-testid="standard-detail-close"><X className="h-4 w-4" /></button>
           </div>
@@ -72,23 +72,23 @@ function StandardDetailPopup({ item, onClose, onEdit, onDelete }) {
             {(item.division_targets || []).map((d) => <Badge key={d} className="border-0 bg-[#edf0e7] text-xs text-[#243e36]">{d}</Badge>)}
             {item.training_enabled && <Badge className="border-0 bg-[#d8f3dc] text-xs text-[#2d5a27]">Training enabled</Badge>}
           </div>
-          {item.notes && <div className="mt-4 rounded-[16px] bg-[#f6f6f2] p-4"><p className="text-xs font-bold uppercase tracking-widest text-[#5f7464]">Crew notes</p><p className="mt-2 text-sm leading-relaxed text-[#41534a]">{item.notes}</p></div>}
-          {item.owner_notes && <div className="mt-3 rounded-[16px] bg-[#f6f6f2] p-4"><p className="text-xs font-bold uppercase tracking-widest text-[#5f7464]">Admin notes</p><p className="mt-2 text-sm leading-relaxed text-[#41534a]">{item.owner_notes}</p></div>}
+          {item.notes && <div className="mt-4 rounded-[16px] bg-[#f6f6f2] p-4"><p className="text-xs font-bold uppercase tracking-widest text-[var(--muted-foreground)]">Crew notes</p><p className="mt-2 text-sm leading-relaxed text-[#41534a]">{item.notes}</p></div>}
+          {item.owner_notes && <div className="mt-3 rounded-[16px] bg-[#f6f6f2] p-4"><p className="text-xs font-bold uppercase tracking-widest text-[var(--muted-foreground)]">Admin notes</p><p className="mt-2 text-sm leading-relaxed text-[#41534a]">{item.owner_notes}</p></div>}
           {(item.checklist || []).length > 0 && (
             <div className="mt-3 rounded-[16px] bg-[#f6f6f2] p-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#5f7464]">Checklist</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted-foreground)]">Checklist</p>
               <ul className="mt-2 space-y-1">{item.checklist.map((c, i) => <li key={i} className="text-sm text-[#41534a]">- {c}</li>)}</ul>
             </div>
           )}
           {item.question_prompt && (
             <div className="mt-3 rounded-[16px] bg-[#f6f6f2] p-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#5f7464]">Training question</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--muted-foreground)]">Training question</p>
               <p className="mt-2 text-sm font-semibold text-[#243e36]">{item.question_prompt}</p>
               {(item.choice_options || []).length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{item.choice_options.map((opt) => <Badge key={opt} className="border-0 bg-white text-xs text-[#243e36]">{opt}</Badge>)}</div>}
-              {item.correct_answer && <p className="mt-2 text-xs text-[#5c6d64]">Answer: {item.correct_answer}</p>}
+              {item.correct_answer && <p className="mt-2 text-xs text-[var(--muted-foreground)]">Answer: {item.correct_answer}</p>}
             </div>
           )}
-          {item.shoutout && <p className="mt-3 text-sm text-[#5c6d64]">Shoutout: {item.shoutout}</p>}
+          {item.shoutout && <p className="mt-3 text-sm text-[var(--muted-foreground)]">Shoutout: {item.shoutout}</p>}
         </div>
         <div className="flex shrink-0 gap-2 border-t border-border/50 p-4">
           <Button type="button" onClick={() => { onEdit(item); onClose(); }} className="h-10 flex-1 rounded-2xl bg-[#243e36] text-white hover:bg-[#1a2c26]" data-testid="standard-detail-edit-btn"><Pencil className="mr-2 h-4 w-4" />Edit</Button>
@@ -106,7 +106,7 @@ function StandardDetailPopup({ item, onClose, onEdit, onDelete }) {
 
 function LibraryGrid({ items, page, pages, total, onPageChange, onEdit, onViewDetail }) {
   if (items.length === 0) {
-    return <p className="py-6 text-center text-sm text-[#5c6d64]" data-testid="library-grid-empty">No standards match this filter.</p>;
+    return <p className="py-6 text-center text-sm text-[var(--muted-foreground)]" data-testid="library-grid-empty">No standards match this filter.</p>;
   }
   return (
     <div data-testid="library-grid">
@@ -118,7 +118,7 @@ function LibraryGrid({ items, page, pages, total, onPageChange, onEdit, onViewDe
             </div>
             <div className="space-y-2 p-3.5">
               <p className="truncate text-sm font-semibold text-[#243e36]">{item.title}</p>
-              <p className="line-clamp-2 text-xs text-[#5c6d64]">{item.notes}</p>
+              <p className="line-clamp-2 text-xs text-[var(--muted-foreground)]">{item.notes}</p>
               <div className="flex flex-wrap gap-1.5">
                 <Badge className="border-0 bg-white text-[10px] text-[#243e36]">{item.category}</Badge>
               </div>
@@ -128,7 +128,7 @@ function LibraryGrid({ items, page, pages, total, onPageChange, onEdit, onViewDe
       </div>
       {pages > 1 && (
         <div className="mt-4 flex items-center justify-between" data-testid="library-grid-pagination">
-          <span className="text-xs text-[#5c6d64]">Page {page} of {pages} ({total} standards)</span>
+          <span className="text-xs text-[var(--muted-foreground)]">Page {page} of {pages} ({total} standards)</span>
           <div className="flex gap-1.5">
             <Button type="button" variant="outline" size="sm" disabled={page <= 1} onClick={() => onPageChange(page - 1)} className="h-7 rounded-lg text-xs" data-testid="library-prev-btn">Prev</Button>
             <Button type="button" variant="outline" size="sm" disabled={page >= pages} onClick={() => onPageChange(page + 1)} className="h-7 rounded-lg text-xs" data-testid="library-next-btn">Next</Button>
@@ -278,11 +278,11 @@ export default function StandardsLibraryPage() {
       <AnimatePresence>{detailItem && <StandardDetailPopup item={detailItem} onClose={() => setDetailItem(null)} onEdit={handleEdit} onDelete={handleDelete} />}</AnimatePresence>
 
       <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-        <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="standards-library-hero-card">
+        <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="standards-library-hero-card">
           <CardContent className="p-6 lg:p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Standards Library</p>
-            <h1 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815] lg:text-4xl">Author company standards and turn them into crew-ready training material.</h1>
-            <p className="mt-2 flex items-center gap-1.5 text-sm leading-6 text-[#5c6d64]">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Standards Library</p>
+            <h1 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)] lg:text-4xl">Author company standards and turn them into crew-ready training material.</h1>
+            <p className="mt-2 flex items-center gap-1.5 text-sm leading-6 text-[var(--muted-foreground)]">
               Browse, create, and manage visual quality standards.
               <HelpPopover title="Standards library guide">
                 <p className="mb-2"><strong>What standards do:</strong></p>
@@ -308,7 +308,7 @@ export default function StandardsLibraryPage() {
                 <SelectContent><SelectItem value="all">All divisions</SelectItem>{DIVISIONS.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <p className="mt-3 text-sm text-[#5c6d64]" data-testid="standards-total-count">{pagination.total} standards in the current view.</p>
+            <p className="mt-3 text-sm text-[var(--muted-foreground)]" data-testid="standards-total-count">{pagination.total} standards in the current view.</p>
           </CardContent>
         </Card>
         <Card className="rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="standards-training-session-card">
@@ -355,7 +355,7 @@ export default function StandardsLibraryPage() {
         </Card>
       </div>
 
-      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="standards-list-card">
+      <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="standards-list-card">
         <CardContent className="p-6 lg:p-8">
           <ToggleSection title="Library items" subtitle={`${pagination.total} standards · Click any to view full details`} icon={LibraryBig} defaultOpen testId="standards-library-section">
             <LibraryGrid items={items} page={pagination.page} pages={pagination.pages} total={pagination.total} onPageChange={loadStandardsPage} onEdit={handleEdit} onViewDetail={setDetailItem} />
@@ -364,7 +364,7 @@ export default function StandardsLibraryPage() {
       </Card>
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="standards-author-form-card">
+        <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="standards-author-form-card">
           <CardContent className="p-6 lg:p-8">
             <ToggleSection title={editingId ? "Edit standard" : "Author new standard"} subtitle="Create or modify company standards" icon={LibraryBig} defaultOpen={false} testId="standards-authoring-section">
               <form className="space-y-4" onSubmit={handleSubmit} data-testid="standards-author-form">
@@ -415,7 +415,7 @@ export default function StandardsLibraryPage() {
                 <Input value={form.question_prompt} onChange={(event) => setForm((current) => ({ ...current, question_prompt: event.target.value }))} placeholder="Question prompt" className="h-11 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="standards-question-prompt-input" />
                 <Input value={form.choice_options_text} onChange={(event) => setForm((current) => ({ ...current, choice_options_text: event.target.value }))} placeholder="Multiple choice options, comma-separated" className="h-11 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="standards-choice-options-input" />
                 <div className="flex items-center justify-between rounded-[20px] bg-[#f6f6f2] px-4 py-3" data-testid="standards-toggle-row">
-                  <div><p className="text-sm font-semibold text-[#243e36]">Training enabled</p><p className="text-xs text-[#5c6d64]">Allow this standard to appear in training sessions.</p></div>
+                  <div><p className="text-sm font-semibold text-[#243e36]">Training enabled</p><p className="text-xs text-[var(--muted-foreground)]">Allow this standard to appear in training sessions.</p></div>
                   <Switch checked={form.training_enabled} onCheckedChange={(value) => setForm((current) => ({ ...current, training_enabled: value }))} data-testid="standards-training-enabled-switch" />
                 </div>
                 <Button type="submit" disabled={creating} className="h-11 w-full rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="standards-save-button">{creating ? "Saving..." : editingId ? "Update standard" : "Create standard"}</Button>
@@ -424,28 +424,28 @@ export default function StandardsLibraryPage() {
           </CardContent>
         </Card>
         <div className="space-y-5">
-          <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="standards-equipment-records-card">
+          <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="standards-equipment-records-card">
             <CardContent className="p-6 lg:p-8">
               <ToggleSection title="Equipment records" subtitle={`${equipmentPagination.total} maintenance logs`} icon={Wrench} defaultOpen={false} testId="standards-equipment-section">
                 <div className="space-y-3">
                   {equipmentLogs.map((log) => (
                     <div key={log.id} className="rounded-[20px] border border-border bg-[#f6f6f2] p-4" data-testid={`equipment-log-card-${log.id}`}>
                       <div className="flex items-start justify-between gap-3">
-                        <div><p className="text-sm font-semibold text-[#243e36]">#{log.equipment_number}</p><p className="mt-0.5 text-xs text-[#5c6d64]">{log.crew_label} · {log.division}</p></div>
+                        <div><p className="text-sm font-semibold text-[#243e36]">#{log.equipment_number}</p><p className="mt-0.5 text-xs text-[var(--muted-foreground)]">{log.crew_label} · {log.division}</p></div>
                         <div className="flex items-center gap-2">
                           {log.red_tag && <Badge className="border-0 bg-[#fbf0ef] text-xs text-[#7a2323]">Red tag</Badge>}
                           {log.forwarded_to_owner && <Badge className="border-0 bg-[#edf0e7] text-xs text-[#243e36]">Forwarded</Badge>}
                         </div>
                       </div>
-                      {log.notes && <p className="mt-2 text-xs text-[#5c6d64]">{log.notes}</p>}
+                      {log.notes && <p className="mt-2 text-xs text-[var(--muted-foreground)]">{log.notes}</p>}
                       {log.red_tag_note && <p className="mt-1 text-xs font-medium text-[#7a2323]">{log.red_tag_note}</p>}
-                      <p className="mt-2 text-[10px] text-[#5c6d64]">{log.created_at?.slice(0, 16)}</p>
+                      <p className="mt-2 text-[10px] text-[var(--muted-foreground)]">{log.created_at?.slice(0, 16)}</p>
                     </div>
                   ))}
-                  {equipmentLogs.length === 0 && <p className="py-4 text-center text-sm text-[#5c6d64]">No equipment logs recorded yet.</p>}
+                  {equipmentLogs.length === 0 && <p className="py-4 text-center text-sm text-[var(--muted-foreground)]">No equipment logs recorded yet.</p>}
                   {equipmentPagination.total > 8 && (
                     <div className="flex items-center justify-between pt-1" data-testid="equipment-logs-pagination">
-                      <span className="text-xs text-[#5c6d64]">Page {equipmentPagination.page} of {equipmentPagination.pages}</span>
+                      <span className="text-xs text-[var(--muted-foreground)]">Page {equipmentPagination.page} of {equipmentPagination.pages}</span>
                       <div className="flex gap-1.5">
                         <Button type="button" variant="outline" size="sm" disabled={!equipmentPagination.has_prev} onClick={() => loadEquipmentPage(equipmentPagination.page - 1)} className="h-7 rounded-lg text-xs" data-testid="equipment-prev-btn">Prev</Button>
                         <Button type="button" variant="outline" size="sm" disabled={!equipmentPagination.has_next} onClick={() => loadEquipmentPage(equipmentPagination.page + 1)} className="h-7 rounded-lg text-xs" data-testid="equipment-next-btn">Next</Button>
@@ -456,19 +456,19 @@ export default function StandardsLibraryPage() {
               </ToggleSection>
             </CardContent>
           </Card>
-          <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="recent-training-sessions-card">
+          <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="recent-training-sessions-card">
             <CardContent className="p-6 lg:p-8">
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Recent training sessions</p>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Recent training sessions</p>
               <div className="mt-4 space-y-3">
                 {sessions.map((item) => (
                   <div key={item.id} className="rounded-[20px] border border-border bg-[#f6f6f2] p-4" data-testid={`training-session-row-${item.id}`}>
                     <div className="flex items-start justify-between gap-3">
-                      <div><p className="text-sm font-semibold text-[#243e36]">{item.crew_label}</p><p className="mt-1 text-xs text-[#5c6d64]">{item.division} · {item.status}</p></div>
+                      <div><p className="text-sm font-semibold text-[#243e36]">{item.crew_label}</p><p className="mt-1 text-xs text-[var(--muted-foreground)]">{item.division} · {item.status}</p></div>
                       <Button type="button" variant="outline" size="sm" onClick={() => copyValue(`${window.location.origin}/training/${item.code}`)} className="h-7 rounded-xl border-[#243e36]/10 bg-white text-xs text-[#243e36] hover:bg-[#edf0e7]" data-testid={`training-session-copy-button-${item.id}`}><Copy className="mr-2 h-3 w-3" />Copy</Button>
                     </div>
                   </div>
                 ))}
-                {sessions.length === 0 && <p className="py-4 text-center text-sm text-[#5c6d64]">No training sessions created yet.</p>}
+                {sessions.length === 0 && <p className="py-4 text-center text-sm text-[var(--muted-foreground)]">No training sessions created yet.</p>}
               </div>
             </CardContent>
           </Card>
@@ -476,8 +476,8 @@ export default function StandardsLibraryPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2" data-testid="standards-crosslinks">
-        <Link to="/repeat-offenders" className="rounded-[20px] border border-border bg-[#f6f6f2] p-4 transition hover:bg-white" data-testid="standards-link-repeat-offenders"><p className="text-xs font-bold uppercase tracking-wider text-[#5f7464]">Related</p><p className="mt-1 font-semibold text-[#243e36]">Repeat Offenders</p><p className="mt-0.5 text-xs text-[#5c6d64]">Track crews who repeat quality issues and trigger training.</p></Link>
-        <Link to="/rubric-editor" className="rounded-[20px] border border-border bg-[#f6f6f2] p-4 transition hover:bg-white" data-testid="standards-link-rubric-editor"><p className="text-xs font-bold uppercase tracking-wider text-[#5f7464]">Related</p><p className="mt-1 font-semibold text-[#243e36]">Rubric Matrices</p><p className="mt-0.5 text-xs text-[#5c6d64]">Manage grading factors and thresholds by division.</p></Link>
+        <Link to="/repeat-offenders" className="rounded-[20px] border border-border bg-[#f6f6f2] p-4 transition hover:bg-white" data-testid="standards-link-repeat-offenders"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Related</p><p className="mt-1 font-semibold text-[#243e36]">Repeat Offenders</p><p className="mt-0.5 text-xs text-[var(--muted-foreground)]">Track crews who repeat quality issues and trigger training.</p></Link>
+        <Link to="/rubric-editor" className="rounded-[20px] border border-border bg-[#f6f6f2] p-4 transition hover:bg-white" data-testid="standards-link-rubric-editor"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Related</p><p className="mt-1 font-semibold text-[#243e36]">Rubric Matrices</p><p className="mt-0.5 text-xs text-[var(--muted-foreground)]">Manage grading factors and thresholds by division.</p></Link>
       </div>
     </div>
   );

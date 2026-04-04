@@ -296,3 +296,148 @@ async def get_variance_drilldown(
         "total_reviewed": len(rows),
         "rows": rows,
     }
+
+
+
+# ─── ROLE-SPECIFIC METRIC ENDPOINTS ───
+
+@router.get("/metrics/division-quality-trend")
+async def division_quality_trend(
+    user: dict = Depends(require_roles("management", "owner")),
+    division: str = Query("all"),
+):
+    """Rolling 30/60/90 day average scores per division."""
+    from datetime import timedelta, timezone
+    now = datetime.now(timezone.utc)
+    results = {}
+    for days_label, days in [("30d", 30), ("60d", 60), ("90d", 90)]:
+        cutoff = (now - timedelta(days=days)).isoformat()
+        query = {"created_at": {"$gte": cutoff}}
+        if division != "all":
+            query["division"] = division
+        subs = await deps.db.submissions.find(query, {"_id": 0, "id": 1, "access_code": 1, "division": 1}).to_list(2000)
+        sub_ids = [s["id"] for s in subs]
+        reviews = await deps.db.management_reviews.find(
+            {"submission_id": {"$in": sub_ids or ["__none__"]}},
+            {"_id": 0, "overall_score": 1, "submission_id": 1}
+        ).to_list(2000)
+        div_scores = {}
+        sub_div = {s["id"]: s.get("division", "Unknown") for s in subs}
+        for r in reviews:
+            d = sub_div.get(r.get("submission_id"), "Unknown")
+            div_scores.setdefault(d, []).append(r.get("overall_score", 0))
+        results[days_label] = {
+            d: round(sum(scores) / max(len(scores), 1), 2)
+            for d, scores in div_scores.items()
+        }
+    return {"trends": results}
+
+
+@router.get("/metrics/standards-compliance")
+async def standards_compliance(
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    """% of submissions passing vs failing per standard check."""
+    training = await deps.db.training_sessions.find(
+        {}, {"_id": 0, "standard_title": 1, "status": 1, "score_percent": 1}
+    ).to_list(1000)
+    standards_map = {}
+    for t in training:
+        title = t.get("standard_title", "Unknown")
+        entry = standards_map.setdefault(title, {"total": 0, "passed": 0, "avg_score": []})
+        entry["total"] += 1
+        if t.get("status") == "completed":
+            entry["passed"] += 1
+        if t.get("score_percent"):
+            entry["avg_score"].append(t["score_percent"])
+    rows = []
+    for title, data in sorted(standards_map.items()):
+        rows.append({
+            "standard": title,
+            "total": data["total"],
+            "passed": data["passed"],
+            "compliance_pct": round(data["passed"] / max(data["total"], 1) * 100, 1),
+            "avg_score": round(sum(data["avg_score"]) / max(len(data["avg_score"]), 1), 1) if data["avg_score"] else 0,
+        })
+    rows.sort(key=lambda x: x["compliance_pct"])
+    return {"standards": rows}
+
+
+@router.get("/metrics/training-funnel")
+async def training_funnel(
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    """Training completion funnel: total crews → viewed standards → attempted quiz → passed."""
+    total_crews = await deps.db.crew_access_links.count_documents({"enabled": True})
+    total_members = await deps.db.crew_members.count_documents({"active": True})
+    all_training = await deps.db.training_sessions.find(
+        {}, {"_id": 0, "access_code": 1, "member_code": 1, "status": 1}
+    ).to_list(1000)
+    codes_attempted = set()
+    codes_passed = set()
+    for t in all_training:
+        key = t.get("member_code") or t.get("access_code", "")
+        codes_attempted.add(key)
+        if t.get("status") == "completed":
+            codes_passed.add(key)
+    return {
+        "total_people": total_crews + total_members,
+        "total_crews": total_crews,
+        "total_members": total_members,
+        "attempted_training": len(codes_attempted),
+        "passed_training": len(codes_passed),
+        "funnel_pct": {
+            "attempted": round(len(codes_attempted) / max(total_crews + total_members, 1) * 100, 1),
+            "passed": round(len(codes_passed) / max(total_crews + total_members, 1) * 100, 1),
+        },
+    }
+
+
+@router.get("/metrics/pm-dashboard")
+async def pm_dashboard_metrics(
+    user: dict = Depends(require_roles("management", "owner")),
+    division: str = Query(...),
+):
+    """PM-scoped metrics: submission count, avg score, training completion for their division."""
+    from datetime import timedelta, timezone
+    now = datetime.now(timezone.utc)
+    cutoff_30 = (now - timedelta(days=30)).isoformat()
+    cutoff_90 = (now - timedelta(days=90)).isoformat()
+
+    sub_30 = await deps.db.submissions.count_documents({"division": division, "created_at": {"$gte": cutoff_30}})
+    sub_90 = await deps.db.submissions.count_documents({"division": division, "created_at": {"$gte": cutoff_90}})
+    subs_90 = await deps.db.submissions.find(
+        {"division": division, "created_at": {"$gte": cutoff_90}},
+        {"_id": 0, "id": 1}
+    ).to_list(1000)
+    sub_ids = [s["id"] for s in subs_90]
+    reviews = await deps.db.management_reviews.find(
+        {"submission_id": {"$in": sub_ids or ["__none__"]}},
+        {"_id": 0, "overall_score": 1, "verdict": 1}
+    ).to_list(1000)
+    scores = [r.get("overall_score", 0) for r in reviews if r.get("overall_score")]
+    avg_score = round(sum(scores) / max(len(scores), 1), 2) if scores else 0
+    pass_count = sum(1 for r in reviews if r.get("verdict") in ("Pass", "Exemplary"))
+    fail_count = sum(1 for r in reviews if r.get("verdict") == "Fail")
+
+    crews = await deps.db.crew_access_links.find(
+        {"division": division, "enabled": True}, {"_id": 0, "code": 1, "label": 1, "leader_name": 1}
+    ).to_list(20)
+    crew_codes = [c["code"] for c in crews]
+    training = await deps.db.training_sessions.find(
+        {"access_code": {"$in": crew_codes}}, {"_id": 0, "status": 1}
+    ).to_list(500)
+    training_completed = sum(1 for t in training if t.get("status") == "completed")
+
+    return {
+        "division": division,
+        "submissions_30d": sub_30,
+        "submissions_90d": sub_90,
+        "avg_score_90d": avg_score,
+        "reviews_total": len(reviews),
+        "pass_count": pass_count,
+        "fail_count": fail_count,
+        "crews": len(crews),
+        "training_total": len(training),
+        "training_completed": training_completed,
+    }

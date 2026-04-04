@@ -33,7 +33,7 @@ function VerticalBars({ data, valueKey, labelKey, testId }) {
             </div>
             <div className="text-center">
               <p className="text-sm font-semibold text-[#243e36]">{item[labelKey]}</p>
-              <p className="text-xs text-[#5c6d64]">{item[valueKey]}</p>
+              <p className="text-xs text-[var(--muted-foreground)]">{item[valueKey]}</p>
             </div>
           </div>
         );
@@ -58,7 +58,7 @@ function TrendBars({ data, testId }) {
             </div>
             <div className="text-center">
               <p className="text-xs font-semibold text-[#243e36]">{item.day}</p>
-              <p className="text-xs text-[#5c6d64]">{item.count}</p>
+              <p className="text-xs text-[var(--muted-foreground)]">{item.count}</p>
             </div>
           </div>
         );
@@ -76,7 +76,7 @@ function HorizontalBars({ data, testId }) {
         <div key={`${item.reason}-${index}`} className="rounded-[22px] p-4" style={{ backgroundColor: "var(--heat-empty)" }}>
           <div className="mb-2 flex items-center justify-between gap-3">
             <p className="text-sm font-semibold text-[#243e36]">{item.reason}</p>
-            <p className="text-xs text-[#5c6d64]">{item.count}</p>
+            <p className="text-xs text-[var(--muted-foreground)]">{item.count}</p>
           </div>
           <div className="h-3 rounded-full" style={{ backgroundColor: "var(--chip-bg)" }}>
             <div className="h-3 rounded-full" style={{ width: `${Math.max(((item.count || 0) / maxValue) * 100, 6)}%`, backgroundColor: "var(--status-critical-text)", opacity: 0.6 }} />
@@ -173,11 +173,11 @@ export default function AnalyticsPage() {
         ))}
       </div>
 
-      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-hero-card">
+      <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="analytics-hero-card">
         <CardContent className="p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Owner calibration dashboard</p>
-          <h2 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[#111815]">Owner-only calibration, reviewer drift, and training signal quality by {analytics.period_label.toLowerCase()} window.</h2>
-          <p className="mt-2 flex items-center gap-1.5 text-sm text-[#5c6d64]">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Owner calibration dashboard</p>
+          <h2 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[var(--foreground)]">Owner-only calibration, reviewer drift, and training signal quality by {analytics.period_label.toLowerCase()} window.</h2>
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-[var(--muted-foreground)]">
             <HelpPopover title="Analytics & calibration guide">
               <p className="mb-2"><strong>What this page shows:</strong></p>
               <ul className="mb-2 list-inside list-disc space-y-1 text-xs">
@@ -192,49 +192,49 @@ export default function AnalyticsPage() {
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <div className="rounded-[28px] border border-border p-5" style={{ backgroundColor: "var(--heat-empty)" }} data-testid="analytics-approved-card">
-              <p className="text-sm text-[#5c6d64]">Training-approved records</p>
-              <p className="mt-3 font-[Cabinet_Grotesk] text-5xl font-black text-[#111815]" data-testid="analytics-approved-value">{analytics.training_approved_count}</p>
+              <p className="text-sm text-[var(--muted-foreground)]">Training-approved records</p>
+              <p className="mt-3 font-[Cabinet_Grotesk] text-5xl font-black text-[var(--foreground)]" data-testid="analytics-approved-value">{analytics.training_approved_count}</p>
             </div>
             <div className="rounded-[28px] border border-border p-5" style={{ backgroundColor: "var(--heat-empty)" }} data-testid="analytics-variance-card">
-              <p className="text-sm text-[#5c6d64]">Average score variance</p>
-              <p className="mt-3 font-[Cabinet_Grotesk] text-5xl font-black text-[#111815]" data-testid="analytics-variance-value">{analytics.score_variance_average}</p>
+              <p className="text-sm text-[var(--muted-foreground)]">Average score variance</p>
+              <p className="mt-3 font-[Cabinet_Grotesk] text-5xl font-black text-[var(--foreground)]" data-testid="analytics-variance-value">{analytics.score_variance_average}</p>
             </div>
             <div className="rounded-[28px] border border-border p-5" style={{ backgroundColor: "var(--heat-empty)" }} data-testid="analytics-fail-reasons-card">
-              <p className="text-sm text-[#5c6d64]">Tracked fail reasons</p>
-              <p className="mt-3 font-[Cabinet_Grotesk] text-5xl font-black text-[#111815]" data-testid="analytics-fail-reasons-value">{analytics.fail_reason_frequency.length}</p>
+              <p className="text-sm text-[var(--muted-foreground)]">Tracked fail reasons</p>
+              <p className="mt-3 font-[Cabinet_Grotesk] text-5xl font-black text-[var(--foreground)]" data-testid="analytics-fail-reasons-value">{analytics.fail_reason_frequency.length}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-crew-chart-card">
+        <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="analytics-crew-chart-card">
           <CardContent className="p-8">
-            <h3 className="font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Average score by crew</h3>
+            <h3 className="font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)]">Average score by crew</h3>
             <div className="mt-6"><VerticalBars data={analytics.average_score_by_crew} valueKey="average_score" labelKey="crew" testId="analytics-crew-bars" /></div>
           </CardContent>
         </Card>
-        <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-volume-chart-card">
+        <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="analytics-volume-chart-card">
           <CardContent className="p-8">
-            <h3 className="font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Submission volume trends</h3>
+            <h3 className="font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)]">Submission volume trends</h3>
             <div className="mt-6"><TrendBars data={analytics.submission_volume_trends} testId="analytics-volume-bars" /></div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-fail-chart-card">
+      <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="analytics-fail-chart-card">
         <CardContent className="p-8">
-          <h3 className="font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Fail reason frequency</h3>
+          <h3 className="font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)]">Fail reason frequency</h3>
           <div className="mt-6"><HorizontalBars data={analytics.fail_reason_frequency} testId="analytics-fail-bars" /></div>
         </CardContent>
       </Card>
 
       {/* Random Sampling */}
-      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-sampling-card">
+      <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="analytics-sampling-card">
         <CardContent className="p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Spot check</p>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Spot check</p>
           <div className="mt-2 flex flex-wrap items-end gap-3">
-            <h3 className="font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Random sampling</h3>
+            <h3 className="font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)]">Random sampling</h3>
             <HelpPopover title="Random sampling" side="right">
               <p className="text-xs">Draw a random subset of submissions for spot-check review. Use the filters to narrow by crew, division, or service type. Each draw is independent — click again for a new random set.</p>
             </HelpPopover>
@@ -242,7 +242,7 @@ export default function AnalyticsPage() {
 
           <div className="mt-5 flex flex-wrap items-end gap-3">
             <div className="min-w-[130px]">
-              <label className="mb-1 block text-xs font-semibold text-[#5f7464]">Crew</label>
+              <label className="mb-1 block text-xs font-semibold text-[var(--muted-foreground)]">Crew</label>
               <Select value={filterCrew} onValueChange={setFilterCrew}>
                 <SelectTrigger className="h-10 rounded-xl" data-testid="sample-filter-crew"><SelectValue placeholder="All crews" /></SelectTrigger>
                 <SelectContent>
@@ -252,7 +252,7 @@ export default function AnalyticsPage() {
               </Select>
             </div>
             <div className="min-w-[130px]">
-              <label className="mb-1 block text-xs font-semibold text-[#5f7464]">Division</label>
+              <label className="mb-1 block text-xs font-semibold text-[var(--muted-foreground)]">Division</label>
               <Select value={filterDivision} onValueChange={setFilterDivision}>
                 <SelectTrigger className="h-10 rounded-xl" data-testid="sample-filter-division"><SelectValue placeholder="All divisions" /></SelectTrigger>
                 <SelectContent>
@@ -262,7 +262,7 @@ export default function AnalyticsPage() {
               </Select>
             </div>
             <div className="min-w-[130px]">
-              <label className="mb-1 block text-xs font-semibold text-[#5f7464]">Service type</label>
+              <label className="mb-1 block text-xs font-semibold text-[var(--muted-foreground)]">Service type</label>
               <Select value={filterService} onValueChange={setFilterService}>
                 <SelectTrigger className="h-10 rounded-xl" data-testid="sample-filter-service"><SelectValue placeholder="All types" /></SelectTrigger>
                 <SelectContent>
@@ -272,7 +272,7 @@ export default function AnalyticsPage() {
               </Select>
             </div>
             <div className="min-w-[80px]">
-              <label className="mb-1 block text-xs font-semibold text-[#5f7464]">Sample size</label>
+              <label className="mb-1 block text-xs font-semibold text-[var(--muted-foreground)]">Sample size</label>
               <Select value={String(sampleSize)} onValueChange={(v) => setSampleSize(Number(v))}>
                 <SelectTrigger className="h-10 rounded-xl" data-testid="sample-filter-size"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -309,7 +309,7 @@ export default function AnalyticsPage() {
                       return (
                         <tr key={row.submission_id} className="border-b border-border/40">
                           <td className="px-3 py-2 font-medium text-[#243e36]">{row.crew}</td>
-                          <td className="px-3 py-2 text-[#5c6d64]">{row.service_type}</td>
+                          <td className="px-3 py-2 text-[var(--muted-foreground)]">{row.service_type}</td>
                           <td className="px-3 py-2 text-[#243e36]">{row.management_score ?? "—"}</td>
                           <td className="px-3 py-2 text-[#243e36]">{row.owner_score ?? "—"}</td>
                           <td className="px-3 py-2 font-bold" style={{ color: row.variance != null ? vColor : "var(--tier-desc-text)" }}>{row.variance ?? "—"}</td>
@@ -328,14 +328,14 @@ export default function AnalyticsPage() {
       </Card>
 
       {/* Calibration Heatmap with clickable drilldown */}
-      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-heatmap-card">
+      <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="analytics-heatmap-card">
         <CardContent className="p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Calibration heatmap</p>
-          <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815]">Click a cell to drill into individual submissions</h3>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Calibration heatmap</p>
+          <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)]">Click a cell to drill into individual submissions</h3>
           <div className="mt-5 grid gap-4 rounded-[24px] border border-border p-5 lg:grid-cols-[1fr_1fr]" style={{ backgroundColor: "var(--heat-empty)" }} data-testid="analytics-heatmap-legend">
             <div>
               <p className="text-sm font-semibold text-[#243e36]">Metric key</p>
-              <div className="mt-3 space-y-2 text-sm text-[#5c6d64]">
+              <div className="mt-3 space-y-2 text-sm text-[var(--muted-foreground)]">
                 <p>&#916; = average variance between management and owner scores</p>
                 <p>M = management score average</p>
                 <p>O = owner score average</p>
@@ -344,7 +344,7 @@ export default function AnalyticsPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-[#243e36]">Color key</p>
-              <div className="mt-3 flex flex-wrap gap-3 text-sm text-[#5c6d64]">
+              <div className="mt-3 flex flex-wrap gap-3 text-sm text-[var(--muted-foreground)]">
                 <div className="flex items-center gap-2"><span className="h-4 w-4 rounded-full" style={{ backgroundColor: `rgba(var(--heat-r),var(--heat-g),var(--heat-b),0.18)` }} />Low variance</div>
                 <div className="flex items-center gap-2"><span className="h-4 w-4 rounded-full" style={{ backgroundColor: `rgba(var(--heat-r),var(--heat-g),var(--heat-b),0.42)` }} />Moderate variance</div>
                 <div className="flex items-center gap-2"><span className="h-4 w-4 rounded-full" style={{ backgroundColor: `rgba(var(--heat-r),var(--heat-g),var(--heat-b),0.72)` }} />High variance</div>
@@ -393,13 +393,13 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Variance Drilldown Panel */}
-          {drilldownLoading && <p className="mt-4 text-center text-sm text-[#5c6d64]">Loading drilldown...</p>}
+          {drilldownLoading && <p className="mt-4 text-center text-sm text-[var(--muted-foreground)]">Loading drilldown...</p>}
           {drilldown && !drilldownLoading && (
             <div className="mt-6 rounded-[24px] border border-border p-5" style={{ backgroundColor: "var(--heat-empty)" }} data-testid="variance-drilldown-panel">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.2em]" style={{ color: "var(--tier-desc-text)" }}>Variance drilldown</p>
-                  <h4 className="mt-1 font-[Cabinet_Grotesk] text-xl font-bold text-[#111815]">{drilldown.crew} &mdash; {drilldown.service_type}</h4>
+                  <h4 className="mt-1 font-[Cabinet_Grotesk] text-xl font-bold text-[var(--foreground)]">{drilldown.crew} &mdash; {drilldown.service_type}</h4>
                   <p className="text-xs" style={{ color: "var(--tier-desc-text)" }}>{drilldown.total_reviewed} reviewed submissions, sorted by largest variance</p>
                 </div>
                 <Button type="button" variant="ghost" size="sm" onClick={() => setDrilldown(null)} data-testid="drilldown-close"><X className="h-4 w-4" /></Button>
@@ -424,18 +424,18 @@ export default function AnalyticsPage() {
                         const vColor = absV > 15 ? "var(--status-critical-text)" : absV > 8 ? "var(--status-warning-text)" : "var(--status-watch-text)";
                         return (
                           <tr key={row.submission_id} className="border-b border-border/40">
-                            <td className="px-3 py-2 text-[#5c6d64]">{row.created_at?.slice(0, 10) || "—"}</td>
+                            <td className="px-3 py-2 text-[var(--muted-foreground)]">{row.created_at?.slice(0, 10) || "—"}</td>
                             <td className="px-3 py-2 text-[#243e36]">{row.management_score ?? "—"}</td>
                             <td className="px-3 py-2 text-[#243e36]">{row.owner_score ?? "—"}</td>
                             <td className="px-3 py-2 font-bold" style={{ color: row.variance != null ? vColor : "var(--tier-desc-text)" }}>{row.variance ?? "—"}</td>
-                            <td className="px-3 py-2 text-[#5c6d64]">{row.management_rating || "—"}</td>
+                            <td className="px-3 py-2 text-[var(--muted-foreground)]">{row.management_rating || "—"}</td>
                             <td className="px-3 py-2">
                               <Badge className="border-0 text-[10px]" style={{
                                 backgroundColor: row.owner_training === "approved" ? "var(--status-watch-bg)" : row.owner_training === "excluded" ? "var(--status-critical-bg)" : "var(--chip-bg)",
                                 color: row.owner_training === "approved" ? "var(--status-watch-text)" : row.owner_training === "excluded" ? "var(--status-critical-text)" : "var(--tier-desc-text)",
                               }}>{row.owner_training || "pending"}</Badge>
                             </td>
-                            <td className="px-3 py-2 text-xs text-[#5c6d64]">{(row.management_issues || []).join(", ") || "—"}</td>
+                            <td className="px-3 py-2 text-xs text-[var(--muted-foreground)]">{(row.management_issues || []).join(", ") || "—"}</td>
                           </tr>
                         );
                       })}
@@ -443,7 +443,7 @@ export default function AnalyticsPage() {
                   </table>
                 </div>
               ) : (
-                <p className="mt-4 text-sm text-[#5c6d64]">No reviewed submissions found for this crew/service combination in the current period.</p>
+                <p className="mt-4 text-sm text-[var(--muted-foreground)]">No reviewed submissions found for this crew/service combination in the current period.</p>
               )}
             </div>
           )}
@@ -451,15 +451,15 @@ export default function AnalyticsPage() {
       </Card>
 
       {/* AI-Assisted Scoring — Placeholder */}
-      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="analytics-ai-placeholder-card">
+      <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="analytics-ai-placeholder-card">
         <CardContent className="p-8">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" style={{ backgroundColor: "var(--panel-gradient-from)" }}>
               <Sparkles className="h-5 w-5" style={{ color: "var(--btn-accent)" }} />
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">Coming soon</p>
-              <h3 className="mt-1 font-[Cabinet_Grotesk] text-xl font-bold tracking-tight text-[#111815]">AI-assisted scoring & quality checks</h3>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Coming soon</p>
+              <h3 className="mt-1 font-[Cabinet_Grotesk] text-xl font-bold tracking-tight text-[var(--foreground)]">AI-assisted scoring & quality checks</h3>
             </div>
           </div>
           <p className="mt-4 text-sm leading-relaxed" style={{ color: "var(--tier-desc-text)" }}>
