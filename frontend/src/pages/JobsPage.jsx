@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronDown, Edit, FileSpreadsheet, Plus, QrCode, UploadCloud, X } from "lucide-react";
+import { ChevronDown, Edit, FileSpreadsheet, Plus, QrCode, Trash2, UploadCloud, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { HelpPopover } from "@/components/common/HelpPopover";
-import { authGet, authPatch, authPost, authPostForm, getApiOrigin } from "@/lib/api";
+import { authGet, authPatch, authPost, authPostForm, authDelete, getApiOrigin } from "@/lib/api";
 import { toast } from "sonner";
 
 
@@ -148,11 +148,26 @@ export default function JobsPage() {
 
   const handleToggleCrewLink = async (crewLinkId, enabled) => {
     try {
-      await authPatch(`/crew-access-links/${crewLinkId}/status`, { enabled });
-      toast.success(enabled ? "Crew link reactivated." : "Crew link removed from active links.");
+      if (!enabled) {
+        await authPost(`/crew-access-links/${crewLinkId}/archive`, {});
+        toast.success("Crew link archived. Auto-deletes after 30 days.");
+      } else {
+        await authPatch(`/crew-access-links/${crewLinkId}/status`, { enabled });
+        toast.success("Crew link reactivated.");
+      }
       await loadPage();
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Unable to update crew link");
+    }
+  };
+
+  const handleDeleteCrewLink = async (crewLinkId) => {
+    try {
+      await authDelete(`/crew-access-links/${crewLinkId}`);
+      toast.success("Crew link permanently deleted.");
+      await loadPage();
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Unable to delete crew link");
     }
   };
 
@@ -293,14 +308,27 @@ export default function JobsPage() {
           </div>
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {inactiveLinks.length === 0 ? <div className="rounded-[24px] bg-[#f6f6f2] p-5 text-sm text-[#5c6d64]">No inactive crew links yet.</div> : inactiveLinks.map((link) => (
-            <div key={link.id} className="rounded-[28px] border border-border bg-[#f6f6f2] p-5" data-testid={`inactive-crew-card-${link.code}`}>
-              <p className="text-sm font-semibold text-[#243e36]">{link.label}</p>
-              <p className="mt-1 text-sm text-[#5c6d64]">{link.crew_member_id} · {link.truck_number} · {link.division}</p>
-              {link.assignment && <p className="mt-1 text-xs text-[#5c6d64]">{link.assignment}</p>}
-              <Button type="button" onClick={() => handleToggleCrewLink(link.id, true)} className="mt-4 h-10 w-full rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid={`inactive-crew-reactivate-button-${link.code}`}>Reactivate link</Button>
-            </div>
-          ))}
+          {inactiveLinks.length === 0 ? <div className="rounded-[24px] bg-[#f6f6f2] p-5 text-sm text-[#5c6d64]">No inactive crew links yet.</div> : inactiveLinks.map((link) => {
+            const archivedDate = link.archived_at ? new Date(link.archived_at) : null;
+            const deleteDate = archivedDate ? new Date(archivedDate.getTime() + 30 * 24 * 60 * 60 * 1000) : null;
+            const daysLeft = deleteDate ? Math.max(0, Math.ceil((deleteDate - Date.now()) / (1000 * 60 * 60 * 24))) : null;
+            return (
+              <div key={link.id} className="rounded-[28px] border border-border bg-[#f6f6f2] p-5" data-testid={`inactive-crew-card-${link.code}`}>
+                <p className="text-sm font-semibold text-[#243e36]">{link.label}</p>
+                <p className="mt-1 text-sm text-[#5c6d64]">{link.crew_member_id} · {link.truck_number} · {link.division}</p>
+                {link.assignment && <p className="mt-1 text-xs text-[#5c6d64]">{link.assignment}</p>}
+                {archivedDate && (
+                  <p className="mt-2 text-xs text-[#5c6d64]" data-testid={`inactive-crew-archive-info-${link.code}`}>
+                    Archived {archivedDate.toLocaleDateString()} · Auto-deletes in {daysLeft} day{daysLeft !== 1 ? "s" : ""}
+                  </p>
+                )}
+                <div className="mt-4 flex gap-2">
+                  <Button type="button" onClick={() => handleToggleCrewLink(link.id, true)} className="h-10 flex-1 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid={`inactive-crew-reactivate-button-${link.code}`}>Reactivate</Button>
+                  <Button type="button" variant="outline" onClick={() => handleDeleteCrewLink(link.id)} className="h-10 rounded-2xl border-red-200 text-red-600 hover:bg-red-50" data-testid={`inactive-crew-delete-button-${link.code}`}><Trash2 className="h-4 w-4" /></Button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </ToggleSection>
 

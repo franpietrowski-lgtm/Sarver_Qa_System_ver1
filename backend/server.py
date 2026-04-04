@@ -392,13 +392,13 @@ async def seed_defaults() -> None:
         {"name": "Craig S", "email": "SCraig.Super@SLMCo.local", "role": "management", "title": "Supervisor"},
         {"name": "Fran P", "email": "PFran.Super@SLMCo.local", "role": "management", "title": "Supervisor"},
         {"name": "Scott K", "email": "KScott.AccM@SLMCo.local", "role": "management", "title": "Account Manager"},
-        {"name": "Megan B", "email": "BMegan.AccM@SLMCo.local", "role": "management", "title": "Account Manager"},
-        {"name": "Daniel M", "email": "MDaniel.AccM@SLMCo.local", "role": "management", "title": "Account Manager"},
+        {"name": "Megan M", "email": "MMegan.AccM@SLMCo.local", "role": "management", "title": "Account Manager"},
+        {"name": "Daniel T", "email": "TDaniel.AccM@SLMCo.local", "role": "management", "title": "Account Manager"},
         {"name": "Tim A", "email": "ATim.ProM@SLMCo.local", "role": "management", "title": "Production Manager"},
         {"name": "Zach O", "email": "OZach.ProM@SLMCo.local", "role": "management", "title": "Production Manager"},
         {"name": "Scott W", "email": "WScott.ProM@SLMCo.local", "role": "management", "title": "Production Manager"},
         {"name": "Tyler C", "email": "CTyler.GM@SLMCo.local", "role": "management", "title": "GM"},
-        {"name": "Brad S", "email": "SBrad.GM@SLMCo.local", "role": "management", "title": "GM"},
+        {"name": "Brad S", "email": "SBrad.GM@SLMCo.local", "role": "management", "title": "Production Manager"},
         {"name": "Adam S", "email": "SAdam.Owner@SLMCo.local", "role": "owner", "title": "Owner"},
     ]
     for user in users:
@@ -761,6 +761,12 @@ async def startup_event():
     await db.rapid_review_sessions.create_index("created_at")
     await db.standards_library.create_index("id", unique=True)
     await db.training_sessions.create_index("code", unique=True)
+    # Auto-delete archived QRs older than 30 days
+    from datetime import datetime, timedelta, timezone
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    deleted = await db.crew_access_links.delete_many({"archived": True, "archived_at": {"$lt": cutoff}})
+    if deleted.deleted_count:
+        logger.info("Auto-deleted %d archived crew QR links (>30 days)", deleted.deleted_count)
     if storage_is_configured():
         try:
             get_supabase_client()

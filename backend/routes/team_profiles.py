@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
 
 import shared.deps as deps
-from shared.deps import require_roles, now_iso
+from shared.deps import require_roles, now_iso, upload_bytes_to_storage, storage_is_configured, get_storage_bucket
 
 router = APIRouter()
 
@@ -202,7 +202,7 @@ async def get_division_hierarchy(user: dict = Depends(require_roles("management"
 
     def user_profile(u):
         ext = extras_map.get(f"user_{u['id']}")
-        p = _build_profile("user", u["id"], u.get("name", ""), u.get("title", ""), "", ext)
+        p = _build_profile("user", u["id"], u.get("name", ""), u.get("title", ""), u.get("division", ""), ext)
         p["title"] = u.get("title", "")
         p["auth_role"] = u.get("role", "")
         return p
@@ -252,3 +252,34 @@ async def get_division_hierarchy(user: dict = Depends(require_roles("management"
         "supervisors": supervisors,
         "divisions": divisions,
     }
+
+
+@router.post("/team/profiles/{profile_id}/avatar")
+async def upload_avatar(
+    profile_id: str,
+    file: UploadFile = File(...),
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    if not storage_is_configured():
+        raise HTTPException(status_code=503, detail="Storage not configured")
+    parts = profile_id.split("_", 1)
+    if len(parts) != 2:
+        raise HTTPException(status_code=400, detail="Invalid profile ID")
+    source_type, source_id = parts
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large (max 5MB)")
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "jpg"
+    path = f"avatars/{profile_id}.{ext}"
+    ct = file.content_type or f"image/{ext}"
+    await upload_bytes_to_storage(path, content, ct)
+    import os
+    bucket = get_storage_bucket()
+    base_url = os.environ.get("SUPABASE_URL", "")
+    avatar_url = f"{base_url}/storage/v1/object/public/{bucket}/{path}"
+    await deps.db.team_profile_extras.update_one(
+        {"source_type": source_type, "source_id": source_id},
+        {"$set": {"avatar_url": avatar_url, "source_type": source_type, "source_id": source_id, "updated_at": now_iso()}},
+        upsert=True,
+    )
+    return {"avatar_url": avatar_url, "profile_id": profile_id}

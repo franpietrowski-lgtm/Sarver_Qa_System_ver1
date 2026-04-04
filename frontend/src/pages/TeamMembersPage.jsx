@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Layers, Network, User, Users, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Layers, Network, Upload, User, Users, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,96 +9,90 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { authGet, authPatch } from "@/lib/api";
 import { toast } from "sonner";
 
-
-/* ─────── Colour helpers ─────── */
-const ROLE_COLORS = {
-  Owner: "bg-amber-100 text-amber-800",
-  GM: "bg-violet-100 text-violet-800",
-  "Account Manager": "bg-sky-100 text-sky-800",
-  "Production Manager": "bg-teal-100 text-teal-800",
-  Supervisor: "bg-indigo-100 text-indigo-800",
-  "Crew Leader": "bg-emerald-100 text-emerald-800",
-  "Crew Member": "bg-slate-100 text-slate-700",
+/* ─────── Colour palette per hierarchy level ─────── */
+const LEVEL_THEMES = {
+  Owner:              { bg: "bg-[#1a2c26]", text: "text-white",      badge: "bg-amber-400/20 text-amber-200",     ring: "ring-amber-400/40",    line: "#d4a843", hex: "#1a2c26" },
+  GM:                 { bg: "bg-[#243e36]", text: "text-white",      badge: "bg-violet-400/20 text-violet-200",   ring: "ring-violet-400/40",   line: "#7c5cbf", hex: "#243e36" },
+  "Account Manager":  { bg: "bg-[#3a5a40]", text: "text-white",      badge: "bg-sky-400/20 text-sky-200",         ring: "ring-sky-400/40",      line: "#59a5d8", hex: "#3a5a40" },
+  "Production Manager":{ bg: "bg-[#588157]", text: "text-white",      badge: "bg-teal-400/20 text-teal-200",       ring: "ring-teal-400/40",     line: "#38a89d", hex: "#588157" },
+  Supervisor:         { bg: "bg-[#344e41]", text: "text-white",      badge: "bg-indigo-400/20 text-indigo-200",   ring: "ring-indigo-400/40",   line: "#6366f1", hex: "#344e41" },
+  "Crew Leader":      { bg: "bg-[#4a7c59]", text: "text-white",      badge: "bg-emerald-400/20 text-emerald-200", ring: "ring-emerald-400/40",  line: "#34d399", hex: "#4a7c59" },
+  "Crew Member":      { bg: "bg-[#6b7c5e]", text: "text-white",      badge: "bg-slate-300/20 text-slate-200",     ring: "ring-slate-400/40",    line: "#94a3b8", hex: "#6b7c5e" },
 };
 
-const INITIALS_BG = [
-  "bg-[#243e36]", "bg-[#3a5a40]", "bg-[#588157]", "bg-[#5c6d64]",
-  "bg-[#344e41]", "bg-[#4a7c59]", "bg-[#2d5a27]", "bg-[#6b7c5e]",
-];
+function getTheme(role) { return LEVEL_THEMES[role] || LEVEL_THEMES["Crew Member"]; }
 
-function getInitials(name) {
-  return name.split(" ").filter(Boolean).map(w => w[0]).join("").toUpperCase().slice(0, 2);
-}
-function hashColor(name) {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
-  return INITIALS_BG[Math.abs(h) % INITIALS_BG.length];
-}
+const INITIALS_BG = ["#243e36","#3a5a40","#588157","#5c6d64","#344e41","#4a7c59","#2d5a27","#6b7c5e"];
+function getInitials(name) { return name.split(" ").filter(Boolean).map(w => w[0]).join("").toUpperCase().slice(0, 2); }
+function hashIdx(name) { let h = 0; for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h); return Math.abs(h) % INITIALS_BG.length; }
 
-
-/* ─────── Avatar ─────── */
-function Avatar({ name, avatarUrl, size = "md" }) {
-  const sizeClass = size === "lg" ? "h-20 w-20 text-2xl" : size === "sm" ? "h-10 w-10 text-xs" : "h-14 w-14 text-base";
+/* ─────── Avatar (hex-clipped when no image) ─────── */
+function Avatar({ name, avatarUrl, size = "md", className = "" }) {
+  const dim = size === "lg" ? "h-20 w-20" : size === "sm" ? "h-10 w-10" : "h-14 w-14";
+  const textSz = size === "lg" ? "text-2xl" : size === "sm" ? "text-xs" : "text-base";
+  const clip = { clipPath: "polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)" };
   if (avatarUrl) {
-    return <img src={avatarUrl} alt={name} className={`${sizeClass} shrink-0 rounded-full object-cover ring-2 ring-white`} />;
+    return <img src={avatarUrl} alt={name} style={clip} className={`${dim} shrink-0 object-cover ${className}`} />;
   }
   return (
-    <div className={`${sizeClass} ${hashColor(name)} flex shrink-0 items-center justify-center rounded-full font-bold text-white ring-2 ring-white`}>
+    <div style={{ ...clip, backgroundColor: INITIALS_BG[hashIdx(name)] }} className={`${dim} ${textSz} flex shrink-0 items-center justify-center font-bold text-white ${className}`}>
       {getInitials(name)}
     </div>
   );
 }
 
-
-/* ─────── Profile Card ─────── */
-function ProfileCard({ profile, onClick }) {
-  const roleBadge = ROLE_COLORS[profile.role] || "bg-gray-100 text-gray-700";
+/* ─────── Org Chart Node Card ─────── */
+function OrgNode({ profile, onClick, size = "md", showDivision = false }) {
+  const theme = getTheme(profile.role);
+  const isSm = size === "sm";
   return (
     <button
       type="button"
       onClick={() => onClick(profile)}
-      className="flex w-[170px] shrink-0 flex-col items-center gap-2.5 rounded-[24px] border border-border bg-white/90 p-4 text-center shadow-sm transition hover:border-[#243e36]/30 hover:shadow-md"
-      data-testid={`profile-card-${profile.profile_id}`}
+      className={`group relative flex items-center gap-3 rounded-[20px] ${theme.bg} ${isSm ? "px-3 py-2" : "px-4 py-3"} shadow-md ring-1 ${theme.ring} transition hover:scale-[1.02] hover:shadow-lg`}
+      data-testid={`org-node-${profile.profile_id}`}
     >
-      <Avatar name={profile.name} avatarUrl={profile.avatar_url} />
-      <div className="w-full min-w-0">
-        <p className="truncate text-sm font-semibold text-[#111815]">{profile.name}</p>
-        {profile.age && <p className="text-xs text-[#5c6d64]">Age {profile.age}</p>}
+      <Avatar name={profile.name} avatarUrl={profile.avatar_url} size={isSm ? "sm" : "md"} />
+      <div className="min-w-0 text-left">
+        <p className={`truncate font-semibold ${theme.text} ${isSm ? "text-xs" : "text-sm"}`}>{profile.name}</p>
+        <Badge className={`mt-0.5 border-0 ${theme.badge} ${isSm ? "text-[9px]" : "text-[10px]"}`}>{profile.role}</Badge>
+        {showDivision && profile.division && <Badge className={`ml-1 mt-0.5 border-0 bg-white/10 ${theme.text} ${isSm ? "text-[9px]" : "text-[10px]"}`}>{profile.division}</Badge>}
       </div>
-      <Badge className={`border-0 text-[10px] ${roleBadge}`}>{profile.role}</Badge>
     </button>
   );
 }
 
+/* ─────── Connector line (vertical + horizontal branches) ─────── */
+function VLine({ height = 24, color = "#5c6d64" }) {
+  return <div className="mx-auto" style={{ width: 2, height, backgroundColor: color, opacity: 0.4 }} />;
+}
 
-/* ─────── Carousel Row ─────── */
-function CarouselRow({ items, onCardClick }) {
-  const scrollRef = useRef(null);
-  const scroll = (dir) => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollBy({ left: dir * 200, behavior: "smooth" });
-  };
-  if (!items.length) return null;
+/* ─────── Profile Card for Grid View ─────── */
+function GridProfileCard({ profile, onClick }) {
+  const theme = getTheme(profile.role);
   return (
-    <div className="relative" data-testid="carousel-row">
-      <button type="button" onClick={() => scroll(-1)} className="absolute -left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white shadow-sm hover:bg-[#edf0e7]" data-testid="carousel-prev"><ChevronLeft className="h-4 w-4" /></button>
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scroll-smooth px-6 py-2 scrollbar-hide" style={{ scrollSnapType: "x mandatory" }}>
-        {items.map((p) => (
-          <div key={p.profile_id} style={{ scrollSnapAlign: "start" }}>
-            <ProfileCard profile={p} onClick={onCardClick} />
-          </div>
-        ))}
+    <button
+      type="button"
+      onClick={() => onClick(profile)}
+      className={`flex flex-col items-center gap-2 rounded-[24px] ${theme.bg} p-4 shadow-md ring-1 ${theme.ring} transition hover:scale-[1.03] hover:shadow-lg`}
+      data-testid={`profile-card-${profile.profile_id}`}
+    >
+      <Avatar name={profile.name} avatarUrl={profile.avatar_url} />
+      <div className="w-full min-w-0 text-center">
+        <p className={`truncate text-sm font-semibold ${theme.text}`}>{profile.name}</p>
+        {profile.age && <p className="text-xs text-white/60">Age {profile.age}</p>}
       </div>
-      <button type="button" onClick={() => scroll(1)} className="absolute -right-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white shadow-sm hover:bg-[#edf0e7]" data-testid="carousel-next"><ChevronRight className="h-4 w-4" /></button>
-    </div>
+      <Badge className={`border-0 text-[10px] ${theme.badge}`}>{profile.role}</Badge>
+    </button>
   );
 }
 
-
 /* ─────── Profile Detail Overlay ─────── */
-function ProfileDetailOverlay({ profile, onClose }) {
+function ProfileDetailOverlay({ profile, onClose, onAvatarUploaded }) {
   const [detail, setDetail] = useState(null);
   const [showStats, setShowStats] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -110,47 +104,68 @@ function ProfileDetailOverlay({ profile, onClose }) {
   if (!profile) return null;
   const d = detail || profile;
   const stats = d.stats || {};
-  const roleBadge = ROLE_COLORS[d.role] || "bg-gray-100 text-gray-700";
+  const theme = getTheme(d.role);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const resp = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/team/profiles/${d.profile_id}/avatar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("auth_token")}` },
+        body: fd,
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.detail || "Upload failed");
+      toast.success("Avatar uploaded!");
+      if (detail) setDetail({ ...detail, avatar_url: data.avatar_url });
+      if (onAvatarUploaded) onAvatarUploaded(d.profile_id, data.avatar_url);
+    } catch (err) {
+      toast.error(err.message || "Avatar upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose} data-testid="profile-detail-overlay">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose} data-testid="profile-detail-overlay">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
         className="w-full max-w-sm overflow-hidden rounded-[28px] border border-border/80 bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         data-testid="profile-detail-popup"
       >
         {/* Header */}
-        <div className="bg-[#243e36] p-6 text-center text-white">
-          <button type="button" onClick={onClose} className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20" data-testid="profile-detail-close"><X className="h-4 w-4" /></button>
-          <Avatar name={d.name} avatarUrl={d.avatar_url} size="lg" />
+        <div className={`relative ${theme.bg} p-6 text-center text-white`}>
+          <button type="button" onClick={onClose} className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20" data-testid="profile-detail-close"><X className="h-4 w-4" /></button>
+          <div className="relative mx-auto w-fit">
+            <Avatar name={d.name} avatarUrl={d.avatar_url} size="lg" />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#243e36] shadow-md hover:bg-[#edf0e7]"
+              data-testid="profile-avatar-upload-btn"
+            >
+              <Upload className="h-3.5 w-3.5" />
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} data-testid="profile-avatar-file-input" />
+          </div>
+          {uploading && <p className="mt-2 text-xs animate-pulse">Uploading...</p>}
           <h2 className="mt-3 font-[Cabinet_Grotesk] text-2xl font-black tracking-tight">{d.name}</h2>
           {d.age && <p className="text-sm text-white/70">Age {d.age}</p>}
           <div className="mt-2 flex flex-wrap justify-center gap-1.5">
-            <Badge className={`border-0 ${roleBadge}`}>{d.role}</Badge>
+            <Badge className={`border-0 ${theme.badge}`}>{d.role}</Badge>
             {d.title && d.title !== d.role && <Badge className="border-0 bg-white/12 text-white">{d.title}</Badge>}
             {d.division && <Badge className="border-0 bg-white/12 text-white">{d.division}</Badge>}
           </div>
         </div>
-
         {/* Body */}
         <div className="max-h-[40vh] overflow-y-auto p-5">
-          {d.parent_crew_label && (
-            <div className="mb-3 rounded-[16px] bg-[#f6f6f2] p-3">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#5f7464]">Team</p>
-              <p className="mt-1 text-sm font-semibold text-[#243e36]">{d.parent_crew_label}</p>
-            </div>
-          )}
-          {d.truck_number && (
-            <div className="mb-3 rounded-[16px] bg-[#f6f6f2] p-3">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#5f7464]">Truck</p>
-              <p className="mt-1 text-sm font-semibold text-[#243e36]">{d.truck_number}</p>
-            </div>
-          )}
-
-          {/* Toggle stats */}
+          {d.parent_crew_label && <div className="mb-3 rounded-[16px] bg-[#f6f6f2] p-3"><p className="text-xs font-bold uppercase tracking-widest text-[#5f7464]">Team</p><p className="mt-1 text-sm font-semibold text-[#243e36]">{d.parent_crew_label}</p></div>}
+          {d.truck_number && <div className="mb-3 rounded-[16px] bg-[#f6f6f2] p-3"><p className="text-xs font-bold uppercase tracking-widest text-[#5f7464]">Truck</p><p className="mt-1 text-sm font-semibold text-[#243e36]">{d.truck_number}</p></div>}
           <button type="button" onClick={() => setShowStats(!showStats)} className="mt-1 flex w-full items-center justify-between rounded-[16px] bg-[#edf0e7] px-4 py-3 text-left text-sm font-semibold text-[#243e36] transition hover:bg-[#e2e8db]" data-testid="profile-toggle-stats">
             Performance & Records
             <ChevronRight className={`h-4 w-4 transition-transform ${showStats ? "rotate-90" : ""}`} />
@@ -159,22 +174,10 @@ function ProfileDetailOverlay({ profile, onClose }) {
             {showStats && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                 <div className="mt-3 grid grid-cols-2 gap-2" data-testid="profile-stats-grid">
-                  <div className="rounded-[14px] bg-[#f6f6f2] p-3 text-center">
-                    <p className="text-xl font-black text-[#243e36]">{stats.review_count ?? "—"}</p>
-                    <p className="text-[10px] font-semibold uppercase text-[#5f7464]">Reviews</p>
-                  </div>
-                  <div className="rounded-[14px] bg-[#f6f6f2] p-3 text-center">
-                    <p className="text-xl font-black text-[#243e36]">{stats.submission_count ?? "—"}</p>
-                    <p className="text-[10px] font-semibold uppercase text-[#5f7464]">Submissions</p>
-                  </div>
-                  <div className="rounded-[14px] bg-[#f6f6f2] p-3 text-center">
-                    <p className="text-xl font-black text-[#243e36]">{stats.training_completed ?? 0}/{stats.training_total ?? 0}</p>
-                    <p className="text-[10px] font-semibold uppercase text-[#5f7464]">Training</p>
-                  </div>
-                  <div className="rounded-[14px] bg-[#f6f6f2] p-3 text-center">
-                    <p className="text-xl font-black text-[#243e36]">{stats.training_total ? `${Math.round((stats.training_completed / stats.training_total) * 100)}%` : "—"}</p>
-                    <p className="text-[10px] font-semibold uppercase text-[#5f7464]">Completion</p>
-                  </div>
+                  <div className="rounded-[14px] bg-[#f6f6f2] p-3 text-center"><p className="text-xl font-black text-[#243e36]">{stats.review_count ?? "—"}</p><p className="text-[10px] font-semibold uppercase text-[#5f7464]">Reviews</p></div>
+                  <div className="rounded-[14px] bg-[#f6f6f2] p-3 text-center"><p className="text-xl font-black text-[#243e36]">{stats.submission_count ?? "—"}</p><p className="text-[10px] font-semibold uppercase text-[#5f7464]">Submissions</p></div>
+                  <div className="rounded-[14px] bg-[#f6f6f2] p-3 text-center"><p className="text-xl font-black text-[#243e36]">{stats.training_completed ?? 0}/{stats.training_total ?? 0}</p><p className="text-[10px] font-semibold uppercase text-[#5f7464]">Training</p></div>
+                  <div className="rounded-[14px] bg-[#f6f6f2] p-3 text-center"><p className="text-xl font-black text-[#243e36]">{stats.training_total ? `${Math.round((stats.training_completed / stats.training_total) * 100)}%` : "—"}</p><p className="text-[10px] font-semibold uppercase text-[#5f7464]">Completion</p></div>
                 </div>
               </motion.div>
             )}
@@ -185,93 +188,100 @@ function ProfileDetailOverlay({ profile, onClose }) {
   );
 }
 
-
-/* ─────── Individual View ─────── */
+/* ═══════ INDIVIDUAL VIEW — 3×5 GRID + PAGINATION ═══════ */
+const PER_PAGE = 15;
 function IndividualView({ profiles, onCardClick }) {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(profiles.length / PER_PAGE));
+  const start = (page - 1) * PER_PAGE;
+  const visible = profiles.slice(start, start + PER_PAGE);
   const rows = [];
-  for (let i = 0; i < profiles.length; i += 5) {
-    rows.push(profiles.slice(i, i + 5));
-  }
+  for (let i = 0; i < visible.length; i += 5) rows.push(visible.slice(i, i + 5));
   while (rows.length < 3) rows.push([]);
 
   return (
-    <div className="flex h-full flex-col justify-center gap-4" data-testid="individual-view">
-      {rows.slice(0, 3).map((row, i) => (
-        <CarouselRow key={i} items={row} onCardClick={onCardClick} />
-      ))}
-      {rows.length > 3 && (
-        <div className="flex flex-wrap justify-center gap-3 pt-2">
-          {profiles.slice(15).map((p) => (
-            <ProfileCard key={p.profile_id} profile={p} onClick={onCardClick} />
+    <div className="flex h-full flex-col" data-testid="individual-view">
+      <div className="flex flex-1 flex-col justify-center gap-5">
+        {rows.map((row, ri) => (
+          <div key={ri} className="flex justify-center gap-4" data-testid={`grid-row-${ri}`}>
+            {row.map((p) => (
+              <div key={p.profile_id} className="w-[170px]">
+                <GridProfileCard profile={p} onClick={onCardClick} />
+              </div>
+            ))}
+            {/* fill empty slots to keep grid alignment */}
+            {Array.from({ length: 5 - row.length }).map((_, ei) => (
+              <div key={`empty-${ei}`} className="w-[170px]" />
+            ))}
+          </div>
+        ))}
+      </div>
+      {totalPages > 1 && (
+        <div className="flex shrink-0 items-center justify-center gap-3 pt-4" data-testid="grid-pagination">
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded-xl" data-testid="grid-prev-page"><ChevronLeft className="h-4 w-4" /></Button>
+          <span className="text-sm font-semibold text-[#243e36]">{page} / {totalPages}</span>
+          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="rounded-xl" data-testid="grid-next-page"><ChevronRight className="h-4 w-4" /></Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════ TEAM STRUCTURE — GRAPHIC ORG CHART ═══════ */
+function TeamStructureView({ teams, onCardClick }) {
+  return (
+    <div className="h-full overflow-y-auto" data-testid="team-structure-view">
+      <div className="flex flex-wrap justify-center gap-8 pb-4">
+        {teams.map((team, i) => (
+          <div key={i} className="flex flex-col items-center" data-testid={`team-card-${team.lead.profile_id}`}>
+            <OrgNode profile={team.lead} onClick={onCardClick} showDivision />
+            {team.members.length > 0 && (
+              <>
+                <VLine height={20} color={getTheme("Crew Leader").line} />
+                <div className="relative flex gap-4">
+                  {/* horizontal connector bar */}
+                  {team.members.length > 1 && (
+                    <div className="absolute left-[50px] right-[50px] top-0 h-[2px] bg-[#94a3b8]/40" />
+                  )}
+                  {team.members.map((m) => (
+                    <div key={m.profile_id} className="flex flex-col items-center">
+                      <VLine height={16} color={getTheme("Crew Member").line} />
+                      <OrgNode profile={m} onClick={onCardClick} size="sm" />
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════ DIVISION HIERARCHY — FULL ORG CHART ═══════ */
+function HierarchyLevel({ label, profiles, onCardClick, children, lineColor = "#5c6d64" }) {
+  return (
+    <div className="flex flex-col items-center">
+      {profiles.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-3">
+          {profiles.map((p) => (
+            <OrgNode key={p.profile_id} profile={p} onClick={onCardClick} showDivision />
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-
-/* ─────── Team Structure View ─────── */
-function TeamStructureView({ teams, onCardClick }) {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-testid="team-structure-view">
-      {teams.map((team, i) => (
-        <Card key={i} className="rounded-[28px] border-border/80 bg-white/95 shadow-sm" data-testid={`team-card-${team.lead.profile_id}`}>
-          <CardContent className="p-5">
-            <button type="button" onClick={() => onCardClick(team.lead)} className="flex w-full items-center gap-3 text-left">
-              <Avatar name={team.lead.name} avatarUrl={team.lead.avatar_url} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-[#111815]">{team.lead.name}</p>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  <Badge className="border-0 bg-emerald-100 text-[10px] text-emerald-800">Crew Leader</Badge>
-                  <Badge className="border-0 bg-[#edf0e7] text-[10px] text-[#243e36]">{team.division}</Badge>
-                </div>
-              </div>
-            </button>
-            {team.members.length > 0 && (
-              <div className="mt-4 space-y-2 border-l-2 border-[#d8f3dc] pl-4" data-testid="team-members-list">
-                {team.members.map((m) => (
-                  <button key={m.profile_id} type="button" onClick={() => onCardClick(m)} className="flex w-full items-center gap-2.5 rounded-2xl p-2 text-left transition hover:bg-[#f6f6f2]" data-testid={`team-member-${m.profile_id}`}>
-                    <Avatar name={m.name} avatarUrl={m.avatar_url} size="sm" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-[#243e36]">{m.name}</p>
-                      <p className="text-xs text-[#5c6d64]">Crew Member</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-            {team.members.length === 0 && (
-              <p className="mt-3 text-xs text-[#5c6d64]">No registered members yet</p>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-
-/* ─────── Division Hierarchy View ─────── */
-function HierarchyNode({ profile, label, indent = 0, onCardClick, children }) {
-  const roleBadge = ROLE_COLORS[profile?.role || label] || "bg-gray-100 text-gray-700";
-  return (
-    <div style={{ paddingLeft: `${indent * 20}px` }} data-testid={`hierarchy-node-${profile?.profile_id || label}`}>
-      {profile ? (
-        <button type="button" onClick={() => onCardClick(profile)} className="flex items-center gap-2.5 rounded-2xl p-2 text-left transition hover:bg-[#f6f6f2]">
-          <Avatar name={profile.name} avatarUrl={profile.avatar_url} size="sm" />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-[#111815]">{profile.name}</p>
-            <Badge className={`border-0 text-[10px] ${roleBadge}`}>{profile.role || profile.title}</Badge>
-          </div>
-        </button>
-      ) : (
-        <div className="flex items-center gap-2 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#edf0e7] text-[#5f7464]"><Layers className="h-4 w-4" /></div>
+      {profiles.length === 0 && label && (
+        <div className="flex items-center gap-2 rounded-2xl bg-[#edf0e7] px-4 py-2">
+          <Layers className="h-4 w-4 text-[#5f7464]" />
           <p className="text-sm font-bold text-[#243e36]">{label}</p>
         </div>
       )}
-      {children}
+      {children && (
+        <>
+          <VLine height={20} color={lineColor} />
+          {children}
+        </>
+      )}
     </div>
   );
 }
@@ -279,50 +289,73 @@ function HierarchyNode({ profile, label, indent = 0, onCardClick, children }) {
 function DivisionHierarchyView({ hierarchy, onCardClick }) {
   if (!hierarchy) return null;
   return (
-    <div className="space-y-1 overflow-y-auto" data-testid="hierarchy-view" style={{ maxHeight: "calc(100vh - 220px)" }}>
-      {/* Owners */}
-      <HierarchyNode label="Ownership" indent={0} onCardClick={onCardClick}>
-        {hierarchy.owners.map((o) => <HierarchyNode key={o.profile_id} profile={o} indent={1} onCardClick={onCardClick} />)}
-      </HierarchyNode>
-
-      {/* GMs */}
-      <HierarchyNode label="General Managers" indent={1} onCardClick={onCardClick}>
-        {hierarchy.general_managers.map((g) => <HierarchyNode key={g.profile_id} profile={g} indent={2} onCardClick={onCardClick} />)}
-      </HierarchyNode>
-
-      {/* AMs */}
-      <HierarchyNode label="Account Managers" indent={2} onCardClick={onCardClick}>
-        {hierarchy.account_managers.map((a) => <HierarchyNode key={a.profile_id} profile={a} indent={3} onCardClick={onCardClick} />)}
-      </HierarchyNode>
-
-      {/* PMs */}
-      <HierarchyNode label="Production Managers" indent={2} onCardClick={onCardClick}>
-        {hierarchy.production_managers.map((p) => <HierarchyNode key={p.profile_id} profile={p} indent={3} onCardClick={onCardClick} />)}
-      </HierarchyNode>
-
-      {/* Supervisors */}
-      <HierarchyNode label="Supervisors" indent={2} onCardClick={onCardClick}>
-        {hierarchy.supervisors.map((s) => <HierarchyNode key={s.profile_id} profile={s} indent={3} onCardClick={onCardClick} />)}
-      </HierarchyNode>
-
-      {/* Divisions → Teams → Members */}
-      {hierarchy.divisions.map((div) => (
-        <HierarchyNode key={div.name} label={div.name} indent={3} onCardClick={onCardClick}>
-          {div.teams.map((team, i) => (
-            <HierarchyNode key={team.lead.profile_id} profile={team.lead} indent={4} onCardClick={onCardClick}>
-              {team.members.map((m) => (
-                <HierarchyNode key={m.profile_id} profile={m} indent={5} onCardClick={onCardClick} />
-              ))}
-            </HierarchyNode>
-          ))}
-        </HierarchyNode>
-      ))}
+    <div className="h-full overflow-y-auto pb-6" data-testid="hierarchy-view">
+      <div className="flex flex-col items-center gap-0">
+        {/* Owner */}
+        <HierarchyLevel profiles={hierarchy.owners} onCardClick={onCardClick} lineColor={LEVEL_THEMES.Owner.line}>
+          {/* GM */}
+          <HierarchyLevel profiles={hierarchy.general_managers} onCardClick={onCardClick} lineColor={LEVEL_THEMES.GM.line}>
+            {/* AM row + PM row side by side */}
+            <div className="flex flex-wrap justify-center gap-12">
+              {/* Account Managers column */}
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-2 rounded-2xl bg-[#edf0e7] px-3 py-1.5">
+                  <p className="text-xs font-bold text-[#243e36]">Account Managers</p>
+                </div>
+                <VLine height={12} color={LEVEL_THEMES["Account Manager"].line} />
+                <div className="flex flex-wrap justify-center gap-3">
+                  {hierarchy.account_managers.map((a) => <OrgNode key={a.profile_id} profile={a} onClick={onCardClick} size="sm" />)}
+                </div>
+              </div>
+              {/* Production Managers + Supervisors + Divisions */}
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-2 rounded-2xl bg-[#edf0e7] px-3 py-1.5">
+                  <p className="text-xs font-bold text-[#243e36]">Production & Field</p>
+                </div>
+                <VLine height={12} color={LEVEL_THEMES["Production Manager"].line} />
+                <div className="flex flex-wrap justify-center gap-3">
+                  {hierarchy.production_managers.map((p) => <OrgNode key={p.profile_id} profile={p} onClick={onCardClick} size="sm" showDivision />)}
+                </div>
+                <VLine height={12} color={LEVEL_THEMES.Supervisor.line} />
+                <div className="flex flex-wrap justify-center gap-3">
+                  {hierarchy.supervisors.map((s) => <OrgNode key={s.profile_id} profile={s} onClick={onCardClick} size="sm" />)}
+                </div>
+                {/* Divisions with teams */}
+                {hierarchy.divisions.map((div) => (
+                  <div key={div.name} className="mt-4 flex flex-col items-center">
+                    <div className="rounded-2xl bg-[#edf0e7] px-3 py-1.5">
+                      <p className="text-xs font-bold text-[#243e36]">{div.name}</p>
+                    </div>
+                    <VLine height={12} color={LEVEL_THEMES["Crew Leader"].line} />
+                    <div className="flex flex-wrap justify-center gap-6">
+                      {div.teams.map((team) => (
+                        <div key={team.lead.profile_id} className="flex flex-col items-center">
+                          <OrgNode profile={team.lead} onClick={onCardClick} size="sm" />
+                          {team.members.length > 0 && (
+                            <>
+                              <VLine height={12} color={LEVEL_THEMES["Crew Member"].line} />
+                              <div className="flex gap-2">
+                                {team.members.map((m) => (
+                                  <OrgNode key={m.profile_id} profile={m} onClick={onCardClick} size="sm" />
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </HierarchyLevel>
+        </HierarchyLevel>
+      </div>
     </div>
   );
 }
 
-
-/* ═══════ Main Page ═══════ */
+/* ═══════ MAIN PAGE ═══════ */
 export default function TeamMembersPage() {
   const [view, setView] = useState("individual");
   const [profiles, setProfiles] = useState([]);
@@ -330,26 +363,29 @@ export default function TeamMembersPage() {
   const [hierarchy, setHierarchy] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
 
-  useEffect(() => {
-    if (view === "individual") {
-      authGet("/team/profiles").then((d) => setProfiles(d.profiles || [])).catch(() => {});
-    } else if (view === "team") {
-      authGet("/team/structure").then((d) => setTeams(d.teams || [])).catch(() => {});
-    } else {
-      authGet("/team/hierarchy").then(setHierarchy).catch(() => {});
-    }
-  }, [view]);
+  const reload = () => {
+    if (view === "individual") authGet("/team/profiles").then((d) => setProfiles(d.profiles || [])).catch(() => {});
+    else if (view === "team") authGet("/team/structure").then((d) => setTeams(d.teams || [])).catch(() => {});
+    else authGet("/team/hierarchy").then(setHierarchy).catch(() => {});
+  };
+
+  useEffect(reload, [view]);
+
+  const handleAvatarUploaded = (profileId, newUrl) => {
+    setProfiles((prev) => prev.map((p) => p.profile_id === profileId ? { ...p, avatar_url: newUrl } : p));
+    reload();
+  };
 
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col" data-testid="team-members-page">
-      {/* Header bar */}
+      {/* Header */}
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-4 pb-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#5f7464]">People</p>
-          <h1 className="mt-1 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[#111815] lg:text-4xl" data-testid="team-page-title">Team Members</h1>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">People</p>
+          <h1 className="mt-1 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)] lg:text-4xl" data-testid="team-page-title">Team Members</h1>
         </div>
         <Select value={view} onValueChange={setView}>
-          <SelectTrigger className="h-11 w-52 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="team-view-selector">
+          <SelectTrigger className="h-11 w-52 rounded-2xl border-transparent bg-[var(--accent)]" data-testid="team-view-selector">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -360,9 +396,9 @@ export default function TeamMembersPage() {
         </Select>
       </div>
 
-      {/* Content area (fills remaining height, no page scroll) */}
+      {/* Content */}
       <div className="min-h-0 flex-1 overflow-hidden">
-        <Card className="h-full rounded-[32px] border-border/80 bg-white/95 shadow-sm">
+        <Card className="h-full rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm">
           <CardContent className="h-full p-6">
             {view === "individual" && <IndividualView profiles={profiles} onCardClick={setSelectedProfile} />}
             {view === "team" && <TeamStructureView teams={teams} onCardClick={setSelectedProfile} />}
@@ -373,7 +409,7 @@ export default function TeamMembersPage() {
 
       {/* Profile overlay */}
       <AnimatePresence>
-        {selectedProfile && <ProfileDetailOverlay profile={selectedProfile} onClose={() => setSelectedProfile(null)} />}
+        {selectedProfile && <ProfileDetailOverlay profile={selectedProfile} onClose={() => setSelectedProfile(null)} onAvatarUploaded={handleAvatarUploaded} />}
       </AnimatePresence>
     </div>
   );

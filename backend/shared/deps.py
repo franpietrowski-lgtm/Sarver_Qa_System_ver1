@@ -266,7 +266,8 @@ def get_jobs_projection() -> dict:
 def get_crew_link_projection() -> dict:
     return {
         "_id": 0, "id": 1, "code": 1, "crew_member_id": 1, "label": 1, "truck_number": 1,
-        "division": 1, "assignment": 1, "enabled": 1, "created_at": 1, "updated_at": 1,
+        "division": 1, "assignment": 1, "enabled": 1, "archived": 1, "archived_at": 1,
+        "created_at": 1, "updated_at": 1,
     }
 
 

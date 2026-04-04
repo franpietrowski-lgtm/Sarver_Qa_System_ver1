@@ -100,3 +100,34 @@ async def update_crew_access_link(
     if not crew_link:
         raise HTTPException(status_code=404, detail="Crew link not found")
     return present_crew_link(crew_link)
+
+
+
+@router.post("/crew-access-links/{crew_link_id}/archive")
+async def archive_crew_access_link(
+    crew_link_id: str,
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    link = await deps.db.crew_access_links.find_one({"id": crew_link_id}, {"_id": 0})
+    if not link:
+        raise HTTPException(status_code=404, detail="Crew link not found")
+    await deps.db.crew_access_links.update_one(
+        {"id": crew_link_id},
+        {
+            "$set": {"enabled": False, "archived": True, "archived_at": now_iso(), "updated_at": now_iso()},
+            "$push": {"audit_history": audit_entry("archived", user["id"], "Crew QR archived")},
+        },
+    )
+    return {"archived": True, "id": crew_link_id}
+
+
+@router.delete("/crew-access-links/{crew_link_id}")
+async def delete_crew_access_link(
+    crew_link_id: str,
+    user: dict = Depends(require_roles("owner")),
+):
+    link = await deps.db.crew_access_links.find_one({"id": crew_link_id}, {"_id": 0})
+    if not link:
+        raise HTTPException(status_code=404, detail="Crew link not found")
+    await deps.db.crew_access_links.delete_one({"id": crew_link_id})
+    return {"deleted": True, "id": crew_link_id}
