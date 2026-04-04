@@ -22,6 +22,7 @@ import RubricEditorPage from "@/pages/RubricEditorPage";
 import SettingsPage from "@/pages/SettingsPage";
 import StandardsLibraryPage from "@/pages/StandardsLibraryPage";
 import TrainingModePage from "@/pages/TrainingModePage";
+import TeamMembersPage from "@/pages/TeamMembersPage";
 import CrewMemberRegisterPage from "@/pages/CrewMemberRegisterPage";
 import CrewMemberDashboard from "@/pages/CrewMemberDashboard";
 
@@ -114,6 +115,7 @@ function App() {
             <Route path="/member/:code" element={<CrewMemberDashboard />} />
             <Route path="/dashboard" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><OverviewPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/jobs" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management"]}><JobsPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/team-members" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><TeamMembersPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/review" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management"]}><ReviewPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/rapid-review" element={<Navigate to="/rapid-review/mobile" replace />} />
             <Route path="/rapid-review/mobile" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management", "owner"]} shell={false}><RapidReviewPage {...pageProps} /></ProtectedRoute>} />

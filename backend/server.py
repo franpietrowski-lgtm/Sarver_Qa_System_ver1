@@ -36,6 +36,7 @@ from routes.integrations import router as integrations_router
 from routes.reviewer_performance import router as reviewer_performance_router
 from routes.coaching import router as coaching_router
 from routes.crew_members import router as crew_members_router
+from routes.team_profiles import router as team_profiles_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
@@ -789,6 +790,7 @@ api_router.include_router(integrations_router)
 api_router.include_router(reviewer_performance_router)
 api_router.include_router(coaching_router)
 api_router.include_router(crew_members_router)
+api_router.include_router(team_profiles_router)
 
 app.include_router(api_router)
 

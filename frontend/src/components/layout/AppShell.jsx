@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChartColumn, ClipboardCheck, FileOutput, FolderInput, Grid3X3, LayoutDashboard, Radar, Settings, ShieldCheck, TrendingUp } from "lucide-react";
+import { ChartColumn, ClipboardCheck, FileOutput, FolderInput, Grid3X3, LayoutDashboard, Radar, Settings, ShieldCheck, TrendingUp, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ const navigationByRole = {
   management: [
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { to: "/jobs", label: "Alignment & QR", icon: FolderInput },
+    { to: "/team-members", label: "Team Members", icon: Users },
     { to: "/review", label: "Review Queue", icon: ClipboardCheck },
     { to: "/rubric-editor", label: "Rubric Matrices", icon: Grid3X3 },
     { to: "/standards", label: "Standards Library", icon: ShieldCheck },
@@ -21,6 +22,7 @@ const navigationByRole = {
   owner: [
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { to: "/owner", label: "Owner Review", icon: ShieldCheck },
+    { to: "/team-members", label: "Team Members", icon: Users },
     { to: "/analytics", label: "Calibration", icon: ChartColumn },
     { to: "/reviewer-performance", label: "Reviewer Perf.", icon: TrendingUp },
     { to: "/rubric-editor", label: "Rubric Matrices", icon: Grid3X3 },

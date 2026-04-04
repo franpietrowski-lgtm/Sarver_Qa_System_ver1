@@ -906,3 +906,6 @@ h4,
     font-family: 'Fredoka', sans-serif !important;
     font-weight: 700;
 }
+/* Scrollbar hide utility */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
