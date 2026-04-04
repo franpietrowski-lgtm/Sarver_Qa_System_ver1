@@ -1,4 +1,4 @@
-import { Activity, Boxes, Copy, FolderInput, Grid3X3, ShieldCheck, Smartphone, TrendingUp, UploadCloud, X } from "lucide-react";
+import { Activity, AlertTriangle, ArrowDown, ArrowUp, Boxes, ClipboardCheck, Copy, FolderInput, Grid3X3, ShieldCheck, Smartphone, TrendingUp, UploadCloud, Users, X, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 
@@ -35,6 +35,14 @@ export default function OverviewPage({ user }) {
   const [funnel, setFunnel] = useState(null);
   const [hoveredMetric, setHoveredMetric] = useState(null);
   const hoverTimerRef = useRef(null);
+
+  // Role-specific widget states
+  const [pmDash, setPmDash] = useState(null);
+  const [crewLeaders, setCrewLeaders] = useState(null);
+  const [amReport, setAmReport] = useState(null);
+  const [supervisorCheck, setSupervisorCheck] = useState(null);
+  const [insights, setInsights] = useState(null);
+  const [digest, setDigest] = useState(null);
 
   const isOwnerOrGM = user?.role === "owner" || user?.title === "GM";
 
@@ -74,9 +82,31 @@ export default function OverviewPage({ user }) {
       authGet("/metrics/division-quality-trend").then(setDivQuality).catch(() => {});
       authGet("/metrics/standards-compliance").then(setCompliance).catch(() => {});
       authGet("/metrics/training-funnel").then(setFunnel).catch(() => {});
+      authGet("/metrics/smart-insights").then(setInsights).catch(() => {});
+      authGet("/metrics/weekly-digest").then(setDigest).catch(() => {});
     };
     load();
   }, []);
+
+  // Role-specific data loading
+  useEffect(() => {
+    if (!user) return;
+    const title = user.title || "";
+    const div = user.division || "all";
+    if (title === "Production Manager") {
+      authGet(`/metrics/pm-dashboard?division=${encodeURIComponent(div)}`).then(setPmDash).catch(() => {});
+      authGet(`/metrics/crew-leader-performance?division=${encodeURIComponent(div)}`).then(setCrewLeaders).catch(() => {});
+    }
+    if (title === "Account Manager" || isOwnerOrGM) {
+      authGet("/metrics/account-manager-report").then(setAmReport).catch(() => {});
+    }
+    if (title === "Supervisor" || isOwnerOrGM) {
+      authGet("/metrics/supervisor-checklist").then(setSupervisorCheck).catch(() => {});
+    }
+    if (isOwnerOrGM) {
+      authGet("/metrics/crew-leader-performance?division=all").then(setCrewLeaders).catch(() => {});
+    }
+  }, [user, isOwnerOrGM]);
 
   if (!overview) {
     return <div className="rounded-[28px] border border-border bg-[var(--card)] p-10 text-center text-[var(--foreground)]" data-testid="overview-loading-state">Loading overview...</div>;
@@ -476,6 +506,253 @@ export default function OverviewPage({ user }) {
             </Card>
           )}
         </div>
+
+        {/* ─── SMART INSIGHTS BAR ─── */}
+        {insights && insights.insights?.length > 0 && (
+          <div className="flex flex-wrap gap-2" data-testid="smart-insights-bar">
+            {insights.insights.map((ins, i) => (
+              <div
+                key={i}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition-transform hover:scale-105 ${
+                  ins.type === "drop" ? "bg-red-500/15 text-red-400" :
+                  ins.type === "rise" ? "bg-emerald-500/15 text-emerald-400" :
+                  ins.type === "red_tag" ? "bg-orange-500/15 text-orange-400" :
+                  "bg-[var(--accent)] text-[var(--muted-foreground)]"
+                }`}
+                data-testid={`smart-insight-${i}`}
+                title={ins.message}
+              >
+                {ins.type === "drop" && <ArrowDown className="h-3 w-3" />}
+                {ins.type === "rise" && <ArrowUp className="h-3 w-3" />}
+                {ins.type === "red_tag" && <AlertTriangle className="h-3 w-3" />}
+                {ins.type === "training_gap" && <Users className="h-3 w-3" />}
+                <span className="truncate max-w-[260px]">{ins.message}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ─── ROLE-SPECIFIC WIDGETS ─── */}
+
+        {/* PM Dashboard Widget */}
+        {pmDash && user?.title === "Production Manager" && (
+          <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="widget-pm-dashboard">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <ClipboardCheck className="h-4 w-4 text-[#38a89d]" />
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">
+                  {user?.title === "Production Manager" ? `${pmDash.division} Division` : "PM Dashboard"} — 90 Day Snapshot
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-[14px] bg-[var(--accent)] p-3 text-center">
+                  <p className="text-2xl font-black text-[var(--foreground)]">{pmDash.submissions_30d}</p>
+                  <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Subs (30d)</p>
+                </div>
+                <div className="rounded-[14px] bg-[var(--accent)] p-3 text-center">
+                  <p className="text-2xl font-black text-[var(--foreground)]">{pmDash.avg_score_90d}</p>
+                  <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Avg Score</p>
+                </div>
+                <div className="rounded-[14px] bg-[var(--accent)] p-3 text-center">
+                  <p className="text-2xl font-black text-emerald-400">{pmDash.pass_count}</p>
+                  <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Pass</p>
+                </div>
+                <div className="rounded-[14px] bg-[var(--accent)] p-3 text-center">
+                  <p className="text-2xl font-black text-red-400">{pmDash.fail_count}</p>
+                  <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Fail</p>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-4 text-[10px] text-[var(--muted-foreground)]">
+                <span><strong className="text-[var(--foreground)]">{pmDash.crews}</strong> active crews</span>
+                <span><strong className="text-[var(--foreground)]">{pmDash.training_completed}</strong>/{pmDash.training_total} training completed</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Crew Leader Performance */}
+        {crewLeaders && crewLeaders.leaders?.length > 0 && (
+          <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="widget-crew-leaders">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="h-4 w-4 text-[#34d399]" />
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Crew Leader Performance</p>
+              </div>
+              <div className="space-y-2">
+                {crewLeaders.leaders.map((leader, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-[14px] bg-[var(--accent)] p-3" data-testid={`crew-leader-${i}`}>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--card)] text-xs font-black text-[var(--foreground)]">{i + 1}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-[var(--foreground)] truncate">{leader.leader_name || "Unnamed"}</p>
+                      <p className="text-[10px] text-[var(--muted-foreground)]">{leader.crew_label} — {leader.division}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-lg font-black text-[var(--foreground)]">{leader.avg_score}</p>
+                      <p className="text-[9px] text-[var(--muted-foreground)]">{leader.submissions_90d} subs · {leader.pass_count}P/{leader.fail_count}F</p>
+                    </div>
+                    <div className="h-2 w-20 rounded-full bg-[var(--border)] overflow-hidden shrink-0">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${Math.min((leader.avg_score / 5) * 100, 100)}%`, backgroundColor: leader.avg_score >= 4 ? "#34d399" : leader.avg_score >= 3 ? "#f59e0b" : "#ef4444" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* AM Client Report */}
+        {amReport && (user?.title === "Account Manager" || isOwnerOrGM) && amReport.properties?.length > 0 && (
+          <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="widget-am-report">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Boxes className="h-4 w-4 text-[#59a5d8]" />
+                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Client Quality Report — {amReport.total_properties} Properties</p>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-border/60">
+                      <th className="pb-2 text-[10px] font-bold uppercase text-[var(--muted-foreground)]">Property</th>
+                      <th className="pb-2 text-[10px] font-bold uppercase text-[var(--muted-foreground)] text-center">Subs</th>
+                      <th className="pb-2 text-[10px] font-bold uppercase text-[var(--muted-foreground)] text-center">Avg Score</th>
+                      <th className="pb-2 text-[10px] font-bold uppercase text-[var(--muted-foreground)] text-center">Pass</th>
+                      <th className="pb-2 text-[10px] font-bold uppercase text-[var(--muted-foreground)] text-center">Fail</th>
+                      <th className="pb-2 text-[10px] font-bold uppercase text-[var(--muted-foreground)]">Divisions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {amReport.properties.map((p, i) => (
+                      <tr key={i} className="border-b border-border/30" data-testid={`am-property-${i}`}>
+                        <td className="py-2 font-medium text-[var(--foreground)] text-xs">{p.property}</td>
+                        <td className="py-2 text-center text-xs text-[var(--foreground)]">{p.submissions}</td>
+                        <td className="py-2 text-center text-xs font-black text-[var(--foreground)]">{p.avg_score}</td>
+                        <td className="py-2 text-center text-xs text-emerald-400">{p.pass_count}</td>
+                        <td className="py-2 text-center text-xs text-red-400">{p.fail_count}</td>
+                        <td className="py-2"><div className="flex gap-1 flex-wrap">{p.divisions.map(d => <Badge key={d} className="border-0 bg-[var(--accent)] text-[9px] text-[var(--foreground)]">{d}</Badge>)}</div></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Supervisor Daily Checklist */}
+        {supervisorCheck && (user?.title === "Supervisor" || isOwnerOrGM) && (
+          <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="widget-supervisor-checklist">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <ClipboardCheck className="h-4 w-4 text-[#7c6cf0]" />
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Supervisor Daily Checklist</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-[14px] bg-[var(--accent)] p-3 text-center">
+                  <p className="text-2xl font-black text-[var(--foreground)]">{supervisorCheck.today_equipment_checks}</p>
+                  <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Equipment Checks</p>
+                </div>
+                <div className="rounded-[14px] bg-[var(--accent)] p-3 text-center">
+                  <p className="text-2xl font-black text-[var(--foreground)]">{supervisorCheck.today_submissions}</p>
+                  <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Submissions Today</p>
+                </div>
+                <div className="rounded-[14px] bg-[var(--accent)] p-3 text-center">
+                  <p className="text-2xl font-black text-[var(--foreground)]">{supervisorCheck.active_crews}</p>
+                  <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Active Crews</p>
+                </div>
+                <div className="rounded-[14px] bg-[var(--accent)] p-3 text-center">
+                  <p className={`text-2xl font-black ${supervisorCheck.red_tags_this_week > 0 ? "text-red-400" : "text-emerald-400"}`}>{supervisorCheck.red_tags_this_week}</p>
+                  <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Red Tags (7d)</p>
+                </div>
+              </div>
+              {supervisorCheck.equipment_checked_today?.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <span className="text-[10px] font-bold text-[var(--muted-foreground)]">Checked:</span>
+                  {supervisorCheck.equipment_checked_today.map(eq => (
+                    <Badge key={eq} className="border-0 bg-emerald-500/15 text-[9px] text-emerald-400">{eq}</Badge>
+                  ))}
+                </div>
+              )}
+              {supervisorCheck.red_tag_details?.length > 0 && (
+                <div className="mt-3 space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-red-400">Recent Red Tags</p>
+                  {supervisorCheck.red_tag_details.map((rt, i) => (
+                    <div key={i} className="flex items-center gap-2 rounded-lg bg-red-500/10 px-2.5 py-1.5 text-[10px] text-red-300">
+                      <AlertTriangle className="h-3 w-3 shrink-0" />
+                      <span className="font-bold">{rt.equipment_number}</span>
+                      <span className="truncate">{rt.notes}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Weekly Digest */}
+        {digest && (digest.top_performers?.length > 0 || digest.bottom_performers?.length > 0) && (
+          <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="widget-weekly-digest">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="h-4 w-4 text-[#f59e0b]" />
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Weekly Digest — {digest.total_crews_active} Active Crews</p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* Top Performers */}
+                {digest.top_performers?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-2">Top Performers</p>
+                    <div className="space-y-1.5">
+                      {digest.top_performers.map((p, i) => (
+                        <div key={i} className="flex items-center gap-2 rounded-[12px] bg-emerald-500/10 p-2.5" data-testid={`digest-top-${i}`}>
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] font-black text-emerald-400">{i + 1}</div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-[var(--foreground)] truncate">{p.crew}</p>
+                            <p className="text-[9px] text-[var(--muted-foreground)]">{p.submissions} subs this week</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-sm font-black text-emerald-400">{p.avg_score}</p>
+                            {p.delta !== 0 && (
+                              <p className={`text-[9px] font-bold ${p.delta > 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                {p.delta > 0 ? "+" : ""}{p.delta}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Bottom Performers */}
+                {digest.bottom_performers?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-red-400 mb-2">Needs Attention</p>
+                    <div className="space-y-1.5">
+                      {digest.bottom_performers.map((p, i) => (
+                        <div key={i} className="flex items-center gap-2 rounded-[12px] bg-red-500/10 p-2.5" data-testid={`digest-bottom-${i}`}>
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/20 text-[10px] font-black text-red-400">{i + 1}</div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-[var(--foreground)] truncate">{p.crew}</p>
+                            <p className="text-[9px] text-[var(--muted-foreground)]">{p.submissions} subs this week</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-sm font-black text-red-400">{p.avg_score}</p>
+                            {p.delta !== 0 && (
+                              <p className={`text-[9px] font-bold ${p.delta > 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                {p.delta > 0 ? "+" : ""}{p.delta}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -444,3 +444,338 @@ async def pm_dashboard_metrics(
         "training_total": len(training),
         "training_completed": training_completed,
     }
+
+
+# ─── CREW LEADER PERFORMANCE (visible to PMs / Supervisors) ───
+
+@router.get("/metrics/crew-leader-performance")
+async def crew_leader_performance(
+    user: dict = Depends(require_roles("management", "owner")),
+    division: str = Query("all"),
+):
+    """Per-crew-leader: recent scores, submission count, training completion."""
+    from datetime import timedelta, timezone
+    now = datetime.now(timezone.utc)
+    cutoff = (now - timedelta(days=90)).isoformat()
+
+    crew_query = {"enabled": True}
+    if division != "all":
+        crew_query["division"] = division
+    crews = await deps.db.crew_access_links.find(crew_query, {"_id": 0, "code": 1, "label": 1, "leader_name": 1, "division": 1}).to_list(50)
+
+    results = []
+    for crew in crews:
+        subs = await deps.db.submissions.find(
+            {"access_code": crew["code"], "created_at": {"$gte": cutoff}},
+            {"_id": 0, "id": 1}
+        ).to_list(500)
+        sub_ids = [s["id"] for s in subs]
+        reviews = await deps.db.management_reviews.find(
+            {"submission_id": {"$in": sub_ids or ["__none__"]}},
+            {"_id": 0, "overall_score": 1, "total_score": 1, "verdict": 1}
+        ).to_list(500)
+        scores = [r.get("total_score") or r.get("overall_score") or 0 for r in reviews if (r.get("total_score") or r.get("overall_score"))]
+        avg = round(sum(scores) / max(len(scores), 1), 2) if scores else 0
+        pass_ct = sum(1 for r in reviews if r.get("verdict") in ("Pass", "Exemplary"))
+
+        training = await deps.db.training_sessions.find(
+            {"access_code": crew["code"]}, {"_id": 0, "status": 1}
+        ).to_list(100)
+        train_done = sum(1 for t in training if t.get("status") == "completed")
+
+        results.append({
+            "crew_label": crew.get("label", ""),
+            "leader_name": crew.get("leader_name", ""),
+            "division": crew.get("division", ""),
+            "submissions_90d": len(subs),
+            "reviews_count": len(reviews),
+            "avg_score": avg,
+            "pass_count": pass_ct,
+            "fail_count": len(reviews) - pass_ct,
+            "training_total": len(training),
+            "training_completed": train_done,
+        })
+    results.sort(key=lambda x: x["avg_score"], reverse=True)
+    return {"leaders": results}
+
+
+# ─── ACCOUNT MANAGER CLIENT REPORT ───
+
+@router.get("/metrics/account-manager-report")
+async def account_manager_report(
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    """Quality summary grouped by property/job for AM export."""
+    from datetime import timedelta, timezone
+    now = datetime.now(timezone.utc)
+    cutoff = (now - timedelta(days=90)).isoformat()
+
+    subs = await deps.db.submissions.find(
+        {"created_at": {"$gte": cutoff}},
+        {"_id": 0, "id": 1, "job_name_input": 1, "crew_label": 1, "division": 1, "service_type": 1, "created_at": 1}
+    ).to_list(2000)
+    sub_ids = [s["id"] for s in subs]
+    reviews = await deps.db.management_reviews.find(
+        {"submission_id": {"$in": sub_ids or ["__none__"]}},
+        {"_id": 0, "submission_id": 1, "overall_score": 1, "total_score": 1, "verdict": 1}
+    ).to_list(2000)
+    rev_lookup = {r["submission_id"]: r for r in reviews}
+
+    props = {}
+    for s in subs:
+        prop = s.get("job_name_input") or "Unassigned"
+        entry = props.setdefault(prop, {"property": prop, "submissions": 0, "scores": [], "pass": 0, "fail": 0, "divisions": set()})
+        entry["submissions"] += 1
+        entry["divisions"].add(s.get("division", ""))
+        rev = rev_lookup.get(s["id"])
+        if rev:
+            sc = rev.get("total_score") or rev.get("overall_score")
+            if sc:
+                entry["scores"].append(sc)
+            if rev.get("verdict") in ("Pass", "Exemplary"):
+                entry["pass"] += 1
+            elif rev.get("verdict") == "Fail":
+                entry["fail"] += 1
+
+    rows = []
+    for entry in props.values():
+        rows.append({
+            "property": entry["property"],
+            "submissions": entry["submissions"],
+            "avg_score": round(sum(entry["scores"]) / max(len(entry["scores"]), 1), 2) if entry["scores"] else 0,
+            "pass_count": entry["pass"],
+            "fail_count": entry["fail"],
+            "divisions": sorted(entry["divisions"] - {""}),
+        })
+    rows.sort(key=lambda x: x["submissions"], reverse=True)
+    return {"properties": rows, "total_properties": len(rows)}
+
+
+# ─── SUPERVISOR DAILY CHECKLIST ───
+
+@router.get("/metrics/supervisor-checklist")
+async def supervisor_checklist(
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    """Today's equipment pre-check status + recent red-tags."""
+    from datetime import timedelta, timezone
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    week_start = (now - timedelta(days=7)).isoformat()
+
+    today_logs = await deps.db.equipment_logs.find(
+        {"created_at": {"$gte": today_start}},
+        {"_id": 0, "equipment_number": 1, "red_tag": 1, "notes": 1, "created_at": 1}
+    ).to_list(100)
+
+    week_logs = await deps.db.equipment_logs.find(
+        {"created_at": {"$gte": week_start}},
+        {"_id": 0, "equipment_number": 1, "red_tag": 1, "notes": 1, "created_at": 1}
+    ).to_list(500)
+
+    crews = await deps.db.crew_access_links.find({"enabled": True}, {"_id": 0, "code": 1, "label": 1}).to_list(20)
+    today_subs = await deps.db.submissions.count_documents({"created_at": {"$gte": today_start}})
+
+    red_tags_week = [lg for lg in week_logs if lg.get("red_tag")]
+    unique_equipment_today = list(set(lg.get("equipment_number", "") for lg in today_logs if lg.get("equipment_number")))
+
+    return {
+        "today_equipment_checks": len(today_logs),
+        "equipment_checked_today": unique_equipment_today,
+        "red_tags_this_week": len(red_tags_week),
+        "red_tag_details": red_tags_week[:5],
+        "today_submissions": today_subs,
+        "active_crews": len(crews),
+    }
+
+
+# ─── SMART INSIGHTS (tooltips) ───
+
+@router.get("/metrics/smart-insights")
+async def smart_insights(
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    """Auto-generated insights: score drops, trends, anomalies."""
+    from datetime import timedelta, timezone
+    now = datetime.now(timezone.utc)
+    cutoff_30 = (now - timedelta(days=30)).isoformat()
+    cutoff_60 = (now - timedelta(days=60)).isoformat()
+
+    # Gather scores in two 30-day windows
+    subs_recent = await deps.db.submissions.find(
+        {"created_at": {"$gte": cutoff_30}},
+        {"_id": 0, "id": 1, "crew_label": 1, "division": 1}
+    ).to_list(2000)
+    subs_prev = await deps.db.submissions.find(
+        {"created_at": {"$gte": cutoff_60, "$lt": cutoff_30}},
+        {"_id": 0, "id": 1, "crew_label": 1, "division": 1}
+    ).to_list(2000)
+
+    async def avg_scores(sub_list):
+        ids = [s["id"] for s in sub_list]
+        revs = await deps.db.management_reviews.find(
+            {"submission_id": {"$in": ids or ["__none__"]}},
+            {"_id": 0, "submission_id": 1, "overall_score": 1, "total_score": 1}
+        ).to_list(2000)
+        rev_map = {r["submission_id"]: r.get("total_score") or r.get("overall_score") or 0 for r in revs}
+        crew_scores = {}
+        for s in sub_list:
+            crew = s.get("crew_label", "Unknown")
+            if s["id"] in rev_map and rev_map[s["id"]] > 0:
+                crew_scores.setdefault(crew, []).append(rev_map[s["id"]])
+        return {c: round(sum(sc) / len(sc), 2) for c, sc in crew_scores.items()}
+
+    recent_avgs = await avg_scores(subs_recent)
+    prev_avgs = await avg_scores(subs_prev)
+
+    insights = []
+    for crew, score in recent_avgs.items():
+        prev = prev_avgs.get(crew)
+        if prev and prev > 0:
+            delta = round(((score - prev) / prev) * 100, 1)
+            if delta <= -10:
+                insights.append({"type": "drop", "crew": crew, "delta_pct": delta, "current": score, "previous": prev, "message": f"{crew} avg score dropped {abs(delta)}% in 30 days"})
+            elif delta >= 15:
+                insights.append({"type": "rise", "crew": crew, "delta_pct": delta, "current": score, "previous": prev, "message": f"{crew} avg score improved {delta}% in 30 days"})
+
+    # Training gap insight
+    total_crews = await deps.db.crew_access_links.count_documents({"enabled": True})
+    training_done = len(set(
+        t.get("access_code") for t in
+        await deps.db.training_sessions.find({"status": "completed"}, {"_id": 0, "access_code": 1}).to_list(500)
+    ))
+    if total_crews > 0 and training_done < total_crews:
+        gap = total_crews - training_done
+        insights.append({"type": "training_gap", "message": f"{gap} crew(s) have not completed any training", "gap": gap, "total": total_crews})
+
+    # Red-tag insight
+    red_count = await deps.db.equipment_logs.count_documents({"red_tag": True, "created_at": {"$gte": cutoff_30}})
+    if red_count > 0:
+        insights.append({"type": "red_tag", "message": f"{red_count} red-tag equipment issue(s) in the last 30 days", "count": red_count})
+
+    insights.sort(key=lambda x: abs(x.get("delta_pct", 0)), reverse=True)
+    return {"insights": insights}
+
+
+# ─── CREW SPARKLINES (90-day monthly scores per crew) ───
+
+@router.get("/metrics/crew-sparklines")
+async def crew_sparklines(
+    user: dict = Depends(require_roles("management", "owner")),
+    division: str = Query("all"),
+):
+    """Monthly average scores per crew over last 6 months for sparkline rendering."""
+    from datetime import timedelta, timezone
+    now = datetime.now(timezone.utc)
+    cutoff = (now - timedelta(days=180)).isoformat()
+
+    sub_query = {"created_at": {"$gte": cutoff}}
+    if division != "all":
+        sub_query["division"] = division
+    subs = await deps.db.submissions.find(sub_query, {"_id": 0, "id": 1, "access_code": 1, "crew_label": 1, "division": 1, "created_at": 1}).to_list(5000)
+    sub_ids = [s["id"] for s in subs]
+    reviews = await deps.db.management_reviews.find(
+        {"submission_id": {"$in": sub_ids or ["__none__"]}},
+        {"_id": 0, "submission_id": 1, "overall_score": 1, "total_score": 1}
+    ).to_list(5000)
+    rev_map = {r["submission_id"]: r.get("total_score") or r.get("overall_score") or 0 for r in reviews}
+
+    crew_months = {}
+    div_months = {}
+    for s in subs:
+        crew = s.get("crew_label") or s.get("access_code", "Unknown")
+        div_name = s.get("division", "Unknown")
+        score = rev_map.get(s["id"])
+        if not score or score == 0:
+            continue
+        created = parse_iso_datetime(s.get("created_at"))
+        if not created:
+            continue
+        month_key = created.strftime("%Y-%m")
+        crew_months.setdefault(crew, {}).setdefault(month_key, []).append(score)
+        div_months.setdefault(div_name, {}).setdefault(month_key, []).append(score)
+
+    # Build ordered month labels for last 6 months
+    months = []
+    for i in range(5, -1, -1):
+        d = now - timedelta(days=30 * i)
+        months.append(d.strftime("%Y-%m"))
+
+    result = {}
+    for crew, month_data in crew_months.items():
+        points = []
+        for m in months:
+            scores = month_data.get(m, [])
+            points.append(round(sum(scores) / len(scores), 2) if scores else None)
+        result[crew] = {"months": months, "scores": points}
+
+    division_sparklines = {}
+    for dv, month_data in div_months.items():
+        points = []
+        for m in months:
+            scores = month_data.get(m, [])
+            points.append(round(sum(scores) / len(scores), 2) if scores else None)
+        division_sparklines[dv] = {"months": months, "scores": points}
+
+    return {"sparklines": result, "division_sparklines": division_sparklines}
+
+
+# ─── WEEKLY DIGEST (top/bottom performers) ───
+
+@router.get("/metrics/weekly-digest")
+async def weekly_digest(
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    """This week's top and bottom performing crews."""
+    from datetime import timedelta, timezone
+    now = datetime.now(timezone.utc)
+    week_start = (now - timedelta(days=7)).isoformat()
+    prev_week_start = (now - timedelta(days=14)).isoformat()
+
+    async def week_scores(start, end=None):
+        q = {"created_at": {"$gte": start}}
+        if end:
+            q["created_at"]["$lt"] = end
+        subs = await deps.db.submissions.find(q, {"_id": 0, "id": 1, "crew_label": 1}).to_list(2000)
+        ids = [s["id"] for s in subs]
+        revs = await deps.db.management_reviews.find(
+            {"submission_id": {"$in": ids or ["__none__"]}},
+            {"_id": 0, "submission_id": 1, "overall_score": 1, "total_score": 1}
+        ).to_list(2000)
+        rev_map = {r["submission_id"]: r.get("total_score") or r.get("overall_score") or 0 for r in revs}
+        crew_data = {}
+        for s in subs:
+            crew = s.get("crew_label", "Unknown")
+            score = rev_map.get(s["id"])
+            if score and score > 0:
+                crew_data.setdefault(crew, {"scores": [], "count": 0})
+                crew_data[crew]["scores"].append(score)
+            crew_data.setdefault(crew, {"scores": [], "count": 0})
+            crew_data[crew]["count"] += 1
+        return {c: {"avg": round(sum(d["scores"]) / max(len(d["scores"]), 1), 2) if d["scores"] else 0, "submissions": d["count"]} for c, d in crew_data.items()}
+
+    this_week = await week_scores(week_start)
+    last_week = await week_scores(prev_week_start, week_start)
+
+    ranked = sorted(this_week.items(), key=lambda x: x[1]["avg"], reverse=True)
+    digest = []
+    for crew, data in ranked:
+        prev = last_week.get(crew, {}).get("avg", 0)
+        delta = round(data["avg"] - prev, 2) if prev else 0
+        digest.append({
+            "crew": crew,
+            "avg_score": data["avg"],
+            "submissions": data["submissions"],
+            "prev_avg": prev,
+            "delta": delta,
+        })
+
+    top = digest[:3] if len(digest) >= 3 else digest
+    bottom = list(reversed(digest[-3:])) if len(digest) >= 3 else []
+
+    return {
+        "week_start": week_start,
+        "top_performers": top,
+        "bottom_performers": bottom,
+        "total_crews_active": len(this_week),
+    }

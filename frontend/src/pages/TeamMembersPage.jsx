@@ -126,8 +126,33 @@ function VLine({ h = 28, color = "var(--border)", dashed = false }) {
   return <div className="mx-auto" style={{ width: 2, height: h, backgroundColor: dashed ? "transparent" : color, borderLeft: dashed ? `2px dashed ${color}` : "none" }} />;
 }
 
+/* ── Sparkline SVG ── */
+function Sparkline({ points, color = "#34d399", width = 80, height = 24 }) {
+  const valid = (points || []).map((v, i) => (v != null ? { x: i, y: v } : null)).filter(Boolean);
+  if (valid.length < 2) return null;
+  const minY = Math.min(...valid.map(p => p.y));
+  const maxY = Math.max(...valid.map(p => p.y));
+  const range = maxY - minY || 1;
+  const xStep = width / Math.max(points.length - 1, 1);
+  const coords = valid.map(p => ({
+    cx: p.x * xStep,
+    cy: height - 2 - ((p.y - minY) / range) * (height - 4),
+  }));
+  const pathD = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.cx.toFixed(1)},${c.cy.toFixed(1)}`).join(" ");
+  const trend = valid[valid.length - 1].y >= valid[0].y;
+  const lineColor = trend ? color : "#ef4444";
+  return (
+    <svg width={width} height={height} className="mt-1.5" data-testid="sparkline-svg">
+      <path d={pathD} fill="none" stroke={lineColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+      {coords.map((c, i) => (
+        <circle key={i} cx={c.cx} cy={c.cy} r="2" fill={lineColor} />
+      ))}
+    </svg>
+  );
+}
+
 /* ── GRID CARD (Individual) — no hover tooltip, selection highlights ── */
-function GridCard({ profile, onClick, isSelected }) {
+function GridCard({ profile, onClick, isSelected, sparkData }) {
   const a = accent(profile.role);
   return (
     <button
@@ -146,6 +171,8 @@ function GridCard({ profile, onClick, isSelected }) {
         <p className="mt-0.5 text-[9px] text-[var(--muted-foreground)]">{profile.crew_label}</p>
       )}
       {profile.division && <p className="text-[9px] text-[var(--muted-foreground)]">{profile.division}</p>}
+      {/* Sparkline */}
+      {sparkData && <Sparkline points={sparkData} color={a.bar} />}
     </button>
   );
 }
@@ -357,9 +384,40 @@ const PER_PAGE = 10;
 function IndividualView({ profiles, onCardClick }) {
   const [page, setPage] = useState(1);
   const [hoveredProfile, setHoveredProfile] = useState(null);
+  const [sparklines, setSparklines] = useState({});
+  const [divSparklines, setDivSparklines] = useState({});
   const hoverTimer = useRef(null);
   const total = Math.max(1, Math.ceil(profiles.length / PER_PAGE));
   const vis = profiles.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  useEffect(() => {
+    authGet("/metrics/crew-sparklines?division=all")
+      .then(data => {
+        setSparklines(data?.sparklines || {});
+        setDivSparklines(data?.division_sparklines || {});
+      })
+      .catch(() => {});
+  }, []);
+
+  const getSparkData = (profile) => {
+    // Direct crew match
+    const label = profile.crew_label || profile.name;
+    if (sparklines[label]) return sparklines[label].scores;
+    // Division match for PMs
+    if (profile.division && divSparklines[profile.division]) return divSparklines[profile.division].scores;
+    // Fallback: aggregate all divisions
+    const allDiv = Object.values(divSparklines);
+    if (allDiv.length > 0) {
+      const months = allDiv[0].scores.length;
+      const agg = [];
+      for (let i = 0; i < months; i++) {
+        const vals = allDiv.map(d => d.scores[i]).filter(v => v != null);
+        agg.push(vals.length > 0 ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) / 100 : null);
+      }
+      return agg;
+    }
+    return null;
+  };
 
   const handleHover = (profile) => {
     if (hoverTimer.current) clearTimeout(hoverTimer.current);
@@ -379,7 +437,7 @@ function IndividualView({ profiles, onCardClick }) {
         >
           {vis.map(p => (
             <div key={p.profile_id} onMouseEnter={() => handleHover(p)} onMouseLeave={handleLeave}>
-              <GridCard profile={p} onClick={onCardClick} isSelected={hoveredProfile?.profile_id === p.profile_id} />
+              <GridCard profile={p} onClick={onCardClick} isSelected={hoveredProfile?.profile_id === p.profile_id} sparkData={getSparkData(p)} />
             </div>
           ))}
         </div>
