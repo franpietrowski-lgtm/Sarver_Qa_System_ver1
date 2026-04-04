@@ -14,74 +14,90 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - **Backend**: FastAPI (modular routes in `/app/backend/routes/`)
 - **Database**: MongoDB (DB_NAME="test_database")
 - **Storage**: Supabase Object Storage
-- **Auth**: JWT-based, role-based routing
+- **Auth**: JWT with role-based routing
+- **Image Processing**: rembg (avatar background removal)
 
-## Implemented Features (Production Ready)
+## Implemented Features
 
 ### V1.0 — Core System
-- JWT auth with unified login screen and role-based routing
-- Crew capture portal (QR/link access, no login required)
-- Photo submissions with GPS, truck, division, task type
-- Management review workflow with rubric scoring
-- Owner calibration review overlay
-- Export pipeline for AI training datasets
-- Equipment maintenance logging with red-tag notifications
+- JWT auth with unified login, role-based routing
+- Photo submissions with GPS, truck, division, task
+- Management & owner review workflows
+- Equipment maintenance with red-tag notifications
 - Dark/light theme toggler
 
-### V1.1 — QA System Expansion
-- Tinder-style "Rapid Review" swipe mode (strict mobile-first)
-- Standards Library with dynamic categories, CRUD, edit/delete
+### V1.1 — QA Expansion
+- Rapid Review (Tinder-style swipe)
+- Standards Library (dynamic categories, CRUD)
 - Repeat Offender tracking
-- Training Mode with quiz-based sessions
-- Pagination and DB query optimization
+- Training Mode (quiz-based)
+- Pagination and optimization
 
 ### V1.2 — Crew & Team Management
-- CrewMember sub-system (QR registration, personal dashboard)
-- Crew Leader "My Team" panel with member management
+- CrewMember sub-system (QR registration)
+- Crew Leader "My Team" panel
 - 30-day auto-cleanup for archived QR codes
-- Clipboard API fallback for iframe environments
 
-### V1.3 — Team Members & Standards Overhaul (Current Session)
-- **Team Members Page** with 3 views:
-  - Individual: Responsive grid, hex avatars, role-colored accents, hover stats with 1/3/6/12/24 month timeline
-  - Team Structure: Crew name header → leader → members, responsive card sizing
-  - Division Hierarchy: Owner → GM → Production/Account Managers (cross-lateral) → Supervisors → Crews by division
-- **Profile Overlay**: Centered enlarged view with avatar upload, stats toggle with timeline, quick links (Training, Heatmap, Repeat Offenders)
-- **Industry Standards Library**: 19 real landscaping standards replacing test data:
-  - Maintenance: Bed Edging, Spring/Fall Cleanup, Pruning, Mulching, Weeding
-  - Install: Hardscape, Softscape, Lighting, Drainage
-  - Tree: ISA Pruning, Tree Removal
-  - Plant Healthcare: Chemical Application
-  - Winter Services: Snow Removal
-  - General: Safety, PPE, Photo Documentation, Equipment Pre-Check, Property Respect
-- **Division Switcher in Crew App**: Crew leaders can switch divisions to access cross-division standards
-- **leader_name field**: Crew access links now store the actual person's name (not just crew label)
-- **QJA Navigation Rename**: "Alignment & QR" → "QJA"
-- **DB Factory Reset**: Clean production-ready state (12 admins, 1 demo crew)
+### V1.3 — Standards & Org Chart
+- 19 real industry landscaping standards
+- Team Members page with 3 views
+- Profile overlay with stats timeline (1/3/6/12/24mo)
+- Division switcher in crew app
+- leader_name field for crew access links
+- QJA navigation rename
 
-## Key API Endpoints
-- `POST /api/auth/login` — JWT authentication
-- `GET /api/public/standards?division=` — Division-filtered standards (no auth)
-- `GET /api/team/profiles` — All team profiles
-- `GET /api/team/structure` — Team structure with crews
-- `GET /api/team/hierarchy` — Full org chart
-- `GET /api/team/profiles/{id}/stats?months=` — Timeline performance stats
-- `POST /api/team/profiles/{id}/avatar` — Avatar upload
-- `POST /api/crew-access-links` — Create crew link (with leader_name)
-- `GET /api/standards` — Standards library CRUD
-- `POST /api/public/submissions` — Field submissions
-- `GET/POST /api/rapid-review` — Rapid review queue
+### V1.4 — Demo Data & System Health (Current Session)
+- **3 new demo crews**: Maintenance Alpha (3-man), Maintenance Bravo (4-man), Tree Alpha (4-man with PHC specialist)
+- **29+ submissions** with management reviews across all divisions
+- **42 training sessions** at crew and individual level
+- **10 rapid reviews** for swipe mode testing
+- **Division Hierarchy fix**: Direct GM→PM paths, direct PM→team paths visible per division
+- **Avatar background removal**: rembg integration with graceful fallback
+- **Updated documentation**: README, frontend README, test_credentials
+
+## Key Endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | /api/auth/login | JWT auth |
+| GET | /api/public/standards?division= | Standards by division |
+| GET | /api/team/profiles | All profiles |
+| GET | /api/team/hierarchy | Org chart with PM-division mapping |
+| GET | /api/team/profiles/:id/stats?months= | Timeline stats |
+| POST | /api/team/profiles/:id/avatar | Upload + bg removal |
+| GET | /api/submissions | Submission queue |
+| GET/POST | /api/rapid-review | Rapid review |
 
 ## DB Schema
 - `users`: {email, hashed_password, role, active, name, division, title}
-- `crew_access_links`: {code, label, leader_name, division, truck_number, enabled, archived}
-- `crew_members`: {code, name, parent_access_code, active}
-- `standards_library`: {title, category, division_targets[], checklist[], notes, image_url, training_enabled, question_*}
+- `crew_access_links`: {code, label, leader_name, division, truck_number, enabled}
+- `crew_members`: {code, name, parent_access_code, division, active}
+- `standards_library`: {title, category, division_targets[], checklist[], notes, image_url, training_enabled}
 - `submissions`, `management_reviews`, `owner_reviews`, `rapid_reviews`
 - `training_sessions`, `equipment_logs`, `notifications`
 
 ## Pending / Backlog
-- P1: Avatar background removal (needs integration_playbook_expert_v2)
-- P2: AI-assisted scoring (placeholder exists)
-- P2: Closed-loop coaching completion reports
-- Backlog: Quality Review Agent (pattern learning engine)
+
+### P1 — Role-Specific Enhancements (Recommended)
+- **PM Dashboard Widget**: Submission count/score trends specific to PM's assigned division
+- **Crew Leader Performance Card**: Quick view of their crew's recent scores, training completion rate
+- **Account Manager Client Report**: Exportable quality report per property/client
+- **Supervisor Daily Checklist**: Equipment pre-check completion tracker, crew coverage heatmap
+
+### P1 — Metric Tracking Additions
+- **Time-to-Review**: Track hours from submission to first review — surface bottlenecks
+- **Division Quality Trend**: Rolling 30/60/90 day average scores per division
+- **Standards Compliance Rate**: % of submissions that pass all checklist items per standard
+- **Training Completion Funnel**: Track onboarding → first standard viewed → first quiz → first pass
+- **Red-Tag Resolution Time**: Equipment downtime tracking from red-tag to resolution
+
+### P2 — Actionable Improvements
+- **Smart Tooltips**: Context-aware hints on hover (e.g., "This crew's avg score dropped 12% in the last 30 days")
+- **Score Trend Sparklines**: Inline mini-charts on team cards showing 90-day score trajectory
+- **Weekly Digest Widget**: Auto-generated summary of top/bottom performers, flagged submissions
+- **Quick Actions Bar**: One-tap access to "Review Next", "Flag for Training", "Generate Report"
+- **Onboarding Progress Tracker**: Visual checklist for new crew members (profile complete, standards viewed, first submission, first training)
+
+### P2 — AI & Automation
+- AI-assisted scoring backend
+- Closed-loop coaching completion reports
+- Quality Review Agent (pattern learning engine)
