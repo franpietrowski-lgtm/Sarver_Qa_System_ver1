@@ -56,6 +56,13 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
   - Crew leader "My Team" panel — collapsible list of registered members with submission counts, training completion %, and quick-view links
   - Backend: `crew_members` collection, 6 public API endpoints
   - Submissions tagged with `member_code` for individual tracking
+- **Team Members Page** (Apr 2026):
+  - Three display modes via dropdown: Individual (carousel grid), Team Structure (crew lead → members), Division Hierarchy (full org chart)
+  - Profile cards with initials avatar, name, age, role badges
+  - Profile detail overlay with Performance & Records toggle (reviews, submissions, training stats)
+  - PATCH endpoint to update age/avatar on profiles
+  - Backend: `team_profiles` route with 5 endpoints, `team_profile_extras` collection
+  - Nav: between Owner Review and Calibration (owner), between Alignment & QR and Review Queue (management)
 
 - **Standards Library Dynamic Categories & CRUD** (Apr 2026):
   - Replaced 5 hardcoded categories with 30 dynamic categories covering all landscaping division tasks
