@@ -78,16 +78,19 @@ async def get_analytics_summary(
     mgmt_lookup = {review["submission_id"]: review for review in management_reviews}
     owner_lookup = {review["submission_id"]: review for review in owner_reviews}
 
+    def _score(review):
+        return review.get("total_score") or review.get("overall_score") or 0
+
     for submission in submissions:
         crew_key = submission.get("crew_label") or submission.get("truck_number")
         if submission["id"] in owner_lookup:
-            crew_scores.setdefault(crew_key, []).append(owner_lookup[submission["id"]]["total_score"])
+            crew_scores.setdefault(crew_key, []).append(_score(owner_lookup[submission["id"]]))
         elif submission["id"] in mgmt_lookup:
-            crew_scores.setdefault(crew_key, []).append(mgmt_lookup[submission["id"]]["total_score"])
+            crew_scores.setdefault(crew_key, []).append(_score(mgmt_lookup[submission["id"]]))
 
     for submission_id, review in owner_lookup.items():
         variance_points.append({"submission_id": submission_id, "variance": review.get("variance_from_management", 0)})
-        if review["training_inclusion"] == "excluded":
+        if review.get("training_inclusion") == "excluded":
             key = review.get("exclusion_reason") or "excluded_without_reason"
             fail_reasons[key] = fail_reasons.get(key, 0) + 1
 
@@ -122,9 +125,9 @@ async def get_analytics_summary(
             },
         )
         if management_review:
-            entry["management_scores"].append(management_review.get("total_score", 0))
+            entry["management_scores"].append(management_review.get("total_score") or management_review.get("overall_score") or 0)
         if owner_review:
-            entry["owner_scores"].append(owner_review.get("total_score", 0))
+            entry["owner_scores"].append(owner_review.get("total_score") or owner_review.get("overall_score") or 0)
         if management_review and owner_review:
             entry["variances"].append(owner_review.get("variance_from_management", 0))
 
@@ -152,7 +155,7 @@ async def get_analytics_summary(
             {"day": entry["label"], "count": entry["count"]}
             for _, entry in sorted(volume_by_bucket.items(), key=lambda item: item[0])
         ],
-        "training_approved_count": len([review for review in owner_reviews if review["training_inclusion"] == "approved"]),
+        "training_approved_count": len([review for review in owner_reviews if review.get("training_inclusion") == "approved"]),
         "calibration_heatmap": calibration_heatmap,
     }
 
@@ -187,13 +190,13 @@ async def get_random_sample(
 
     mgmt_reviews = await deps.db.management_reviews.find(
         {"submission_id": {"$in": sampled_ids or ["__none__"]}},
-        {"_id": 0, "submission_id": 1, "total_score": 1, "overall_rating": 1,
-         "flagged_issues": 1, "reviewer_id": 1},
+        {"_id": 0, "submission_id": 1, "total_score": 1, "overall_score": 1, "overall_rating": 1,
+         "verdict": 1, "flagged_issues": 1, "reviewer_id": 1},
     ).to_list(500)
 
     owner_reviews = await deps.db.owner_reviews.find(
         {"submission_id": {"$in": sampled_ids or ["__none__"]}},
-        {"_id": 0, "submission_id": 1, "total_score": 1, "training_inclusion": 1,
+        {"_id": 0, "submission_id": 1, "total_score": 1, "overall_score": 1, "training_inclusion": 1,
          "variance_from_management": 1},
     ).to_list(500)
 
@@ -212,10 +215,10 @@ async def get_random_sample(
             "status": sub.get("status", ""),
             "created_at": sub.get("created_at", ""),
             "image_count": len(sub.get("image_urls") or []),
-            "management_score": mgmt["total_score"] if mgmt else None,
-            "management_rating": mgmt.get("overall_rating") if mgmt else None,
+            "management_score": (mgmt.get("total_score") or mgmt.get("overall_score")) if mgmt else None,
+            "management_rating": (mgmt.get("overall_rating") or mgmt.get("verdict")) if mgmt else None,
             "management_issues": mgmt.get("flagged_issues", []) if mgmt else [],
-            "owner_score": owner["total_score"] if owner else None,
+            "owner_score": (owner.get("total_score") or owner.get("overall_score")) if owner else None,
             "owner_training": owner.get("training_inclusion") if owner else None,
             "variance": owner.get("variance_from_management") if owner else None,
         })
@@ -255,13 +258,13 @@ async def get_variance_drilldown(
     sub_ids = [s["id"] for s in submissions]
     mgmt_reviews = await deps.db.management_reviews.find(
         {"submission_id": {"$in": sub_ids or ["__none__"]}},
-        {"_id": 0, "submission_id": 1, "total_score": 1, "overall_rating": 1,
-         "flagged_issues": 1, "reviewer_id": 1},
+        {"_id": 0, "submission_id": 1, "total_score": 1, "overall_score": 1, "overall_rating": 1,
+         "verdict": 1, "flagged_issues": 1, "reviewer_id": 1},
     ).to_list(1000)
 
     owner_reviews = await deps.db.owner_reviews.find(
         {"submission_id": {"$in": sub_ids or ["__none__"]}},
-        {"_id": 0, "submission_id": 1, "total_score": 1, "training_inclusion": 1,
+        {"_id": 0, "submission_id": 1, "total_score": 1, "overall_score": 1, "training_inclusion": 1,
          "variance_from_management": 1, "exclusion_reason": 1},
     ).to_list(1000)
 
@@ -278,10 +281,10 @@ async def get_variance_drilldown(
             "submission_id": sub["id"],
             "created_at": sub.get("created_at", ""),
             "status": sub.get("status", ""),
-            "management_score": mgmt["total_score"] if mgmt else None,
-            "management_rating": mgmt.get("overall_rating") if mgmt else None,
+            "management_score": (mgmt.get("total_score") or mgmt.get("overall_score")) if mgmt else None,
+            "management_rating": (mgmt.get("overall_rating") or mgmt.get("verdict")) if mgmt else None,
             "management_issues": mgmt.get("flagged_issues", []) if mgmt else [],
-            "owner_score": owner["total_score"] if owner else None,
+            "owner_score": (owner.get("total_score") or owner.get("overall_score")) if owner else None,
             "owner_training": owner.get("training_inclusion") if owner else None,
             "variance": owner.get("variance_from_management") if owner else None,
             "exclusion_reason": owner.get("exclusion_reason") if owner else None,

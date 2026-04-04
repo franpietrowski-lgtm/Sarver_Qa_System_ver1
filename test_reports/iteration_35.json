@@ -1,0 +1,58 @@
+{
+  "summary": "Iteration 35 - Analytics 500 Error Fix & Hover-to-Expand Metric Widgets. All 9 backend tests passed. Frontend verified: Analytics/Calibration page loads without 500 errors, Overview page shows three metric widget cards (Division Quality Trend, Standards Compliance, Training Funnel) with working hover-to-expand functionality.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration35_analytics_fix.py",
+    "/app/test_reports/pytest/pytest_results_iter35.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_iteration35_analytics_fix.py"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9 tests passed)",
+    "frontend": "100% (all verified features working)"
+  },
+  "test_credentials": {
+    "owner": "sadam.owner@slmco.local / SLMCo2026!",
+    "gm": "ctyler.gm@slmco.local / SLMCo2026!",
+    "pm": "atim.prom@slmco.local / SLMCo2026!"
+  },
+  "seed_data_creation": "None - using existing seeded data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 35 verified the fix for KeyError: 'total_score' in analytics.py. The fix uses .get() with fallback to handle both 'total_score' and 'overall_score' field names from MongoDB. All analytics endpoints now return 200: /api/analytics/summary (with calibration_heatmap, average_score_by_crew), /api/analytics/random-sample (with samples array), /api/analytics/variance-drilldown (with crew/service_type params). The Overview page's three metric widget cards (Division Quality Trend, Standards Compliance, Training Funnel) have working hover-to-expand functionality using CSS grid-template-columns transition. Hovering one card makes it wider (2.2fr) and shows expanded detail (Score Breakdown, Passing/At Risk/Failing counts, Crews/Members breakdown), pushing the other two cards aside (0.9fr each).",
+  "verified_features": {
+    "backend_analytics_summary": "GET /api/analytics/summary returns 200 with calibration_heatmap, average_score_by_crew, period, score_variance_average, fail_reason_frequency, submission_volume_trends, training_approved_count",
+    "backend_analytics_summary_periods": "GET /api/analytics/summary works with daily, weekly, monthly, quarterly period params",
+    "backend_analytics_random_sample": "GET /api/analytics/random-sample returns 200 with pool_size, sample_size, samples array, filter_options",
+    "backend_analytics_random_sample_filters": "GET /api/analytics/random-sample?size=5 works with size filter",
+    "backend_analytics_variance_drilldown": "GET /api/analytics/variance-drilldown returns 200 with crew, service_type, period, total_reviewed, rows",
+    "backend_metrics_division_quality_trend": "GET /api/metrics/division-quality-trend returns 200 with trends (30d, 60d, 90d)",
+    "backend_metrics_standards_compliance": "GET /api/metrics/standards-compliance returns 200 with standards array (standard, total, passed, compliance_pct)",
+    "backend_metrics_training_funnel": "GET /api/metrics/training-funnel returns 200 with total_people, total_crews, total_members, attempted_training, passed_training, funnel_pct",
+    "backend_dashboard_overview": "GET /api/dashboard/overview returns 200 with totals, queues, workflow_health",
+    "frontend_overview_metric_widgets_visible": "Three metric widget cards visible at bottom of Overview page: Division Quality Trend, Standards Compliance, Training Funnel",
+    "frontend_hover_division_quality": "Hovering Division Quality Trend card shows expanded detail with Score Breakdown (Install: 4.7, Maintenance: 4.3, etc.)",
+    "frontend_hover_standards_compliance": "Hovering Standards Compliance card shows expanded detail with Passing/At Risk/Failing counts",
+    "frontend_hover_training_funnel": "Hovering Training Funnel card shows expanded detail with Crews/Members breakdown (CREWS: 4, MEMBERS: 9)",
+    "frontend_analytics_page_loads": "Analytics/Calibration page loads without 500 errors, shows Average score by crew, Submission volume trends, Fail reason frequency, Random sampling, Calibration heatmap"
+  },
+  "screenshots": [
+    "/app/test_reports/screenshots_iter35/overview-metric-widgets.jpeg",
+    "/app/test_reports/screenshots_iter35/hover-quality-card.jpeg",
+    "/app/test_reports/screenshots_iter35/hover-compliance-card.jpeg",
+    "/app/test_reports/screenshots_iter35/hover-funnel-card.jpeg",
+    "/app/test_reports/screenshots_iter35/analytics-page.jpeg",
+    "/app/test_reports/screenshots_iter35/analytics-page-scrolled.jpeg"
+  ]
+}

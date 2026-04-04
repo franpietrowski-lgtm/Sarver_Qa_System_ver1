@@ -1,5 +1,5 @@
 import { Activity, Boxes, Copy, FolderInput, Grid3X3, ShieldCheck, Smartphone, TrendingUp, UploadCloud, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 
 import { QRCodeSVG } from "qrcode.react";
@@ -33,8 +33,18 @@ export default function OverviewPage({ user }) {
   const [divQuality, setDivQuality] = useState(null);
   const [compliance, setCompliance] = useState(null);
   const [funnel, setFunnel] = useState(null);
+  const [hoveredMetric, setHoveredMetric] = useState(null);
+  const hoverTimerRef = useRef(null);
 
   const isOwnerOrGM = user?.role === "owner" || user?.title === "GM";
+
+  const handleMetricEnter = useCallback((key) => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    setHoveredMetric(key);
+  }, []);
+  const handleMetricLeave = useCallback(() => {
+    hoverTimerRef.current = setTimeout(() => setHoveredMetric(null), 150);
+  }, []);
 
   useEffect(() => {
     if (matrixOpen) {
@@ -122,7 +132,7 @@ export default function OverviewPage({ user }) {
         {stats.map((item) => <StatCard key={item.label} {...item} />)}
       </div>
 
-      <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="overview-rubric-matrix-card">
+      <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="overview-rubric-matrix-card">
         <CardContent className="p-5 sm:p-6">
           <button
             type="button"
@@ -293,12 +303,27 @@ export default function OverviewPage({ user }) {
           </Card>
         </div>
 
-        {/* ─── METRICS WIDGETS ROW ─── */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="metrics-widgets-row">
+        {/* ─── METRICS WIDGETS ROW — hover to expand ─── */}
+        <div
+          className="grid gap-4 transition-all duration-500 ease-in-out"
+          style={{
+            gridTemplateColumns:
+              hoveredMetric === "quality"  ? "2.2fr 0.9fr 0.9fr" :
+              hoveredMetric === "compliance" ? "0.9fr 2.2fr 0.9fr" :
+              hoveredMetric === "funnel"   ? "0.9fr 0.9fr 2.2fr" :
+              "1fr 1fr 1fr",
+          }}
+          data-testid="metrics-widgets-row"
+        >
 
           {/* Division Quality Trend */}
           {divQuality && (
-            <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="metric-division-quality">
+            <Card
+              className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm cursor-default transition-shadow duration-300 hover:shadow-lg overflow-hidden"
+              data-testid="metric-division-quality"
+              onMouseEnter={() => handleMetricEnter("quality")}
+              onMouseLeave={handleMetricLeave}
+            >
               <CardContent className="p-5">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-[#38a89d]" />
@@ -321,30 +346,73 @@ export default function OverviewPage({ user }) {
                     </div>
                   ))}
                 </div>
+                {/* Expanded detail */}
+                <div className={`overflow-hidden transition-all duration-400 ease-in-out ${hoveredMetric === "quality" ? "mt-4 max-h-[300px] opacity-100" : "mt-0 max-h-0 opacity-0"}`}>
+                  <div className="border-t border-border/60 pt-3 space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">Score Breakdown</p>
+                    {["30d", "60d", "90d"].map(period => (
+                      divQuality.trends[period] && Object.entries(divQuality.trends[period]).map(([div, score]) => (
+                        <div key={`${period}-${div}`} className="flex items-center gap-2">
+                          <span className="w-14 text-[10px] font-semibold text-[var(--muted-foreground)]">{period}</span>
+                          <span className="w-24 truncate text-[11px] font-medium text-[var(--foreground)]">{div}</span>
+                          <div className="h-1.5 flex-1 rounded-full bg-[var(--border)] overflow-hidden">
+                            <div className="h-full rounded-full bg-[#38a89d] transition-all duration-500" style={{ width: `${Math.min((score / 5) * 100, 100)}%` }} />
+                          </div>
+                          <span className="w-8 text-right text-[11px] font-black text-[var(--foreground)]">{score}</span>
+                        </div>
+                      ))
+                    ))}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
 
           {/* Standards Compliance */}
           {compliance && compliance.standards?.length > 0 && (
-            <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="metric-standards-compliance">
+            <Card
+              className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm cursor-default transition-shadow duration-300 hover:shadow-lg overflow-hidden"
+              data-testid="metric-standards-compliance"
+              onMouseEnter={() => handleMetricEnter("compliance")}
+              onMouseLeave={handleMetricLeave}
+            >
               <CardContent className="p-5">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-[#34d399]" />
                   <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Standards Compliance</p>
                 </div>
-                <div className="mt-3 max-h-[180px] overflow-y-auto space-y-1.5">
+                <div className={`mt-3 space-y-1.5 overflow-y-auto transition-all duration-400 ${hoveredMetric === "compliance" ? "max-h-[360px]" : "max-h-[180px]"}`}>
                   {compliance.standards.map(s => (
                     <div key={s.standard} className="flex items-center justify-between gap-2 rounded-[10px] bg-[var(--accent)] px-2.5 py-1.5">
-                      <p className="text-[10px] font-medium text-[var(--foreground)] truncate flex-1" title={s.standard}>{s.standard}</p>
+                      <p className={`font-medium text-[var(--foreground)] truncate flex-1 transition-all duration-300 ${hoveredMetric === "compliance" ? "text-[11px]" : "text-[10px]"}`} title={s.standard}>{s.standard}</p>
                       <div className="flex items-center gap-2 shrink-0">
-                        <div className="h-1.5 w-16 rounded-full bg-[var(--border)] overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${s.compliance_pct}%`, backgroundColor: s.compliance_pct >= 70 ? "#34d399" : s.compliance_pct >= 40 ? "#f59e0b" : "#ef4444" }} />
+                        <div className={`rounded-full bg-[var(--border)] overflow-hidden transition-all duration-400 ${hoveredMetric === "compliance" ? "h-2 w-24" : "h-1.5 w-16"}`}>
+                          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${s.compliance_pct}%`, backgroundColor: s.compliance_pct >= 70 ? "#34d399" : s.compliance_pct >= 40 ? "#f59e0b" : "#ef4444" }} />
                         </div>
                         <span className="text-[10px] font-bold text-[var(--foreground)] w-9 text-right">{s.compliance_pct}%</span>
                       </div>
                     </div>
                   ))}
+                </div>
+                {/* Expanded detail */}
+                <div className={`overflow-hidden transition-all duration-400 ease-in-out ${hoveredMetric === "compliance" ? "mt-4 max-h-[200px] opacity-100" : "mt-0 max-h-0 opacity-0"}`}>
+                  <div className="border-t border-border/60 pt-3 space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">Summary</p>
+                    <div className="flex gap-3">
+                      <div className="flex-1 rounded-[10px] bg-[var(--accent)] p-2 text-center">
+                        <p className="text-lg font-black text-[#34d399]">{compliance.standards.filter(s => s.compliance_pct >= 70).length}</p>
+                        <p className="text-[9px] font-semibold text-[var(--muted-foreground)]">Passing</p>
+                      </div>
+                      <div className="flex-1 rounded-[10px] bg-[var(--accent)] p-2 text-center">
+                        <p className="text-lg font-black text-[#f59e0b]">{compliance.standards.filter(s => s.compliance_pct >= 40 && s.compliance_pct < 70).length}</p>
+                        <p className="text-[9px] font-semibold text-[var(--muted-foreground)]">At Risk</p>
+                      </div>
+                      <div className="flex-1 rounded-[10px] bg-[var(--accent)] p-2 text-center">
+                        <p className="text-lg font-black text-[#ef4444]">{compliance.standards.filter(s => s.compliance_pct < 40).length}</p>
+                        <p className="text-[9px] font-semibold text-[var(--muted-foreground)]">Failing</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -352,7 +420,12 @@ export default function OverviewPage({ user }) {
 
           {/* Training Funnel */}
           {funnel && (
-            <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="metric-training-funnel">
+            <Card
+              className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm cursor-default transition-shadow duration-300 hover:shadow-lg overflow-hidden"
+              data-testid="metric-training-funnel"
+              onMouseEnter={() => handleMetricEnter("funnel")}
+              onMouseLeave={handleMetricLeave}
+            >
               <CardContent className="p-5">
                 <div className="flex items-center gap-2">
                   <Activity className="h-4 w-4 text-[#9b7cd8]" />
@@ -374,6 +447,30 @@ export default function OverviewPage({ user }) {
                       </div>
                     </div>
                   ))}
+                </div>
+                {/* Expanded detail */}
+                <div className={`overflow-hidden transition-all duration-400 ease-in-out ${hoveredMetric === "funnel" ? "mt-4 max-h-[300px] opacity-100" : "mt-0 max-h-0 opacity-0"}`}>
+                  <div className="border-t border-border/60 pt-3 space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">Breakdown</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="rounded-[10px] bg-[var(--accent)] p-2.5">
+                        <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Crews</p>
+                        <p className="text-lg font-black text-[var(--foreground)]">{funnel.total_crews}</p>
+                      </div>
+                      <div className="rounded-[10px] bg-[var(--accent)] p-2.5">
+                        <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Members</p>
+                        <p className="text-lg font-black text-[var(--foreground)]">{funnel.total_members}</p>
+                      </div>
+                      <div className="rounded-[10px] bg-[var(--accent)] p-2.5">
+                        <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Drop-off Rate</p>
+                        <p className="text-lg font-black text-[#f59e0b]">{(100 - (funnel.funnel_pct?.passed || 0)).toFixed(1)}%</p>
+                      </div>
+                      <div className="rounded-[10px] bg-[var(--accent)] p-2.5">
+                        <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Completion</p>
+                        <p className="text-lg font-black text-[#34d399]">{funnel.funnel_pct?.passed || 0}%</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
