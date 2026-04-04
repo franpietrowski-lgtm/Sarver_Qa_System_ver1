@@ -37,6 +37,9 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - **Bug Fix**: Analytics/Calibration page 500 errors — `KeyError: 'total_score'` in `analytics.py`. Fixed all score field references to handle both `total_score` (new reviews) and `overall_score` (seeded data) via `.get()` fallbacks.
 - **Hover-to-expand metric cards**: Division Quality Trend, Standards Compliance, and Training Funnel cards on Overview page now expand on hover (CSS grid-template-columns transition: hovered card grows to 2.2fr, others shrink to 0.9fr). Each shows expanded detail panel (score breakdowns, passing/at-risk/failing counts, crews/members breakdown).
 - Fixed rubric matrix card using hardcoded `bg-white/95` → `bg-[var(--card)]` for dark mode.
+- **Breakfast theme**: Warm waffle/chocolate/maple palette — dark brown (#382615) background, cream (#F5E6D0) text, chocolate (#B78F64) accents, syrup (#713E18) modal headers.
+- **Cafe theme**: Coffee/matcha/caramel palette — deep coffee (#3F1D0E) background, milk (#E6E2D7) text, matcha (#ABBF9B) primary accent, caramel (#A2663C) buttons.
+- Both themes include full CSS overrides for Shadcn variables, radix dropdowns, inputs, tables, nav links, badges, and checkboxes with high font contrast.
 
 ## Key Endpoints
 | Method | Path | Description |

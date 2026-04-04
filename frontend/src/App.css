@@ -841,6 +841,308 @@ h4,
 
 
 /* ══════════════════════════════════════════════════════════════
+   THEME: Breakfast — Warm Waffle + Maple Honey (#382615 / #F4C07D)
+   Palette: Chocolate #B78F64, Waffle #382615, Honey #DBD8D0,
+            Syrup #713E18, Maple #F4C07D
+   ══════════════════════════════════════════════════════════════ */
+.workspace-shell.theme-breakfast {
+    background: linear-gradient(180deg, #2e1e12 0%, #382615 100%);
+    color: #F5E6D0;
+    --status-watch-bg: #3a2a18;
+    --status-watch-border: #5a4528;
+    --status-watch-text: #B78F64;
+    --status-warning-bg: #3a3018;
+    --status-warning-border: #5a4a25;
+    --status-warning-text: #F4C07D;
+    --status-critical-bg: #3a2020;
+    --status-critical-border: #5a3028;
+    --status-critical-text: #e08060;
+    --heat-r: 244;
+    --heat-g: 192;
+    --heat-b: 125;
+    --heat-empty: #3d2c1a;
+    --tier-desc-text: #D0B890;
+
+    --panel-gradient-from: #4a3520;
+    --panel-gradient-to: #3d2c1a;
+    --panel-border: #713E18;
+    --btn-accent: #B78F64;
+    --btn-accent-hover: #96723A;
+    --slider-accent: #F4C07D;
+    --form-card-bg: #4a3520;
+    --form-card-border: rgba(183, 143, 100, 0.25);
+    --inactive-badge-bg: #4a2828;
+    --inactive-badge-text: #e08060;
+    --progress-dot-inactive: #5a4530;
+    --modal-bg: #3d2c1a;
+    --modal-header-bg: #713E18;
+    --chip-bg: #5a4530;
+}
+
+.workspace-shell.theme-breakfast {
+    --card: 28 32% 17%;
+    --card-foreground: 35 60% 90%;
+    --popover: 28 32% 17%;
+    --popover-foreground: 35 60% 90%;
+    --border: 28 26% 27%;
+    --muted-foreground: 30 35% 58%;
+    --primary: 35 60% 67%;
+    --primary-foreground: 20 50% 12%;
+    --input: 28 26% 27%;
+    --accent: 28 28% 22%;
+    --accent-foreground: 35 60% 90%;
+    --ring: 35 60% 67%;
+    --destructive: 12 70% 45%;
+    --destructive-foreground: 0 0% 100%;
+}
+
+.workspace-shell.theme-breakfast [class*='bg-white/95'],
+.workspace-shell.theme-breakfast [class*='bg-white/90'],
+.workspace-shell.theme-breakfast [class*='bg-white/85'],
+.workspace-shell.theme-breakfast [class*='bg-[#f6f6f2]'],
+.workspace-shell.theme-breakfast [class*='bg-[#edf0e7]'],
+.workspace-shell.theme-breakfast [class*='bg-[#f0f1ea]'] {
+    background-color: #3d2c1a !important;
+}
+
+.workspace-shell.theme-breakfast [class*='bg-white'] {
+    background-color: #3d2c1a !important;
+}
+
+.workspace-shell.theme-breakfast [class*='bg-[#243e36]'] {
+    background-color: #713E18 !important;
+}
+
+.workspace-shell.theme-breakfast [class*='text-[#111815]'],
+.workspace-shell.theme-breakfast [class*='text-[#243e36]'],
+.workspace-shell.theme-breakfast [class*='text-[#41534a]'],
+.workspace-shell.theme-breakfast [class*='text-[#5c6d64]'],
+.workspace-shell.theme-breakfast [class*='text-foreground'] {
+    color: #F5E6D0 !important;
+}
+
+.workspace-shell.theme-breakfast [class*='text-white/70'],
+.workspace-shell.theme-breakfast [class*='text-white/80'],
+.workspace-shell.theme-breakfast [class*='text-[#5f7464]'] {
+    color: #B78F64 !important;
+}
+
+.workspace-shell.theme-breakfast [class*='text-[#d8f3dc]'] {
+    color: #F4C07D !important;
+}
+
+.workspace-shell.theme-breakfast [class*='border-border'],
+.workspace-shell.theme-breakfast [class*='border-[#243e36]'],
+.workspace-shell.theme-breakfast [class*='border-transparent'] {
+    border-color: #5a4530 !important;
+}
+
+.workspace-shell.theme-breakfast [data-radix-popper-content-wrapper] [role="listbox"],
+.workspace-shell.theme-breakfast [data-radix-popper-content-wrapper] [role="menu"],
+.workspace-shell.theme-breakfast [data-radix-popper-content-wrapper] > div {
+    background-color: #3d2c1a !important;
+    border-color: #5a4530 !important;
+    color: #F5E6D0 !important;
+}
+
+.workspace-shell.theme-breakfast [data-radix-popper-content-wrapper] [role="option"],
+.workspace-shell.theme-breakfast [data-radix-popper-content-wrapper] [data-radix-collection-item] {
+    color: #F5E6D0 !important;
+}
+
+.workspace-shell.theme-breakfast [data-radix-popper-content-wrapper] [role="option"]:hover,
+.workspace-shell.theme-breakfast [data-radix-popper-content-wrapper] [role="option"][data-highlighted],
+.workspace-shell.theme-breakfast [data-radix-popper-content-wrapper] [data-radix-collection-item]:hover {
+    background-color: #B78F64 !important;
+    color: #2e1e12 !important;
+}
+
+.workspace-shell.theme-breakfast button[role="combobox"],
+.workspace-shell.theme-breakfast [data-slot="select-trigger"] {
+    color: #F5E6D0 !important;
+}
+
+.workspace-shell.theme-breakfast input,
+.workspace-shell.theme-breakfast textarea,
+.workspace-shell.theme-breakfast select {
+    background-color: #2e1e12 !important;
+    color: #F5E6D0 !important;
+    border-color: #5a4530 !important;
+}
+
+.workspace-shell.theme-breakfast [role="checkbox"],
+.workspace-shell.theme-breakfast [role="switch"] {
+    border-color: #6a5538 !important;
+}
+
+.workspace-shell.theme-breakfast .inline-flex[class*='bg-white'] {
+    background-color: #5a4530 !important;
+    color: #F5E6D0 !important;
+}
+
+.workspace-shell.theme-breakfast table th { color: #B78F64 !important; }
+.workspace-shell.theme-breakfast table td { color: #F5E6D0 !important; border-color: #5a4530 !important; }
+.workspace-shell.theme-breakfast table tr { border-color: #5a4530 !important; }
+
+.workspace-shell.theme-breakfast nav a[class*='border-[#243e36]'][class*='bg-white'] {
+    background-color: #B78F64 !important;
+    border-color: #B78F64 !important;
+    color: #2e1e12 !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   THEME: Cafe — Coffee + Matcha + Caramel (#3F1D0E / #ABBF9B)
+   Palette: Matcha #ABBF9B, Milk #E6E2D7, Cream #E4CDB0,
+            Caramel #A2663C, Coffee #3F1D0E
+   ══════════════════════════════════════════════════════════════ */
+.workspace-shell.theme-cafe {
+    background: linear-gradient(180deg, #2a150a 0%, #3F1D0E 100%);
+    color: #E6E2D7;
+    --status-watch-bg: #1e3028;
+    --status-watch-border: #2a4535;
+    --status-watch-text: #ABBF9B;
+    --status-warning-bg: #3a2a18;
+    --status-warning-border: #5a4428;
+    --status-warning-text: #E4CDB0;
+    --status-critical-bg: #3a1e1e;
+    --status-critical-border: #5a2828;
+    --status-critical-text: #e07060;
+    --heat-r: 171;
+    --heat-g: 191;
+    --heat-b: 155;
+    --heat-empty: #4a2816;
+    --tier-desc-text: #C0B8A8;
+
+    --panel-gradient-from: #3a2010;
+    --panel-gradient-to: #4a2816;
+    --panel-border: #6a4530;
+    --btn-accent: #A2663C;
+    --btn-accent-hover: #8a5530;
+    --slider-accent: #ABBF9B;
+    --form-card-bg: #4a2816;
+    --form-card-border: rgba(162, 102, 60, 0.25);
+    --inactive-badge-bg: #4a2222;
+    --inactive-badge-text: #e07060;
+    --progress-dot-inactive: #5a3a25;
+    --modal-bg: #4a2816;
+    --modal-header-bg: #A2663C;
+    --chip-bg: #5a3a25;
+}
+
+.workspace-shell.theme-cafe {
+    --card: 20 42% 18%;
+    --card-foreground: 38 23% 87%;
+    --popover: 20 42% 18%;
+    --popover-foreground: 38 23% 87%;
+    --border: 22 32% 25%;
+    --muted-foreground: 30 18% 55%;
+    --primary: 96 18% 67%;
+    --primary-foreground: 20 50% 12%;
+    --input: 22 32% 25%;
+    --accent: 20 36% 22%;
+    --accent-foreground: 38 23% 87%;
+    --ring: 96 18% 67%;
+    --destructive: 5 70% 45%;
+    --destructive-foreground: 0 0% 100%;
+}
+
+.workspace-shell.theme-cafe [class*='bg-white/95'],
+.workspace-shell.theme-cafe [class*='bg-white/90'],
+.workspace-shell.theme-cafe [class*='bg-white/85'],
+.workspace-shell.theme-cafe [class*='bg-[#f6f6f2]'],
+.workspace-shell.theme-cafe [class*='bg-[#edf0e7]'],
+.workspace-shell.theme-cafe [class*='bg-[#f0f1ea]'] {
+    background-color: #4a2816 !important;
+}
+
+.workspace-shell.theme-cafe [class*='bg-white'] {
+    background-color: #4a2816 !important;
+}
+
+.workspace-shell.theme-cafe [class*='bg-[#243e36]'] {
+    background-color: #A2663C !important;
+}
+
+.workspace-shell.theme-cafe [class*='text-[#111815]'],
+.workspace-shell.theme-cafe [class*='text-[#243e36]'],
+.workspace-shell.theme-cafe [class*='text-[#41534a]'],
+.workspace-shell.theme-cafe [class*='text-[#5c6d64]'],
+.workspace-shell.theme-cafe [class*='text-foreground'] {
+    color: #E6E2D7 !important;
+}
+
+.workspace-shell.theme-cafe [class*='text-white/70'],
+.workspace-shell.theme-cafe [class*='text-white/80'],
+.workspace-shell.theme-cafe [class*='text-[#5f7464]'] {
+    color: #A89880 !important;
+}
+
+.workspace-shell.theme-cafe [class*='text-[#d8f3dc]'] {
+    color: #ABBF9B !important;
+}
+
+.workspace-shell.theme-cafe [class*='border-border'],
+.workspace-shell.theme-cafe [class*='border-[#243e36]'],
+.workspace-shell.theme-cafe [class*='border-transparent'] {
+    border-color: #5a3a25 !important;
+}
+
+.workspace-shell.theme-cafe [data-radix-popper-content-wrapper] [role="listbox"],
+.workspace-shell.theme-cafe [data-radix-popper-content-wrapper] [role="menu"],
+.workspace-shell.theme-cafe [data-radix-popper-content-wrapper] > div {
+    background-color: #4a2816 !important;
+    border-color: #5a3a25 !important;
+    color: #E6E2D7 !important;
+}
+
+.workspace-shell.theme-cafe [data-radix-popper-content-wrapper] [role="option"],
+.workspace-shell.theme-cafe [data-radix-popper-content-wrapper] [data-radix-collection-item] {
+    color: #E6E2D7 !important;
+}
+
+.workspace-shell.theme-cafe [data-radix-popper-content-wrapper] [role="option"]:hover,
+.workspace-shell.theme-cafe [data-radix-popper-content-wrapper] [role="option"][data-highlighted],
+.workspace-shell.theme-cafe [data-radix-popper-content-wrapper] [data-radix-collection-item]:hover {
+    background-color: #ABBF9B !important;
+    color: #2a150a !important;
+}
+
+.workspace-shell.theme-cafe button[role="combobox"],
+.workspace-shell.theme-cafe [data-slot="select-trigger"] {
+    color: #E6E2D7 !important;
+}
+
+.workspace-shell.theme-cafe input,
+.workspace-shell.theme-cafe textarea,
+.workspace-shell.theme-cafe select {
+    background-color: #2a150a !important;
+    color: #E6E2D7 !important;
+    border-color: #5a3a25 !important;
+}
+
+.workspace-shell.theme-cafe [role="checkbox"],
+.workspace-shell.theme-cafe [role="switch"] {
+    border-color: #6a4a32 !important;
+}
+
+.workspace-shell.theme-cafe .inline-flex[class*='bg-white'] {
+    background-color: #5a3a25 !important;
+    color: #E6E2D7 !important;
+}
+
+.workspace-shell.theme-cafe table th { color: #A89880 !important; }
+.workspace-shell.theme-cafe table td { color: #E6E2D7 !important; border-color: #5a3a25 !important; }
+.workspace-shell.theme-cafe table tr { border-color: #5a3a25 !important; }
+
+.workspace-shell.theme-cafe nav a[class*='border-[#243e36]'][class*='bg-white'] {
+    background-color: #ABBF9B !important;
+    border-color: #ABBF9B !important;
+    color: #2a150a !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
    FONT PACKAGES — independent of color theme
    ══════════════════════════════════════════════════════════════ */
 

@@ -12,6 +12,8 @@ export const THEMES = [
   { id: "gold", label: "Gold", description: "Black & gold luxury" },
   { id: "noir", label: "Noir", description: "Dark charcoal + crimson" },
   { id: "neon", label: "Neon", description: "Deep green + lime glow" },
+  { id: "breakfast", label: "Breakfast", description: "Warm waffle + maple honey" },
+  { id: "cafe", label: "Cafe", description: "Coffee + matcha + caramel" },
 ];
 
 const THEME_SWATCHES = {
@@ -21,6 +23,8 @@ const THEME_SWATCHES = {
   gold: ["#19171b", "#2f2921", "#9e8123", "#563a17"],
   noir: ["#252B2B", "#380F17", "#DC2011", "#EFDFC5"],
   neon: ["#032820", "#08652C", "#80A416", "#C5C764"],
+  breakfast: ["#382615", "#4a3520", "#F4C07D", "#B78F64"],
+  cafe: ["#3F1D0E", "#4a2816", "#ABBF9B", "#A2663C"],
 };
 
 export { THEME_SWATCHES };
