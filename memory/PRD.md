@@ -20,21 +20,23 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - Rapid Review (Tinder-style swipe), Standards Library, Repeat Offenders, Training Mode
 - CrewMember sub-system (QR registration), 30-day QR cleanup
 
-### V1.3 (Previous Session)
+### V1.3
 - 19 real industry landscaping standards
 - Team Members page (3 views), profile overlays with timeline stats
 - Division switcher in crew app, leader_name field, QJA rename
 
-### V1.4 (Current Session)
-- **Division Hierarchy restructure**: Owner→GM at top, Account Managers on left connected to GM, Production Managers on right with direct arrows to their division crews. David Park tagged as Plant Healthcare.
-- **Profile overlay glass effect**: backdrop-filter blur(20px) + bg-black/60, fully opaque card
-- **Individual grid fix**: CSS grid for proper column alignment across all rows
-- **Hover stats repositioned**: Tooltip appears above card (not below) to prevent row overlap
-- **Avatar background removal**: rembg integration, outputs transparent PNG
-- **3 demo crews**: Maintenance Alpha (3-man), Maintenance Bravo (4-man), Tree Alpha (4-man w/ PHC)
-- **Full demo dataset**: 29+ submissions, 25+ reviews, 42 training sessions, 10 rapid reviews
-- **Workflow Guide**: `/app/memory/WORKFLOW_GUIDE.md` with role access matrix and interaction training
-- **Documentation updated**: README, frontend README, test_credentials
+### V1.4
+- Division Hierarchy restructure: Owner->GM at top, AMs left, PMs right with crew arrows
+- Profile overlay glass effect, Individual grid fix, Hover stats repositioned
+- Avatar background removal (rembg), 3 demo crews, full demo dataset
+- Workflow Guide, documentation updates
+- 3 metric endpoints (division-quality-trend, standards-compliance, training-funnel)
+- Dark Mode hardcoded color sweep across all components
+
+### V1.5 (Current Session — Apr 4, 2026)
+- **Bug Fix**: Analytics/Calibration page 500 errors — `KeyError: 'total_score'` in `analytics.py`. Fixed all score field references to handle both `total_score` (new reviews) and `overall_score` (seeded data) via `.get()` fallbacks.
+- **Hover-to-expand metric cards**: Division Quality Trend, Standards Compliance, and Training Funnel cards on Overview page now expand on hover (CSS grid-template-columns transition: hovered card grows to 2.2fr, others shrink to 0.9fr). Each shows expanded detail panel (score breakdowns, passing/at-risk/failing counts, crews/members breakdown).
+- Fixed rubric matrix card using hardcoded `bg-white/95` → `bg-[var(--card)]` for dark mode.
 
 ## Key Endpoints
 | Method | Path | Description |
@@ -44,6 +46,12 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 | GET | /api/team/hierarchy | Org chart with PM-division mapping |
 | GET | /api/team/profiles/:id/stats?months= | Timeline stats |
 | POST | /api/team/profiles/:id/avatar | Upload + bg removal |
+| GET | /api/analytics/summary | Calibration analytics (crew scores, heatmap) |
+| GET | /api/analytics/random-sample | Owner random sample tool |
+| GET | /api/analytics/variance-drilldown | Drill into crew/service variance |
+| GET | /api/metrics/division-quality-trend | 30/60/90d rolling division scores |
+| GET | /api/metrics/standards-compliance | Standard pass rates |
+| GET | /api/metrics/training-funnel | Training completion funnel |
 
 ## Pending / Backlog
 
@@ -52,12 +60,6 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - Crew Leader Performance Card: Recent scores + training completion rate
 - Account Manager Client Report: Exportable quality report per property
 - Supervisor Daily Checklist: Equipment pre-check tracker
-
-### P1 — Metric Tracking
-- Standards Compliance Rate: % passing all checklist items
-- Training Completion Funnel: Onboarding → standard viewed → quiz → pass
-- Red-Tag Resolution Time: Equipment downtime tracking
-- Division Quality Trend: Rolling 30/60/90 day average scores
 
 ### P2 — UX Improvements
 - Smart tooltips ("Crew avg score dropped 12% in 30 days")
