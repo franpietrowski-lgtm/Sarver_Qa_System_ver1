@@ -1,0 +1,74 @@
+{
+  "summary": "Iteration 33 Full Regression Test - All backend tests passed (17/17). Frontend verified: Individual grid with CSS grid alignment, profile overlay with glass blur effect (backdrop-filter: blur(20px)), Division Hierarchy with correct org structure (Owner→GM, AMs left, PMs→Divisions right), Crew Portal with 5-division switcher, Standards Library (19 standards), QJA page with leader_name field.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration33_regression.py",
+    "/app/test_reports/pytest/pytest_results_iter33.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_iteration33_regression.py"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)",
+    "frontend": "100% (all verified features working)"
+  },
+  "test_credentials": {
+    "owner": "sadam.owner@slmco.local / SLMCo2026!",
+    "gm": "ctyler.gm@slmco.local / SLMCo2026!",
+    "pm": "atim.prom@slmco.local / SLMCo2026!"
+  },
+  "seed_data_creation": "None - using existing seeded data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All iteration 33 features verified working. Key changes tested: (1) CSS grid for Individual view - confirmed display:grid with 8 columns, (2) Glass backdrop overlay - confirmed backdrop-filter:blur(20px) + rgba(0,0,0,0.6), (3) Division Hierarchy matches org chart - Owner→GM at top, AMs left column, PMs→Divisions right with arrows, (4) Maintenance has Tim A + Scott W as PMs with Marcus Thompson and Derek Washington crews, (5) Tree has Brad S as PM with Nathan Cole crew and David Park tagged as PLANT HEALTHCARE, (6) Crew portal has 5 division pills (Maintenance, Install, Tree, Plant Healthcare, Winter Services), (7) Standards Library shows 19 standards, (8) QJA page shows 4 crews with leader_name field.",
+  "verified_features": {
+    "backend_health": "GET /api/health returns ok",
+    "auth_owner": "Login as Owner (sadam.owner@slmco.local) returns JWT with role=owner",
+    "auth_gm": "Login as GM (ctyler.gm@slmco.local) returns JWT with role=management, title=GM",
+    "auth_pm": "Login as PM (atim.prom@slmco.local) returns JWT with role=management, title=Production Manager, division=Maintenance",
+    "team_hierarchy_structure": "Returns 1 owner, 1 GM, 3 AMs, 4 PMs",
+    "team_hierarchy_divisions": "Returns 3 divisions (Install/Maintenance/Tree) with production_managers field per division",
+    "team_hierarchy_maintenance": "Maintenance has Tim A + Scott W as PMs, Marcus Thompson + Derek Washington as crew leads",
+    "team_hierarchy_tree": "Tree has Brad S as PM, Nathan Cole as crew lead, David Park with division=Plant Healthcare",
+    "team_profiles_count": "Returns 25 profiles",
+    "team_profiles_names": "All expected personnel found (Adam S, Tyler C, Tim A, Zach O, Scott W, Brad S, Megan M, Daniel T, Scott K, Alejandro, Marcus, Derek, Nathan)",
+    "timeline_stats_crew": "GET /api/team/profiles/crew_bb01032c/stats returns stats with review_count, submission_count, avg_review_score",
+    "timeline_stats_user": "GET /api/team/profiles/user_{id}/stats returns stats for users",
+    "public_standards_total": "GET /api/public/standards returns 19 standards",
+    "public_standards_filtered": "Standards can be filtered by division (Maintenance, Install, Tree)",
+    "crew_access_links": "All 4 demo crews exist with leader_name field",
+    "qja_crew_links": "GET /api/crew-access-links returns 4 items with leader_name field",
+    "frontend_individual_view": "CSS grid with display:grid, gridTemplateColumns showing 8 columns",
+    "frontend_profile_overlay": "Glass effect with backdrop-filter:blur(20px), bg-black/60",
+    "frontend_profile_stats": "Performance & Records toggle with timeline selector (1/3/6/12/24 mo)",
+    "frontend_profile_quick_links": "Calibration Heatmap, Reviewer Performance, Repeat Offenders links",
+    "frontend_hierarchy_view": "Owner→GM at top, AMs left, PMs→Divisions right with arrows",
+    "frontend_hierarchy_david_park": "David Park visible with PLANT HEALTHCARE badge",
+    "frontend_crew_portal": "Install Alpha crew with Capture/Standards/Equipment tabs",
+    "frontend_crew_division_switcher": "5 division pills (Maintenance, Install, Tree, Plant Healthcare, Winter Services)",
+    "frontend_standards_library": "19 standards, Page 1 of 4, with images and categories",
+    "frontend_qja_page": "4 active crew links with QR codes, leader names, truck numbers"
+  },
+  "screenshots": [
+    "/app/test_reports/screenshots_iter33/team-individual-view.jpeg",
+    "/app/test_reports/screenshots_iter33/profile-overlay-glass.jpeg",
+    "/app/test_reports/screenshots_iter33/profile-overlay-stats.jpeg",
+    "/app/test_reports/screenshots_iter33/team-hierarchy-view.jpeg",
+    "/app/test_reports/screenshots_iter33/team-hierarchy-scrolled.jpeg",
+    "/app/test_reports/screenshots_iter33/crew-capture-install.jpeg",
+    "/app/test_reports/screenshots_iter33/crew-standards-install.jpeg",
+    "/app/test_reports/screenshots_iter33/crew-standards-maintenance.jpeg",
+    "/app/test_reports/screenshots_iter33/standards-library.jpeg",
+    "/app/test_reports/screenshots_iter33/qja-page.jpeg"
+  ]
+}
