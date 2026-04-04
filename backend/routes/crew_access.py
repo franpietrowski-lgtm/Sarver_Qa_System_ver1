@@ -46,6 +46,7 @@ async def create_crew_access_link(payload: CrewAccessCreate, user: dict = Depend
         "code": uuid.uuid4().hex[:8],
         "crew_member_id": make_id("crewid").upper(),
         "label": payload.label,
+        "leader_name": payload.leader_name,
         "truck_number": payload.truck_number,
         "division": payload.division,
         "assignment": payload.assignment,
@@ -88,6 +89,7 @@ async def update_crew_access_link(
         {
             "$set": {
                 "label": payload.label,
+                "leader_name": payload.leader_name,
                 "truck_number": payload.truck_number,
                 "division": payload.division,
                 "assignment": payload.assignment,

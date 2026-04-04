@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from datetime import timezone
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from pydantic import BaseModel
 
 import shared.deps as deps
-from shared.deps import require_roles, now_iso, upload_bytes_to_storage, storage_is_configured, get_storage_bucket
+from shared.deps import require_roles, now_iso, utc_now, upload_bytes_to_storage, storage_is_configured, get_storage_bucket
 
 router = APIRouter()
 
@@ -57,9 +58,11 @@ async def get_all_profiles(user: dict = Depends(require_roles("management", "own
         if c.get("label", "").startswith("TEST"):
             continue
         ext = extras_map.get(f"crew_{c['code']}")
-        p = _build_profile("crew", c["code"], c.get("label", ""), "Crew Leader", c.get("division", ""), ext)
+        display_name = c.get("leader_name") or c.get("label", "")
+        p = _build_profile("crew", c["code"], display_name, "Crew Leader", c.get("division", ""), ext)
         p["truck_number"] = c.get("truck_number", "")
         p["crew_code"] = c["code"]
+        p["crew_label"] = c.get("label", "")
         profiles.append(p)
 
     # Crew members
@@ -176,8 +179,10 @@ async def get_team_structure(user: dict = Depends(require_roles("management", "o
         if c.get("label", "").startswith("TEST"):
             continue
         ext = extras_map.get(f"crew_{c['code']}")
-        lead = _build_profile("crew", c["code"], c.get("label", ""), "Crew Leader", c.get("division", ""), ext)
+        display_name = c.get("leader_name") or c.get("label", "")
+        lead = _build_profile("crew", c["code"], display_name, "Crew Leader", c.get("division", ""), ext)
         lead["truck_number"] = c.get("truck_number", "")
+        lead["crew_label"] = c.get("label", "")
 
         members = []
         member_docs = await deps.db.crew_members.find(
@@ -190,7 +195,7 @@ async def get_team_structure(user: dict = Depends(require_roles("management", "o
             mp = _build_profile("member", m["code"], m.get("name", ""), "Crew Member", m.get("division", ""), m_ext)
             members.append(mp)
 
-        teams.append({"lead": lead, "members": members, "division": c.get("division", "")})
+        teams.append({"lead": lead, "members": members, "division": c.get("division", ""), "crew_label": c.get("label", "")})
     return {"teams": teams}
 
 
@@ -226,8 +231,10 @@ async def get_division_hierarchy(user: dict = Depends(require_roles("management"
         if div not in division_map:
             division_map[div] = []
         ext = extras_map.get(f"crew_{c['code']}")
-        lead = _build_profile("crew", c["code"], c.get("label", ""), "Crew Leader", div, ext)
+        display_name = c.get("leader_name") or c.get("label", "")
+        lead = _build_profile("crew", c["code"], display_name, "Crew Leader", div, ext)
         lead["truck_number"] = c.get("truck_number", "")
+        lead["crew_label"] = c.get("label", "")
         members = []
         member_docs = await deps.db.crew_members.find(
             {"parent_access_code": c["code"], "active": True}, {"_id": 0}
@@ -283,3 +290,65 @@ async def upload_avatar(
         upsert=True,
     )
     return {"avatar_url": avatar_url, "profile_id": profile_id}
+
+
+
+@router.get("/team/profiles/{profile_id}/stats")
+async def get_profile_timeline_stats(
+    profile_id: str,
+    months: int = Query(3, ge=1, le=24),
+    user: dict = Depends(require_roles("management", "owner")),
+):
+    parts = profile_id.split("_", 1)
+    if len(parts) != 2:
+        raise HTTPException(status_code=400, detail="Invalid profile ID")
+    source_type, source_id = parts
+    from datetime import timedelta
+    cutoff = (utc_now() - timedelta(days=months * 30)).isoformat()
+
+    review_query = {"created_at": {"$gte": cutoff}}
+    sub_query = {"created_at": {"$gte": cutoff}}
+    if source_type == "user":
+        review_query["reviewer_id"] = source_id
+    elif source_type == "crew":
+        review_query["access_code"] = source_id
+        sub_query["access_code"] = source_id
+    elif source_type == "member":
+        review_query["member_code"] = source_id
+        sub_query["member_code"] = source_id
+
+    review_count = await deps.db.management_reviews.count_documents(review_query)
+    submission_count = 0
+    avg_score = 0
+    if source_type in ("crew", "member"):
+        submission_count = await deps.db.submissions.count_documents(sub_query)
+    reviews = await deps.db.management_reviews.find(
+        review_query, {"_id": 0, "overall_score": 1, "category_scores": 1}
+    ).to_list(500)
+    if reviews:
+        scores = [r.get("overall_score", 0) for r in reviews if r.get("overall_score")]
+        avg_score = round(sum(scores) / max(len(scores), 1), 1) if scores else 0
+
+    training_query = {"created_at": {"$gte": cutoff}}
+    if source_type == "crew":
+        training_query["access_code"] = source_id
+    elif source_type == "member":
+        training_query["member_code"] = source_id
+    training_sessions = await deps.db.training_sessions.find(
+        training_query, {"_id": 0, "status": 1, "score_percent": 1}
+    ).to_list(100) if source_type in ("crew", "member") else []
+    training_completed = sum(1 for t in training_sessions if t.get("status") == "completed")
+    training_avg = 0
+    if training_sessions:
+        t_scores = [t.get("score_percent", 0) for t in training_sessions if t.get("score_percent")]
+        training_avg = round(sum(t_scores) / max(len(t_scores), 1), 1) if t_scores else 0
+
+    return {
+        "months": months,
+        "review_count": review_count,
+        "submission_count": submission_count,
+        "avg_review_score": avg_score,
+        "training_total": len(training_sessions),
+        "training_completed": training_completed,
+        "training_avg_score": training_avg,
+    }

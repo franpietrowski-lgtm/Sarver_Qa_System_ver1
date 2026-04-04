@@ -1,0 +1,163 @@
+{
+  "summary": "Iteration 31: Tested real industry standards with division filtering, Team Members page views (Individual/TeamStructure/DivisionHierarchy), profile overlay with timeline stats, crew capture division switcher, and QJA navigation rename. Backend: 16/16 tests passed. Frontend: All features verified.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration31_standards_team_crew.py",
+    "/app/test_reports/pytest/pytest_results_iter31.xml",
+    "/app/test_reports/screenshots_iter31/team-individual-view.jpeg",
+    "/app/test_reports/screenshots_iter31/team-structure-view.jpeg",
+    "/app/test_reports/screenshots_iter31/team-hierarchy-view.jpeg",
+    "/app/test_reports/screenshots_iter31/profile-overlay-stats.jpeg",
+    "/app/test_reports/screenshots_iter31/crew-capture-header.jpeg",
+    "/app/test_reports/screenshots_iter31/crew-standards-install.jpeg",
+    "/app/test_reports/screenshots_iter31/crew-standards-maintenance.jpeg",
+    "/app/test_reports/screenshots_iter31/jobs-page-management.jpeg"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_iteration31_standards_team_crew.py",
+    "/app/memory/test_credentials.md"
+  ],
+  "success_rate": {
+    "backend": "100% - 16/16 tests passed",
+    "frontend": "100% - All features working"
+  },
+  "test_credentials": "Owner: sadam.owner@slmco.local / SLMCo2026!, GM: ctyler.gm@slmco.local / SLMCo2026!, Demo crew: bb01032c (Install Alpha, leader: Alejandro Ruiz-Domian)",
+  "seed_data_creation": "Created and deleted TEST_Iter31_Crew and TEST_Iter31_Update crew links during testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 31 verified all requested features: (1) Public standards API with division filtering - GET /api/public/standards?division=Maintenance returns 11 standards, ?division=Install returns 9 standards, with 5 overlapping general standards. (2) Team profiles API shows leader_name as display name - Alejandro Ruiz-Domian shown instead of Install Alpha for crew leader. (3) Timeline stats API - GET /api/team/profiles/{id}/stats?months=6 returns stats object with review_count, submission_count, avg_review_score, training_total, training_completed. (4) Team Members page Individual view shows all 14 profiles with hex avatars. (5) Team Structure view shows Install Alpha as team header with Alejandro as leader, Alex Rivera as member. (6) Division Hierarchy shows correct org: Adam S (Owner) → Tyler C (GM) → Production Managers (Tim A, Zach O, Scott W, Brad S) with CROSS-LATERAL indicator → Account Managers (Scott K, Megan M, Daniel T) → Supervisors (Johnny H, Craig S, Fran P) → Install Division crews. (7) Profile overlay has stats toggle with 1/3/6/12/24 month timeline selector and quick links (Calibration Heatmap, Reviewer Performance, Repeat Offenders). (8) Crew capture page /crew/bb01032c has division switcher with 5 pills (Maintenance, Install, Tree, Plant Healthcare, Winter Services). (9) Standards tab loads Install standards by default (9), can switch to Maintenance (11) with indicator showing 'your assigned division is Install'. (10) QJA navigation rename confirmed - nav-link-qja shows 'QJA' text. (11) Crew link creation form has 'Crew leader full name' input field.",
+  "features_tested": {
+    "backend_endpoints": {
+      "GET /api/public/standards": {
+        "no_filter": "PASS - 19 total standards",
+        "division_maintenance": "PASS - 11 standards (Maintenance + general)",
+        "division_install": "PASS - 9 standards (Install + general)",
+        "overlap_count": "5 general standards shared"
+      },
+      "GET /api/team/profiles": {
+        "returns_profiles": "PASS - 14 profiles",
+        "crew_leader_name": "PASS - Alejandro Ruiz-Domian (not Install Alpha)"
+      },
+      "GET /api/team/profiles/{id}/stats": {
+        "default_3_months": "PASS",
+        "6_months": "PASS",
+        "all_periods": "PASS - 1/3/6/12/24 months",
+        "requires_auth": "PASS"
+      },
+      "GET /api/team/structure": {
+        "returns_teams": "PASS - 1 team",
+        "leader_name": "PASS - Alejandro Ruiz-Domian"
+      },
+      "GET /api/team/hierarchy": {
+        "owners": "PASS - 1",
+        "general_managers": "PASS - 1",
+        "production_managers": "PASS - 4",
+        "account_managers": "PASS - 3",
+        "supervisors": "PASS - 3",
+        "divisions": "PASS - 1 (Install)"
+      },
+      "POST /api/crew-access-links": {
+        "with_leader_name": "PASS"
+      },
+      "PATCH /api/crew-access-links/{id}": {
+        "update_leader_name": "PASS"
+      },
+      "GET /api/public/crew-access/bb01032c": {
+        "demo_crew_exists": "PASS",
+        "label": "Install Alpha",
+        "leader_name": "Alejandro Ruiz-Domian",
+        "division": "Install",
+        "truck": "TR-01"
+      }
+    },
+    "frontend_team_members_page": {
+      "individual_view": {
+        "loads": "PASS",
+        "profile_count": "14 profiles with hex avatars",
+        "alejandro_shown": "PASS - person name displayed"
+      },
+      "team_structure_view": {
+        "loads": "PASS",
+        "install_alpha_header": "PASS",
+        "alejandro_leader": "PASS",
+        "alex_member": "PASS"
+      },
+      "division_hierarchy_view": {
+        "loads": "PASS",
+        "owner_level": "PASS - Adam S",
+        "gm_level": "PASS - Tyler C",
+        "production_managers": "PASS - Tim A, Zach O, Scott W, Brad S",
+        "cross_lateral_indicator": "PASS",
+        "account_managers": "PASS - Scott K, Megan M, Daniel T",
+        "supervisors": "PASS - Johnny H, Craig S, Fran P",
+        "install_division": "PASS"
+      },
+      "profile_overlay": {
+        "opens_on_click": "PASS",
+        "stats_toggle": "PASS",
+        "timeline_selector": "PASS - 1/3/6/12/24 months",
+        "stats_grid": "PASS",
+        "quick_links": "PASS - 3 links (Calibration Heatmap, Reviewer Performance, Repeat Offenders)"
+      }
+    },
+    "frontend_crew_capture_page": {
+      "demo_crew_bb01032c": {
+        "loads": "PASS",
+        "crew_label": "Install Alpha",
+        "division": "Install",
+        "truck": "TR-01"
+      },
+      "standards_tab": {
+        "division_switcher": "PASS - 5 division pills",
+        "install_standards": "PASS - 9 standards",
+        "maintenance_standards": "PASS - 11 standards",
+        "switch_indicator": "PASS - shows 'your assigned division is Install'"
+      }
+    },
+    "frontend_jobs_page": {
+      "qja_navigation": "PASS - nav-link-qja shows 'QJA'",
+      "leader_name_input": "PASS - placeholder 'Crew leader full name'",
+      "form_fields": "PASS - label, truck, division, assignment inputs"
+    }
+  },
+  "data_testids_verified": [
+    "team-members-page",
+    "team-page-title",
+    "team-view-selector",
+    "individual-view",
+    "profile-card-{profile_id}",
+    "team-structure-view",
+    "hierarchy-view",
+    "org-card-{profile_id}",
+    "profile-detail-overlay",
+    "profile-detail-popup",
+    "profile-detail-close",
+    "profile-toggle-stats",
+    "profile-timeline-selector",
+    "profile-timeline-btn-{n}m",
+    "profile-stats-grid",
+    "profile-link-{name}",
+    "crew-capture-header-card",
+    "crew-standards-tab-trigger",
+    "crew-division-switcher",
+    "crew-division-btn-{division}",
+    "crew-standard-card-{id}",
+    "nav-link-qja",
+    "crew-link-leader-name-input",
+    "jobs-page"
+  ],
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": []
+  }
+}

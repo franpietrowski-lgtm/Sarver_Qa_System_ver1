@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Network, Upload, User, Users, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, Network, Upload, User, Users, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { authGet } from "@/lib/api";
 import { toast } from "sonner";
 
-/* ── Level accent colours (theme-reactive fallback to brand) ── */
+/* ── Level accent colours ── */
 const ACCENT = {
   Owner:              { bar: "#d4a843", card: "rgba(212,168,67,0.12)", text: "#d4a843" },
   GM:                 { bar: "#9b7cd8", card: "rgba(155,124,216,0.12)", text: "#9b7cd8" },
@@ -34,24 +34,80 @@ function HexAvatar({ name, url, size = 56, className = "" }) {
   return <div style={{ ...s, backgroundColor: BG[hIdx(name)] }} className={`flex shrink-0 items-center justify-center font-bold text-white ${fs} ${className}`}>{ini(name)}</div>;
 }
 
-/* ════════════ INFOGRAPHIC ORG-NODE ════════════
-   Hex avatar overlaps left edge of a rounded white card.
-   Coloured accent bar underneath the name.                 */
+/* ── TIMELINE SELECTOR for on-hover stats ── */
+const TIMELINES = [1, 3, 6, 12, 24];
+
+function HoverStats({ profileId, onClose }) {
+  const [months, setMonths] = useState(3);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    authGet(`/team/profiles/${profileId}/stats?months=${months}`)
+      .then(setStats)
+      .catch(() => setStats(null))
+      .finally(() => setLoading(false));
+  }, [profileId, months]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -4 }}
+      className="absolute left-1/2 top-full z-40 mt-2 w-56 -translate-x-1/2 rounded-[18px] bg-[var(--card)] p-3 shadow-xl ring-1 ring-[var(--border)]"
+      onClick={(e) => e.stopPropagation()}
+      data-testid={`hover-stats-${profileId}`}
+    >
+      <div className="flex flex-wrap gap-1 mb-2" data-testid="timeline-selector">
+        {TIMELINES.map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setMonths(m); }}
+            className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition ${months === m ? "bg-[#243e36] text-white" : "bg-[var(--accent)] text-[var(--muted-foreground)] hover:bg-[var(--border)]"}`}
+            data-testid={`timeline-btn-${m}m`}
+          >
+            {m}mo
+          </button>
+        ))}
+      </div>
+      {loading ? (
+        <p className="text-xs text-center text-[var(--muted-foreground)] animate-pulse py-2">Loading...</p>
+      ) : stats ? (
+        <div className="grid grid-cols-2 gap-1.5" data-testid="hover-stats-grid">
+          {[
+            ["Reviews", stats.review_count],
+            ["Submissions", stats.submission_count],
+            ["Avg Score", stats.avg_review_score || "—"],
+            ["Training", `${stats.training_completed}/${stats.training_total}`],
+          ].map(([label, val]) => (
+            <div key={label} className="rounded-[10px] bg-[var(--accent)] px-2 py-1.5 text-center">
+              <p className="text-sm font-black text-[var(--foreground)]">{val}</p>
+              <p className="text-[8px] font-bold uppercase text-[var(--muted-foreground)]">{label}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-center text-[var(--muted-foreground)]">No data</p>
+      )}
+    </motion.div>
+  );
+}
+
+/* ── INFOGRAPHIC ORG-NODE ── */
 function OrgCard({ profile, onClick, compact = false }) {
   const a = accent(profile.role);
   const h = compact ? 42 : 56;
   return (
     <button type="button" onClick={() => onClick(profile)} className="group relative flex items-center text-left transition hover:scale-[1.02]" data-testid={`org-card-${profile.profile_id}`}>
-      {/* avatar overlapping left edge */}
       <div className="relative z-10 -mr-3 shrink-0">
         <div style={{ padding: 3, clipPath: HEX_CLIP, backgroundColor: a.bar }}>
           <HexAvatar name={profile.name} url={profile.avatar_url} size={h} />
         </div>
       </div>
-      {/* card body */}
       <div className="relative flex min-w-0 flex-col justify-center rounded-r-[16px] rounded-l-[8px] bg-[var(--card)] py-2 pl-5 pr-4 shadow-md ring-1 ring-[var(--border)]" style={{ minHeight: h + 8 }}>
         <p className={`truncate font-semibold text-[var(--foreground)] ${compact ? "text-xs" : "text-sm"}`}>{profile.name}</p>
-        {/* accent bar */}
         <div className="mt-1 h-[3px] w-16 rounded-full" style={{ backgroundColor: a.bar }} />
         <p className={`mt-0.5 text-[var(--muted-foreground)] ${compact ? "text-[9px]" : "text-[10px]"} font-semibold uppercase tracking-wider`}>{profile.role}</p>
         {profile.division && <p className="text-[9px] text-[var(--muted-foreground)]">{profile.division}</p>}
@@ -60,41 +116,63 @@ function OrgCard({ profile, onClick, compact = false }) {
   );
 }
 
-/* ════════ CONNECTOR LINES ════════ */
+/* ── CONNECTOR LINES ── */
 function VLine({ h = 28, color = "var(--border)", dashed = false }) {
   return <div className="mx-auto" style={{ width: 2, height: h, backgroundColor: dashed ? "transparent" : color, borderLeft: dashed ? `2px dashed ${color}` : "none" }} />;
 }
+function HLine({ color = "var(--border)" }) {
+  return <div className="h-[2px] flex-1" style={{ backgroundColor: color }} />;
+}
 
-/* ════════ GRID CARD (Individual view) ════════ */
-function GridCard({ profile, onClick }) {
+/* ── GRID CARD (Individual view) — responsive sizing ── */
+function GridCard({ profile, onClick, cardWidth = 184 }) {
+  const [hovered, setHovered] = useState(false);
   const a = accent(profile.role);
   return (
-    <button type="button" onClick={() => onClick(profile)}
-      className="group flex w-[184px] flex-col items-center rounded-[22px] bg-[var(--card)] p-4 shadow-md ring-1 ring-[var(--border)] transition hover:scale-[1.03] hover:shadow-lg"
-      data-testid={`profile-card-${profile.profile_id}`}
-    >
-      <div style={{ padding: 3, clipPath: HEX_CLIP, backgroundColor: a.bar }}>
-        <HexAvatar name={profile.name} url={profile.avatar_url} size={60} />
-      </div>
-      <p className="mt-2 w-full truncate text-center text-sm font-semibold text-[var(--foreground)]">{profile.name}</p>
-      <div className="mt-1 h-[3px] w-12 rounded-full" style={{ backgroundColor: a.bar }} />
-      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: a.text }}>{profile.role}</p>
-      {profile.age && <p className="text-[10px] text-[var(--muted-foreground)]">Age {profile.age}</p>}
-    </button>
+    <div className="relative" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      <button type="button" onClick={() => onClick(profile)}
+        className="group flex flex-col items-center rounded-[22px] bg-[var(--card)] p-4 shadow-md ring-1 ring-[var(--border)] transition hover:scale-[1.03] hover:shadow-lg"
+        style={{ width: cardWidth }}
+        data-testid={`profile-card-${profile.profile_id}`}
+      >
+        <div style={{ padding: 3, clipPath: HEX_CLIP, backgroundColor: a.bar }}>
+          <HexAvatar name={profile.name} url={profile.avatar_url} size={Math.max(48, Math.min(70, cardWidth * 0.35))} />
+        </div>
+        <p className="mt-2 w-full truncate text-center text-sm font-semibold text-[var(--foreground)]">{profile.name}</p>
+        <div className="mt-1 h-[3px] w-12 rounded-full" style={{ backgroundColor: a.bar }} />
+        <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: a.text }}>{profile.role}</p>
+        {profile.crew_label && profile.crew_label !== profile.name && (
+          <p className="mt-0.5 text-[9px] text-[var(--muted-foreground)]">{profile.crew_label}</p>
+        )}
+        {profile.division && <p className="text-[9px] text-[var(--muted-foreground)]">{profile.division}</p>}
+      </button>
+      <AnimatePresence>
+        {hovered && <HoverStats profileId={profile.profile_id} />}
+      </AnimatePresence>
+    </div>
   );
 }
 
-/* ════════ PROFILE DETAIL OVERLAY ════════ */
+/* ── PROFILE DETAIL OVERLAY — centered, enlarged to fit screen ── */
 function ProfileOverlay({ profile, onClose, onAvatarDone }) {
   const [detail, setDetail] = useState(null);
   const [showStats, setShowStats] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [statsMonths, setStatsMonths] = useState(3);
+  const [timelineStats, setTimelineStats] = useState(null);
   const fileRef = useRef(null);
 
   useEffect(() => { if (profile) authGet(`/team/profiles/${profile.profile_id}`).then(setDetail).catch(() => setDetail(profile)); }, [profile]);
+
+  useEffect(() => {
+    if (!profile || !showStats) return;
+    authGet(`/team/profiles/${profile.profile_id}/stats?months=${statsMonths}`)
+      .then(setTimelineStats)
+      .catch(() => setTimelineStats(null));
+  }, [profile, showStats, statsMonths]);
+
   if (!profile) return null;
   const d = detail || profile;
-  const stats = d.stats || {};
   const a = accent(d.role);
 
   const upload = async (e) => {
@@ -111,31 +189,44 @@ function ProfileOverlay({ profile, onClose, onAvatarDone }) {
     finally { setUploading(false); }
   };
 
+  const profileLinks = [];
+  if (d.source_type === "crew" || d.source_type === "member") {
+    profileLinks.push({ label: "Training Sessions", href: "/training", icon: "book" });
+  }
+  if (d.auth_role === "management" || d.auth_role === "owner") {
+    profileLinks.push({ label: "Calibration Heatmap", href: "/analytics", icon: "chart" });
+    profileLinks.push({ label: "Reviewer Performance", href: "/reviewer-performance", icon: "trending" });
+  }
+  profileLinks.push({ label: "Repeat Offenders", href: "/repeat-offenders", icon: "radar" });
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose} data-testid="profile-detail-overlay">
-      <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:20 }}
-        className="w-full max-w-sm overflow-hidden rounded-[28px] bg-[var(--card)] shadow-2xl ring-1 ring-[var(--border)]"
+      <motion.div initial={{ opacity:0, scale:0.92 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0, scale:0.92 }}
+        className="w-full max-w-lg overflow-hidden rounded-[28px] bg-[var(--card)] shadow-2xl ring-1 ring-[var(--border)]"
         onClick={e => e.stopPropagation()} data-testid="profile-detail-popup">
-        <div className="relative p-6 text-center" style={{ background: `linear-gradient(135deg, ${a.bar}22 0%, ${a.bar}08 100%)` }}>
+        <div className="relative p-8 text-center" style={{ background: `linear-gradient(135deg, ${a.bar}22 0%, ${a.bar}08 100%)` }}>
           <button type="button" onClick={onClose} className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--foreground)] hover:opacity-80" data-testid="profile-detail-close"><X className="h-4 w-4" /></button>
           <div className="relative mx-auto w-fit">
             <div style={{ padding: 4, clipPath: HEX_CLIP, backgroundColor: a.bar }}>
-              <HexAvatar name={d.name} url={d.avatar_url} size={80} />
+              <HexAvatar name={d.name} url={d.avatar_url} size={100} />
             </div>
             <button type="button" onClick={() => fileRef.current?.click()} className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--card)] shadow-md ring-1 ring-[var(--border)]" data-testid="profile-avatar-upload-btn"><Upload className="h-3.5 w-3.5 text-[var(--foreground)]" /></button>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={upload} data-testid="profile-avatar-file-input" />
           </div>
           {uploading && <p className="mt-2 text-xs animate-pulse text-[var(--muted-foreground)]">Uploading...</p>}
-          <h2 className="mt-3 font-[Cabinet_Grotesk] text-2xl font-black tracking-tight text-[var(--foreground)]">{d.name}</h2>
+          <h2 className="mt-4 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)]">{d.name}</h2>
           <div className="mx-auto mt-1 h-[3px] w-16 rounded-full" style={{ backgroundColor: a.bar }} />
-          <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+          <div className="mt-3 flex flex-wrap justify-center gap-1.5">
             <Badge className="border-0 text-white text-[10px]" style={{ backgroundColor: a.bar }}>{d.role}</Badge>
             {d.division && <Badge className="border-0 bg-[var(--accent)] text-[var(--foreground)] text-[10px]">{d.division}</Badge>}
+            {d.crew_label && d.crew_label !== d.name && <Badge className="border-0 bg-[var(--accent)] text-[var(--foreground)] text-[10px]">{d.crew_label}</Badge>}
           </div>
         </div>
-        <div className="max-h-[40vh] overflow-y-auto p-5 space-y-3">
+        <div className="max-h-[50vh] overflow-y-auto p-6 space-y-3">
           {d.parent_crew_label && <div className="rounded-[16px] bg-[var(--accent)] p-3"><p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">Team</p><p className="mt-1 text-sm font-semibold text-[var(--foreground)]">{d.parent_crew_label}</p></div>}
           {d.truck_number && <div className="rounded-[16px] bg-[var(--accent)] p-3"><p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">Truck</p><p className="mt-1 text-sm font-semibold text-[var(--foreground)]">{d.truck_number}</p></div>}
+
+          {/* Stats toggle with timeline */}
           <button type="button" onClick={() => setShowStats(!showStats)} className="flex w-full items-center justify-between rounded-[16px] bg-[var(--accent)] px-4 py-3 text-left text-sm font-semibold text-[var(--foreground)] transition hover:opacity-80" data-testid="profile-toggle-stats">
             Performance & Records
             <svg className={`h-4 w-4 transition-transform ${showStats ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
@@ -143,40 +234,85 @@ function ProfileOverlay({ profile, onClose, onAvatarDone }) {
           <AnimatePresence>
             {showStats && (
               <motion.div initial={{ height:0, opacity:0 }} animate={{ height:"auto", opacity:1 }} exit={{ height:0, opacity:0 }} className="overflow-hidden">
-                <div className="grid grid-cols-2 gap-2 pt-1" data-testid="profile-stats-grid">
-                  {[["review_count","Reviews"],["submission_count","Submissions"],["training_completed","Trained"],["training_total","Sessions"]].map(([k,l])=>(
-                    <div key={k} className="rounded-[14px] bg-[var(--accent)] p-3 text-center">
-                      <p className="text-xl font-black text-[var(--foreground)]">{stats[k] ?? "—"}</p>
-                      <p className="text-[10px] font-semibold uppercase text-[var(--muted-foreground)]">{l}</p>
-                    </div>
+                <div className="flex flex-wrap gap-1.5 pb-2" data-testid="profile-timeline-selector">
+                  {TIMELINES.map((m) => (
+                    <button key={m} type="button" onClick={() => setStatsMonths(m)}
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold transition ${statsMonths === m ? "bg-[#243e36] text-white" : "bg-[var(--accent)] text-[var(--muted-foreground)] hover:bg-[var(--border)]"}`}
+                      data-testid={`profile-timeline-btn-${m}m`}
+                    >
+                      {m} mo
+                    </button>
                   ))}
                 </div>
+                {timelineStats ? (
+                  <div className="grid grid-cols-2 gap-2 pt-1" data-testid="profile-stats-grid">
+                    {[
+                      ["review_count","Reviews"],
+                      ["submission_count","Submissions"],
+                      ["avg_review_score","Avg Score"],
+                      ["training_completed","Trained"],
+                    ].map(([k,l])=>(
+                      <div key={k} className="rounded-[14px] bg-[var(--accent)] p-3 text-center">
+                        <p className="text-xl font-black text-[var(--foreground)]">{timelineStats[k] ?? "—"}</p>
+                        <p className="text-[10px] font-semibold uppercase text-[var(--muted-foreground)]">{l}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-center text-[var(--muted-foreground)] animate-pulse py-3">Loading stats...</p>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Quick links to related systems */}
+          {profileLinks.length > 0 && (
+            <div className="pt-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted-foreground)] mb-2">Quick Links</p>
+              <div className="flex flex-wrap gap-2">
+                {profileLinks.map((link) => (
+                  <a key={link.href} href={link.href} className="flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] transition hover:opacity-80" data-testid={`profile-link-${link.label.toLowerCase().replace(/\s+/g, "-")}`}>
+                    <ExternalLink className="h-3 w-3" />
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
   );
 }
 
-/* ═══════ INDIVIDUAL VIEW — 3×5 GRID ═══════ */
+/* ═══════ INDIVIDUAL VIEW — responsive grid ═══════ */
 const PER_PAGE = 15;
 function IndividualView({ profiles, onCardClick }) {
   const [page, setPage] = useState(1);
+  const containerRef = useRef(null);
+  const [cardWidth, setCardWidth] = useState(184);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      const w = el.clientWidth;
+      const cols = w > 1100 ? 5 : w > 800 ? 4 : w > 500 ? 3 : 2;
+      const gap = 16;
+      const cw = Math.floor((w - gap * (cols - 1)) / cols);
+      setCardWidth(Math.max(140, Math.min(220, cw)));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const total = Math.max(1, Math.ceil(profiles.length / PER_PAGE));
   const vis = profiles.slice((page-1)*PER_PAGE, page*PER_PAGE);
-  const rows = []; for (let i=0;i<vis.length;i+=5) rows.push(vis.slice(i,i+5));
-  while (rows.length < 3) rows.push([]);
+
   return (
-    <div className="flex h-full flex-col" data-testid="individual-view">
-      <div className="flex flex-1 flex-col justify-center gap-5">
-        {rows.slice(0,3).map((row,ri) => (
-          <div key={ri} className="flex justify-center gap-4" data-testid={`grid-row-${ri}`}>
-            {row.map(p => <GridCard key={p.profile_id} profile={p} onClick={onCardClick} />)}
-            {Array.from({ length: 5-row.length }).map((_,i) => <div key={`e${i}`} className="w-[184px]" />)}
-          </div>
-        ))}
+    <div className="flex h-full flex-col" data-testid="individual-view" ref={containerRef}>
+      <div className="flex flex-1 flex-wrap justify-center gap-4 content-start py-2">
+        {vis.map(p => <GridCard key={p.profile_id} profile={p} onClick={onCardClick} cardWidth={cardWidth} />)}
       </div>
       {total > 1 && (
         <div className="flex shrink-0 items-center justify-center gap-3 pt-4" data-testid="grid-pagination">
@@ -189,72 +325,88 @@ function IndividualView({ profiles, onCardClick }) {
   );
 }
 
-/* ═══════ TEAM STRUCTURE — HOVER EXPAND ═══════ */
-function CrewHoverCard({ team, onCardClick }) {
+/* ═══════ TEAM STRUCTURE — responsive, hover expand ═══════ */
+function CrewTeamCard({ team, onCardClick, scale = 1 }) {
   const [hovered, setHovered] = useState(false);
   const a = accent("Crew Leader");
+  const memberA = accent("Crew Member");
   return (
-    <div className="flex flex-col items-center" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} data-testid={`team-hover-${team.lead.profile_id}`}>
-      {/* Crew label pill */}
-      <div className="rounded-[18px] px-5 py-3 text-center shadow-md ring-1 ring-[var(--border)] transition" style={{ backgroundColor: hovered ? a.card : "var(--card)" }}>
-        <p className="text-sm font-bold text-[var(--foreground)]">{team.lead.name}</p>
+    <div className="flex flex-col items-center" style={{ minWidth: 180 * scale, maxWidth: 280 * scale }}
+      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      data-testid={`team-hover-${team.lead.profile_id}`}
+    >
+      {/* Crew name pill */}
+      <div className="rounded-[18px] px-5 py-3 text-center shadow-md ring-1 ring-[var(--border)] transition w-full" style={{ backgroundColor: hovered ? a.card : "var(--card)" }}>
+        <p className="text-xs font-bold uppercase tracking-wider" style={{ color: a.text }}>{team.crew_label || team.division}</p>
         <div className="mx-auto mt-1 h-[3px] w-10 rounded-full" style={{ backgroundColor: a.bar }} />
-        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: a.text }}>{team.division}</p>
+        <p className="mt-1 text-[10px] text-[var(--muted-foreground)]">{team.division}</p>
       </div>
 
-      {/* Expanded on hover */}
-      <AnimatePresence>
-        {hovered && (
-          <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:"auto" }} exit={{ opacity:0, height:0 }} className="overflow-hidden">
-            <VLine h={16} color={a.bar} />
-            {/* Crew leader detail */}
-            <div className="flex items-center gap-3 rounded-[18px] bg-[var(--card)] px-4 py-2 shadow ring-1 ring-[var(--border)]">
-              <button type="button" onClick={() => onCardClick(team.lead)}>
-                <div style={{ padding: 2, clipPath: HEX_CLIP, backgroundColor: a.bar }}>
-                  <HexAvatar name={team.lead.name} url={team.lead.avatar_url} size={44} />
-                </div>
-              </button>
-              <div>
-                <p className="text-xs font-semibold text-[var(--foreground)]">{team.lead.name}</p>
-                <Badge className="mt-0.5 border-0 text-[9px] text-white" style={{ backgroundColor: a.bar }}>Crew Leader</Badge>
-              </div>
-              {team.lead.truck_number && <Badge className="border-0 bg-[var(--accent)] text-[var(--foreground)] text-[9px]">{team.lead.truck_number}</Badge>}
-            </div>
+      <VLine h={14} color={a.bar} />
 
-            {/* Members */}
-            {team.members.length > 0 && (
-              <>
-                <VLine h={12} color={accent("Crew Member").bar} dashed />
-                <div className="space-y-1.5">
-                  {team.members.map(m => (
-                    <button key={m.profile_id} type="button" onClick={() => onCardClick(m)}
-                      className="flex w-full items-center gap-2.5 rounded-[14px] bg-[var(--card)] px-3 py-2 text-left shadow-sm ring-1 ring-[var(--border)] transition hover:ring-2"
-                      data-testid={`team-member-${m.profile_id}`}>
-                      <div style={{ padding: 2, clipPath: HEX_CLIP, backgroundColor: accent("Crew Member").bar }}>
-                        <HexAvatar name={m.name} url={m.avatar_url} size={32} />
-                      </div>
-                      <p className="truncate text-xs font-medium text-[var(--foreground)]">{m.name}</p>
-                    </button>
-                  ))}
+      {/* Crew leader */}
+      <button type="button" onClick={() => onCardClick(team.lead)}
+        className="flex w-full items-center gap-3 rounded-[18px] bg-[var(--card)] px-4 py-2.5 shadow ring-1 ring-[var(--border)] transition hover:shadow-lg"
+      >
+        <div style={{ padding: 2, clipPath: HEX_CLIP, backgroundColor: a.bar }}>
+          <HexAvatar name={team.lead.name} url={team.lead.avatar_url} size={44} />
+        </div>
+        <div className="min-w-0 flex-1 text-left">
+          <p className="truncate text-xs font-semibold text-[var(--foreground)]">{team.lead.name}</p>
+          <Badge className="mt-0.5 border-0 text-[9px] text-white" style={{ backgroundColor: a.bar }}>Crew Leader</Badge>
+        </div>
+        {team.lead.truck_number && <Badge className="border-0 bg-[var(--accent)] text-[var(--foreground)] text-[9px]">{team.lead.truck_number}</Badge>}
+      </button>
+
+      {/* Members — always visible */}
+      {team.members.length > 0 && (
+        <>
+          <VLine h={10} color={memberA.bar} dashed />
+          <div className="w-full space-y-1.5">
+            {team.members.map(m => (
+              <button key={m.profile_id} type="button" onClick={() => onCardClick(m)}
+                className="flex w-full items-center gap-2.5 rounded-[14px] bg-[var(--card)] px-3 py-2 text-left shadow-sm ring-1 ring-[var(--border)] transition hover:ring-2"
+                data-testid={`team-member-${m.profile_id}`}>
+                <div style={{ padding: 2, clipPath: HEX_CLIP, backgroundColor: memberA.bar }}>
+                  <HexAvatar name={m.name} url={m.avatar_url} size={32} />
                 </div>
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <p className="truncate text-xs font-medium text-[var(--foreground)]">{m.name}</p>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
 function TeamStructureView({ teams, onCardClick }) {
+  const containerRef = useRef(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      const w = el.clientWidth;
+      const count = teams.length || 1;
+      const idealPerTeam = 240;
+      const needed = count * idealPerTeam;
+      if (needed > w && count > 1) setScale(Math.max(0.7, w / needed));
+      else setScale(1);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [teams.length]);
+
   return (
-    <div className="flex h-full items-start justify-center gap-8 overflow-x-auto py-4" data-testid="team-structure-view">
-      {teams.map((t,i) => <CrewHoverCard key={i} team={t} onCardClick={onCardClick} />)}
+    <div className="flex h-full items-start justify-center gap-6 overflow-x-auto py-4" ref={containerRef} data-testid="team-structure-view">
+      {teams.map((t,i) => <CrewTeamCard key={i} team={t} onCardClick={onCardClick} scale={scale} />)}
     </div>
   );
 }
 
-/* ═══════ DIVISION HIERARCHY — FULL ORG CHART ═══════ */
+/* ═══════ DIVISION HIERARCHY — corrected org chart ═══════ */
 function DivisionHierarchyView({ hierarchy, onCardClick }) {
   if (!hierarchy) return null;
   return (
@@ -272,9 +424,27 @@ function DivisionHierarchyView({ hierarchy, onCardClick }) {
         </div>
         <VLine h={24} color={accent("GM").bar} />
 
-        {/* Two branches: AMs ←→ PMs & Field */}
-        <div className="flex flex-wrap justify-center gap-16">
-          {/* AM branch */}
+        {/* Production & Account Managers — side by side, cross-lateral */}
+        <div className="flex items-start justify-center gap-4 lg:gap-12">
+          {/* Production Managers */}
+          <div className="flex flex-col items-center">
+            <p className="rounded-xl bg-[var(--accent)] px-4 py-1.5 text-xs font-bold text-[var(--foreground)]">Production Managers</p>
+            <VLine h={14} color={accent("Production Manager").bar} />
+            <div className="flex flex-wrap justify-center gap-3">
+              {hierarchy.production_managers.map(p => <OrgCard key={p.profile_id} profile={{...p, role: "Production Manager"}} onClick={onCardClick} compact />)}
+            </div>
+          </div>
+
+          {/* Cross-lateral indicator */}
+          <div className="flex flex-col items-center justify-center pt-6">
+            <div className="flex items-center gap-1">
+              <HLine color="var(--border)" />
+              <span className="whitespace-nowrap rounded-full bg-[var(--accent)] px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">cross-lateral</span>
+              <HLine color="var(--border)" />
+            </div>
+          </div>
+
+          {/* Account Managers */}
           <div className="flex flex-col items-center">
             <p className="rounded-xl bg-[var(--accent)] px-4 py-1.5 text-xs font-bold text-[var(--foreground)]">Account Managers</p>
             <VLine h={14} color={accent("Account Manager").bar} dashed />
@@ -282,43 +452,43 @@ function DivisionHierarchyView({ hierarchy, onCardClick }) {
               {hierarchy.account_managers.map(p => <OrgCard key={p.profile_id} profile={p} onClick={onCardClick} compact />)}
             </div>
           </div>
+        </div>
 
-          {/* Production & Field branch */}
-          <div className="flex flex-col items-center">
-            <p className="rounded-xl bg-[var(--accent)] px-4 py-1.5 text-xs font-bold text-[var(--foreground)]">Production & Field</p>
-            <VLine h={14} color={accent("Production Manager").bar} />
-            <div className="flex flex-wrap justify-center gap-3">
-              {hierarchy.production_managers.map(p => <OrgCard key={p.profile_id} profile={{...p, role: "Production Manager"}} onClick={onCardClick} compact />)}
-            </div>
-            <VLine h={14} color={accent("Supervisor").bar} dashed />
-            <div className="flex flex-wrap justify-center gap-3">
-              {hierarchy.supervisors.map(p => <OrgCard key={p.profile_id} profile={p} onClick={onCardClick} compact />)}
-            </div>
+        <VLine h={20} color={accent("Supervisor").bar} />
 
-            {/* Divisions */}
-            {hierarchy.divisions.map(div => (
-              <div key={div.name} className="mt-5 flex flex-col items-center">
-                <p className="rounded-xl px-4 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: accent("Crew Leader").bar }}>{div.name}</p>
-                <VLine h={14} color={accent("Crew Leader").bar} />
-                <div className="flex flex-wrap justify-center gap-6">
-                  {div.teams.map(team => (
-                    <div key={team.lead.profile_id} className="flex flex-col items-center">
-                      <OrgCard profile={team.lead} onClick={onCardClick} compact />
-                      {team.members.length > 0 && (
-                        <>
-                          <VLine h={12} color={accent("Crew Member").bar} dashed />
-                          <div className="flex gap-2">
-                            {team.members.map(m => <OrgCard key={m.profile_id} profile={m} onClick={onCardClick} compact />)}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+        {/* Supervisors — answer to both AM and PM */}
+        <div className="flex flex-col items-center">
+          <p className="rounded-xl bg-[var(--accent)] px-4 py-1.5 text-xs font-bold text-[var(--foreground)]">Supervisors</p>
+          <VLine h={14} color={accent("Supervisor").bar} dashed />
+          <div className="flex flex-wrap justify-center gap-3">
+            {hierarchy.supervisors.map(p => <OrgCard key={p.profile_id} profile={p} onClick={onCardClick} compact />)}
           </div>
         </div>
+
+        <VLine h={20} color={accent("Crew Leader").bar} />
+
+        {/* Divisions with Crew Leaders & Members flowing from PMs */}
+        {hierarchy.divisions.map(div => (
+          <div key={div.name} className="mt-4 flex flex-col items-center w-full">
+            <p className="rounded-xl px-4 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: accent("Crew Leader").bar }}>{div.name} Division</p>
+            <VLine h={14} color={accent("Crew Leader").bar} />
+            <div className="flex flex-wrap justify-center gap-6">
+              {div.teams.map(team => (
+                <div key={team.lead.profile_id} className="flex flex-col items-center">
+                  <OrgCard profile={team.lead} onClick={onCardClick} compact />
+                  {team.members.length > 0 && (
+                    <>
+                      <VLine h={12} color={accent("Crew Member").bar} dashed />
+                      <div className="flex gap-2">
+                        {team.members.map(m => <OrgCard key={m.profile_id} profile={m} onClick={onCardClick} compact />)}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

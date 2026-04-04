@@ -66,9 +66,9 @@ export default function JobsPage() {
   const [csvFile, setCsvFile] = useState(null);
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [newLink, setNewLink] = useState({ label: "", truck_number: "", division: DIVISIONS[0], assignment: "" });
+  const [newLink, setNewLink] = useState({ label: "", truck_number: "", division: DIVISIONS[0], assignment: "", leader_name: "" });
   const [editingLink, setEditingLink] = useState(null);
-  const [editForm, setEditForm] = useState({ label: "", truck_number: "", division: DIVISIONS[0], assignment: "" });
+  const [editForm, setEditForm] = useState({ label: "", truck_number: "", division: DIVISIONS[0], assignment: "", leader_name: "" });
   const [updating, setUpdating] = useState(false);
   const [jobPagination, setJobPagination] = useState({ page: 1, pages: 1, total: 0, limit: PAGE_SIZE });
   const [activeLinkPagination, setActiveLinkPagination] = useState({ page: 1, pages: 1, total: 0, limit: PAGE_SIZE });
@@ -118,7 +118,7 @@ export default function JobsPage() {
     try {
       await authPost("/crew-access-links", newLink);
       toast.success("New crew QR link created.");
-      setNewLink({ label: "", truck_number: "", division: DIVISIONS[0], assignment: "" });
+      setNewLink({ label: "", truck_number: "", division: DIVISIONS[0], assignment: "", leader_name: "" });
       await loadPage({ nextActivePage: 1, nextInactivePage: 1 });
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Unable to create crew link");
@@ -141,7 +141,7 @@ export default function JobsPage() {
 
   const startEditLink = (link) => {
     setEditingLink(link);
-    setEditForm({ label: link.label, truck_number: link.truck_number, division: link.division, assignment: link.assignment || "" });
+    setEditForm({ label: link.label, truck_number: link.truck_number, division: link.division, assignment: link.assignment || "", leader_name: link.leader_name || "" });
   };
 
   const appOrigin = getApiOrigin();
@@ -230,7 +230,8 @@ export default function JobsPage() {
               </HelpPopover>
             </p>
             <form className="mt-5 grid gap-3" onSubmit={handleCreateCrewLink} data-testid="jobs-create-crew-link-form">
-              <Input value={newLink.label} onChange={(event) => setNewLink((c) => ({ ...c, label: event.target.value }))} placeholder="Crew label" className="h-11 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-label-input" />
+              <Input value={newLink.label} onChange={(event) => setNewLink((c) => ({ ...c, label: event.target.value }))} placeholder="Crew label (e.g. Install Alpha)" className="h-11 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-label-input" />
+              <Input value={newLink.leader_name} onChange={(event) => setNewLink((c) => ({ ...c, leader_name: event.target.value }))} placeholder="Crew leader full name" className="h-11 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-leader-name-input" />
               <Input value={newLink.truck_number} onChange={(event) => setNewLink((c) => ({ ...c, truck_number: event.target.value }))} placeholder="Truck number" className="h-11 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-truck-input" />
               <Input value={newLink.assignment} onChange={(event) => setNewLink((c) => ({ ...c, assignment: event.target.value }))} placeholder="Assignment / route note" className="h-11 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-assignment-input" />
               <select value={newLink.division} onChange={(event) => setNewLink((c) => ({ ...c, division: event.target.value }))} className="h-11 rounded-2xl border border-white/10 bg-white/10 px-4 text-sm text-white focus:outline-none" data-testid="crew-link-division-input">
@@ -248,6 +249,7 @@ export default function JobsPage() {
                 </div>
                 <form className="mt-3 grid gap-3" onSubmit={handleUpdateCrewLink} data-testid="crew-link-update-form">
                   <Input value={editForm.label} onChange={(e) => setEditForm((c) => ({ ...c, label: e.target.value }))} placeholder="Crew label" className="h-11 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-update-label" />
+                  <Input value={editForm.leader_name} onChange={(e) => setEditForm((c) => ({ ...c, leader_name: e.target.value }))} placeholder="Crew leader full name" className="h-11 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-update-leader-name" />
                   <Input value={editForm.truck_number} onChange={(e) => setEditForm((c) => ({ ...c, truck_number: e.target.value }))} placeholder="Truck number" className="h-11 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-update-truck" />
                   <Input value={editForm.assignment} onChange={(e) => setEditForm((c) => ({ ...c, assignment: e.target.value }))} placeholder="Assignment / route" className="h-11 rounded-2xl border-white/10 bg-white/10 text-white placeholder:text-white/60" data-testid="crew-link-update-assignment" />
                   <select value={editForm.division} onChange={(e) => setEditForm((c) => ({ ...c, division: e.target.value }))} className="h-11 rounded-2xl border border-white/10 bg-white/10 px-4 text-sm text-white focus:outline-none" data-testid="crew-link-update-division">
@@ -280,6 +282,7 @@ export default function JobsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-[#243e36]" data-testid={`crew-qr-label-${link.code}`}>{link.label}</p>
+                    {link.leader_name && <p className="text-xs text-[#5c6d64]" data-testid={`crew-qr-leader-${link.code}`}>Leader: {link.leader_name}</p>}
                     <p className="mt-1 text-sm text-[#5c6d64]" data-testid={`crew-qr-meta-${link.code}`}>{link.crew_member_id} · {link.truck_number} · {link.division}</p>
                     {link.assignment && <p className="mt-1 text-xs text-[#5c6d64]">{link.assignment}</p>}
                   </div>

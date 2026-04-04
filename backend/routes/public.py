@@ -39,6 +39,17 @@ async def get_crew_access_link(code: str):
     return {**present_crew_link(crew_link), "notifications": notifications}
 
 
+
+@router.get("/public/standards")
+async def get_public_standards(division: str = "all"):
+    query = {"is_active": {"$ne": False}}
+    if division != "all":
+        query["$or"] = [{"division_targets": []}, {"division_targets": division}]
+    items = await deps.db.standards_library.find(query, {"_id": 0}).sort("category", 1).to_list(200)
+    return {"standards": items}
+
+
+
 @router.get("/public/jobs")
 async def get_public_jobs(search: str = "", access_code: str | None = None):
     query: dict[str, Any] = {}

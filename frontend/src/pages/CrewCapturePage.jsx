@@ -15,6 +15,8 @@ import { copyToClipboard } from "@/lib/clipboard";
 import { toast } from "sonner";
 
 
+const ALL_DIVISIONS = ["Maintenance", "Install", "Tree", "Plant Healthcare", "Winter Services"];
+
 const DIVISION_TASKS = {
   Maintenance: ["Bed edging", "Spring/Fall Cleanup", "Property Maintenance", "Pruning", "Weeding", "Mulching"],
   Install: ["Softscape", "Hardscape", "Tree/Plant Install/Removal", "Drainage/Trenching", "Lighting"],
@@ -22,30 +24,6 @@ const DIVISION_TASKS = {
   "Plant Healthcare": ["Fert and Chem treatments", "Air Spade", "Dormant pruning", "Deer fencing and shrub treatment"],
   "Winter Services": ["Snow removal", "Plow", "Salting"],
 };
-
-const STANDARDS_HIGHLIGHTS = [
-  {
-    id: "standard-edge-clean",
-    title: "Clean bed edge finish",
-    note: "Look for a confident edge line, contained turf, and a final pass that reads clean from the street.",
-    image: "https://images.unsplash.com/photo-1734303023491-db8037a21f09?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
-    category: "Edging",
-  },
-  {
-    id: "standard-cleanup-reset",
-    title: "Spring cleanup reset",
-    note: "Wide shot first, detail shots after. Reviewers want the property reset to feel complete, not partial.",
-    image: "https://images.pexels.com/photos/30467599/pexels-photo-30467599.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-    category: "Cleanup",
-  },
-  {
-    id: "standard-tree-work",
-    title: "Tree work clarity",
-    note: "Show the cut area clearly and keep one framing shot that proves the work zone is safe and tidy.",
-    image: "https://images.unsplash.com/photo-1772764057845-121fd5f3ebe8?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85",
-    category: "Sarver Tree",
-  },
-];
 
 const DAMAGE_TYPES = ["Landscape feature", "Hardscape / paver", "Irrigation / plumbing", "Fence / gate", "Structure / building", "Vehicle", "Other"];
 const INCIDENT_TYPES = ["Slip / trip / fall", "Cut / laceration", "Struck by object", "Equipment malfunction / injury", "Heat / cold illness", "Chemical exposure", "Vehicle accident", "Near miss (no injury)", "Other"];
@@ -99,8 +77,12 @@ export default function CrewCapturePage() {
   const [selectedStandard, setSelectedStandard] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamOpen, setTeamOpen] = useState(false);
+  const [activeDivision, setActiveDivision] = useState("");
+  const [standards, setStandards] = useState([]);
+  const [loadingStandards, setLoadingStandards] = useState(false);
 
-  const availableTasks = DIVISION_TASKS[crewLink?.division] || DIVISION_TASKS.Maintenance;
+  const currentDivision = activeDivision || crewLink?.division || "Maintenance";
+  const availableTasks = DIVISION_TASKS[currentDivision] || DIVISION_TASKS.Maintenance;
 
   const loadCrewContext = async () => {
     try {
@@ -114,6 +96,15 @@ export default function CrewCapturePage() {
   };
 
   useEffect(() => { loadCrewContext(); }, [code]);
+
+  useEffect(() => {
+    if (!currentDivision) return;
+    setLoadingStandards(true);
+    publicGet(`/public/standards?division=${encodeURIComponent(currentDivision)}`)
+      .then((res) => setStandards(res.standards || []))
+      .catch(() => setStandards([]))
+      .finally(() => setLoadingStandards(false));
+  }, [currentDivision]);
 
   useEffect(() => {
     if (!code) return;
@@ -183,6 +174,11 @@ export default function CrewCapturePage() {
   useEffect(() => {
     if (!taskType && availableTasks.length) setTaskType(availableTasks[0]);
   }, [availableTasks, taskType]);
+
+  const handleDivisionSwitch = (div) => {
+    setActiveDivision(div);
+    setTaskType("");
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -287,7 +283,7 @@ export default function CrewCapturePage() {
                 <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-crew-badge">{crewLink.label}</Badge>
                 <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-crew-id-badge">Crew pass active</Badge>
                 <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-truck-badge">{crewLink.truck_number}</Badge>
-                <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-division-badge">{crewLink.division}</Badge>
+                <Badge className="border-0 bg-white/12 px-3 py-1 text-white" data-testid="crew-capture-division-badge">{currentDivision}{activeDivision && activeDivision !== crewLink?.division ? " (switched)" : ""}</Badge>
               </div>
             )}
           </CardContent>
@@ -557,16 +553,38 @@ export default function CrewCapturePage() {
                   <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4">
                     <p className="text-sm font-semibold text-[#243e36]">Crew standards library</p>
                     <p className="mt-1 text-sm text-[#5c6d64]">Tap a standard for full details. Review before shooting a proof set.</p>
+                    <div className="mt-3 flex flex-wrap gap-1.5" data-testid="crew-division-switcher">
+                      {ALL_DIVISIONS.map((div) => (
+                        <button
+                          key={div}
+                          type="button"
+                          onClick={() => handleDivisionSwitch(div)}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${currentDivision === div ? "bg-[#243e36] text-white" : "bg-white text-[#5c6d64] hover:bg-[#edf0e7]"}`}
+                          data-testid={`crew-division-btn-${div.toLowerCase().replace(/\s+/g, "-")}`}
+                        >
+                          {div}
+                        </button>
+                      ))}
+                    </div>
+                    {currentDivision !== crewLink?.division && (
+                      <p className="mt-2 text-xs text-amber-700 font-medium">Viewing {currentDivision} standards (your assigned division is {crewLink?.division})</p>
+                    )}
                   </div>
-                  {STANDARDS_HIGHLIGHTS.map((item) => (
+                  {loadingStandards && <p className="text-center text-sm text-[#5c6d64] animate-pulse py-4">Loading standards...</p>}
+                  {!loadingStandards && standards.length === 0 && (
+                    <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-6 text-center">
+                      <p className="text-sm text-[#5c6d64]">No standards found for {currentDivision}.</p>
+                    </div>
+                  )}
+                  {standards.map((item) => (
                     <button key={item.id} type="button" onClick={() => setSelectedStandard(item)} className="w-full overflow-hidden rounded-[24px] border border-border bg-[#f6f6f2] text-left transition hover:border-[#243e36]/30 hover:shadow-md" data-testid={`crew-standard-card-${item.id}`}>
-                      <div className="aspect-[5/3] overflow-hidden bg-[#dde4d6]"><img src={item.image} alt={item.title} className="h-full w-full object-cover" /></div>
+                      {item.image_url && <div className="aspect-[5/3] overflow-hidden bg-[#dde4d6]"><img src={item.image_url} alt={item.title} className="h-full w-full object-cover" /></div>}
                       <div className="space-y-2 p-4">
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-sm font-semibold text-[#243e36]">{item.title}</p>
                           <Badge className="border-0 bg-white text-[#243e36]" data-testid={`crew-standard-category-${item.id}`}>{item.category}</Badge>
                         </div>
-                        <p className="text-sm text-[#5c6d64] line-clamp-2">{item.note}</p>
+                        <p className="text-sm text-[#5c6d64] line-clamp-2">{item.notes}</p>
                         <p className="text-xs font-semibold text-[#243e36]">Tap to view full details</p>
                       </div>
                     </button>
@@ -575,7 +593,7 @@ export default function CrewCapturePage() {
                 {selectedStandard && (
                   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setSelectedStandard(null)} data-testid="crew-standard-detail-overlay">
                     <div className="max-h-[85vh] w-full max-w-md overflow-hidden rounded-[28px] border border-border/80 bg-white shadow-2xl" onClick={(e) => e.stopPropagation()} data-testid="crew-standard-detail-popup">
-                      <div className="aspect-[5/3] bg-[#dbe3d7]"><img src={selectedStandard.image} alt={selectedStandard.title} className="h-full w-full object-cover" /></div>
+                      {selectedStandard.image_url && <div className="aspect-[5/3] bg-[#dbe3d7]"><img src={selectedStandard.image_url} alt={selectedStandard.title} className="h-full w-full object-cover" /></div>}
                       <div className="max-h-[45vh] overflow-y-auto p-5">
                         <div className="flex items-start justify-between gap-3">
                           <div>
@@ -584,8 +602,8 @@ export default function CrewCapturePage() {
                           </div>
                           <button type="button" onClick={() => setSelectedStandard(null)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#edf0e7] text-[#243e36] hover:bg-[#dbe3d7]" data-testid="crew-standard-detail-close"><X className="h-4 w-4" /></button>
                         </div>
-                        <p className="mt-3 text-sm leading-relaxed text-[#41534a]">{selectedStandard.note}</p>
-                        {selectedStandard.checklist && (
+                        <p className="mt-3 text-sm leading-relaxed text-[#41534a]">{selectedStandard.notes}</p>
+                        {selectedStandard.checklist?.length > 0 && (
                           <div className="mt-4 rounded-[16px] bg-[#f6f6f2] p-4">
                             <p className="text-xs font-bold uppercase tracking-widest text-[#5f7464]">Checklist</p>
                             <ul className="mt-2 space-y-1">{selectedStandard.checklist.map((c, i) => <li key={i} className="text-sm text-[#41534a]">- {c}</li>)}</ul>

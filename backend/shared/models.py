@@ -15,6 +15,7 @@ class CrewAccessCreate(BaseModel):
     truck_number: str
     division: str
     assignment: str = ""
+    leader_name: str = ""
 
 
 class CrewAccessUpdate(BaseModel):
@@ -22,6 +23,7 @@ class CrewAccessUpdate(BaseModel):
     truck_number: str
     division: str
     assignment: str = ""
+    leader_name: str = ""
 
 
 class MatchOverrideRequest(BaseModel):
