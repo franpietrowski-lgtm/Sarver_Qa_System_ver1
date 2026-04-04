@@ -1,0 +1,76 @@
+{
+  "summary": "Iteration 37 - PDF Export, Onboarding Progress Tracker, Coaching Loop. All 21 backend tests passed. Frontend verified: Owner sees Onboarding Tracker widget with crew progress bars and milestone badges, AM Report widget with Export PDF button (download works), Crew Leaders, Supervisor Checklist, Weekly Digest widgets (regression OK). Coaching Loop widget not visible because no repeat offenders exist (expected behavior - widget only shows when total_offenders > 0).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration37_new_features.py",
+    "/app/test_reports/pytest/pytest_results_iter37.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Coaching Loop widget only renders when coachingLoop.report?.length > 0 || coachingLoop.summary?.total_offenders > 0 - this is correct behavior but may confuse users if no repeat offenders exist"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration37_new_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (21/21 tests passed)",
+    "frontend": "100% (all verified features working)"
+  },
+  "test_credentials": {
+    "owner": "sadam.owner@slmco.local / SLMCo2026!",
+    "pm": "atim.prom@slmco.local / SLMCo2026!"
+  },
+  "seed_data_creation": "Created coaching actions via API for testing (coach_8b0f5f633d6f and others)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 37 verified all new features: 1) PDF Export at /api/exports/am-report-pdf returns valid PDF with proper headers, 2) Onboarding Progress at /api/onboarding/progress returns crews with 6 milestones (first_submission, first_review, training_started, training_completed, equipment_check, five_submissions), 3) Coaching Loop at /api/coaching/loop-report returns report and summary (0 offenders currently - crews need 2+ flagged issues to appear), 4) Coaching assign/complete endpoints work correctly. Server refactor verified - server.py now ~120 lines with routes imported from /routes/. Seed data moved to shared/seed_data.py. All regression tests pass.",
+  "verified_features": {
+    "backend_health_after_refactor": "GET /api/health returns 200 with status=ok",
+    "backend_auth_after_refactor": "POST /api/auth/login returns token for owner credentials",
+    "backend_pdf_export": "GET /api/exports/am-report-pdf returns 200 with content-type application/pdf and valid PDF bytes",
+    "backend_pdf_export_content_disposition": "PDF has Content-Disposition header with attachment and filename",
+    "backend_pdf_export_auth_required": "PDF export requires authentication (401/403 without token)",
+    "backend_pdf_export_pm_access": "PM (management role) can access PDF export",
+    "backend_onboarding_all": "GET /api/onboarding/progress?division=all returns crews with milestones",
+    "backend_onboarding_structure": "Each crew has crew_label, leader_name, division, milestones, completed_count, total_milestones, progress_pct",
+    "backend_onboarding_install_filter": "GET /api/onboarding/progress?division=Install filters correctly",
+    "backend_onboarding_auth_required": "Onboarding progress requires authentication",
+    "backend_coaching_loop_report": "GET /api/coaching/loop-report?division=all returns report array and summary object",
+    "backend_coaching_assign": "POST /api/coaching/assign creates coaching action with crew_code, issue_tags, notes",
+    "backend_coaching_assign_validation": "POST /api/coaching/assign requires crew_code",
+    "backend_coaching_complete": "PATCH /api/coaching/{action_id}/complete marks action as completed",
+    "backend_coaching_complete_invalid": "PATCH /api/coaching/{invalid_id}/complete returns error",
+    "backend_coaching_auth_required": "Coaching loop report requires authentication",
+    "backend_weekly_digest_regression": "GET /api/metrics/weekly-digest still returns 200",
+    "backend_crew_leader_performance_regression": "GET /api/metrics/crew-leader-performance?division=all still returns 200",
+    "backend_dashboard_overview_regression": "GET /api/dashboard/overview still returns 200",
+    "backend_submissions_regression": "GET /api/submissions still returns 200",
+    "backend_rubric_matrices_regression": "GET /api/rubric-matrices still returns 200",
+    "frontend_onboarding_tracker_widget": "Owner sees widget-onboarding-tracker with crew progress bars (67%, 83%, 83%, 83%) and milestone badges",
+    "frontend_am_report_widget": "Owner sees widget-am-report with Client Quality Report table",
+    "frontend_export_pdf_button": "Export PDF button (data-testid='am-export-pdf-btn') visible and triggers download",
+    "frontend_pdf_download_works": "Clicking Export PDF downloads SarverLandscape_ClientReport.pdf",
+    "frontend_crew_leaders_regression": "widget-crew-leaders renders with 4 ranked leaders",
+    "frontend_supervisor_checklist_regression": "widget-supervisor-checklist renders with 4 stat boxes",
+    "frontend_weekly_digest_regression": "widget-weekly-digest renders with top performers"
+  },
+  "screenshots": [
+    "/app/test_reports/screenshots_iter37/owner-overview-top.jpeg",
+    "/app/test_reports/screenshots_iter37/owner-overview-middle.jpeg",
+    "/app/test_reports/screenshots_iter37/owner-overview-bottom.jpeg",
+    "/app/test_reports/screenshots_iter37/owner-overview-very-bottom.jpeg",
+    "/app/test_reports/screenshots_iter37/pdf-export-test.jpeg"
+  ],
+  "notes": {
+    "coaching_loop_widget": "The widget-coaching-loop is not visible because coachingLoop.summary.total_offenders is 0. This is expected behavior - the widget only renders when there are repeat offenders (crews with 2+ flagged issues in 180 days). The backend endpoint works correctly and returns the proper structure.",
+    "server_refactor": "Server.py successfully refactored to ~120 lines. All routes imported from /routes/ directory. Seed data extracted to shared/seed_data.py. No breaking changes detected."
+  }
+}

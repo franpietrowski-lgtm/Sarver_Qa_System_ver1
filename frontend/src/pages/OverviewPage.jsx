@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, ArrowDown, ArrowUp, Boxes, ClipboardCheck, Copy, FolderInput, Grid3X3, ShieldCheck, Smartphone, TrendingUp, UploadCloud, Users, X, Zap } from "lucide-react";
+import { Activity, AlertTriangle, ArrowDown, ArrowUp, Boxes, CheckCircle2, CircleDot, ClipboardCheck, Copy, Download, FolderInput, Grid3X3, ShieldCheck, Smartphone, Target, TrendingUp, UploadCloud, Users, X, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 
@@ -43,6 +43,8 @@ export default function OverviewPage({ user }) {
   const [supervisorCheck, setSupervisorCheck] = useState(null);
   const [insights, setInsights] = useState(null);
   const [digest, setDigest] = useState(null);
+  const [onboarding, setOnboarding] = useState(null);
+  const [coachingLoop, setCoachingLoop] = useState(null);
 
   const isOwnerOrGM = user?.role === "owner" || user?.title === "GM";
 
@@ -84,6 +86,8 @@ export default function OverviewPage({ user }) {
       authGet("/metrics/training-funnel").then(setFunnel).catch(() => {});
       authGet("/metrics/smart-insights").then(setInsights).catch(() => {});
       authGet("/metrics/weekly-digest").then(setDigest).catch(() => {});
+      authGet("/onboarding/progress?division=all").then(setOnboarding).catch(() => {});
+      authGet("/coaching/loop-report?division=all").then(setCoachingLoop).catch(() => {});
     };
     load();
   }, []);
@@ -609,6 +613,28 @@ export default function OverviewPage({ user }) {
                   <Boxes className="h-4 w-4 text-[#59a5d8]" />
                   <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Client Quality Report — {amReport.total_properties} Properties</p>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-[10px] font-bold uppercase"
+                  data-testid="am-export-pdf-btn"
+                  onClick={() => {
+                    const token = localStorage.getItem("field-quality-token");
+                    const url = `${process.env.REACT_APP_BACKEND_URL}/api/exports/am-report-pdf`;
+                    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+                      .then(r => r.blob())
+                      .then(blob => {
+                        const a = document.createElement("a");
+                        a.href = URL.createObjectURL(blob);
+                        a.download = `SarverLandscape_ClientReport.pdf`;
+                        a.click();
+                        toast.success("PDF downloaded");
+                      })
+                      .catch(() => toast.error("PDF export failed"));
+                  }}
+                >
+                  <Download className="h-3 w-3" /> Export PDF
+                </Button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
@@ -750,6 +776,104 @@ export default function OverviewPage({ user }) {
                   </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Onboarding Progress Tracker */}
+        {onboarding && onboarding.crews?.length > 0 && (
+          <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="widget-onboarding-tracker">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="h-4 w-4 text-[#38a89d]" />
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Crew Onboarding Progress</p>
+              </div>
+              <div className="space-y-3">
+                {onboarding.crews.map((crew, i) => (
+                  <div key={i} className="rounded-[14px] bg-[var(--accent)] p-3" data-testid={`onboarding-crew-${i}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-[var(--foreground)] truncate">{crew.crew_label}</p>
+                        <p className="text-[10px] text-[var(--muted-foreground)]">{crew.leader_name} — {crew.division}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`text-sm font-black ${crew.progress_pct === 100 ? "text-emerald-400" : crew.progress_pct >= 50 ? "text-[#f59e0b]" : "text-red-400"}`}>
+                          {crew.progress_pct}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-[var(--border)] overflow-hidden mb-2">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${crew.progress_pct}%`, backgroundColor: crew.progress_pct === 100 ? "#34d399" : crew.progress_pct >= 50 ? "#f59e0b" : "#ef4444" }} />
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {onboarding.milestone_definitions.map(m => {
+                        const done = crew.milestones[m.key]?.done;
+                        return (
+                          <span key={m.key} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold ${done ? "bg-emerald-500/15 text-emerald-400" : "bg-[var(--border)] text-[var(--muted-foreground)]"}`} title={m.description}>
+                            {done ? <CheckCircle2 className="h-2.5 w-2.5" /> : <CircleDot className="h-2.5 w-2.5" />}
+                            {m.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Coaching Loop Report */}
+        {coachingLoop && (coachingLoop.report?.length > 0 || coachingLoop.summary?.total_offenders > 0) && (
+          <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="widget-coaching-loop">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="h-4 w-4 text-[#f06292]" />
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Coaching Completion Loop</p>
+              </div>
+              {/* Summary stats */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-4">
+                <div className="rounded-[14px] bg-[var(--accent)] p-3 text-center">
+                  <p className="text-2xl font-black text-[var(--foreground)]">{coachingLoop.summary.total_offenders}</p>
+                  <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Repeat Offenders</p>
+                </div>
+                <div className="rounded-[14px] bg-red-500/10 p-3 text-center">
+                  <p className="text-2xl font-black text-red-400">{coachingLoop.summary.open_loops}</p>
+                  <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Open Loops</p>
+                </div>
+                <div className="rounded-[14px] bg-[#f59e0b]/10 p-3 text-center">
+                  <p className="text-2xl font-black text-[#f59e0b]">{coachingLoop.summary.in_progress}</p>
+                  <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">In Progress</p>
+                </div>
+                <div className="rounded-[14px] bg-emerald-500/10 p-3 text-center">
+                  <p className="text-2xl font-black text-emerald-400">{coachingLoop.summary.closed_loops}</p>
+                  <p className="text-[9px] font-bold uppercase text-[var(--muted-foreground)]">Closed</p>
+                </div>
+              </div>
+              {coachingLoop.report.length > 0 && (
+                <div className="space-y-2">
+                  {coachingLoop.report.map((entry, i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-[12px] bg-[var(--accent)] p-2.5" data-testid={`coaching-entry-${i}`}>
+                      <div className={`flex h-2.5 w-2.5 shrink-0 rounded-full ${entry.loop_status === "closed" ? "bg-emerald-400" : entry.loop_status === "in_progress" ? "bg-[#f59e0b]" : "bg-red-400"}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-[var(--foreground)] truncate">{entry.crew_label}</p>
+                        <p className="text-[9px] text-[var(--muted-foreground)]">{entry.division} — {entry.total_issues} issues</p>
+                      </div>
+                      <div className="flex gap-1 flex-wrap shrink-0">
+                        {entry.top_issues.slice(0, 3).map(iss => (
+                          <Badge key={iss.tag} className="border-0 bg-red-500/15 text-[8px] text-red-400">{iss.tag} ({iss.count})</Badge>
+                        ))}
+                      </div>
+                      <Badge className={`border-0 text-[9px] font-bold ${entry.loop_status === "closed" ? "bg-emerald-500/15 text-emerald-400" : entry.loop_status === "in_progress" ? "bg-[#f59e0b]/15 text-[#f59e0b]" : "bg-red-500/15 text-red-400"}`}>
+                        {entry.loop_status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {coachingLoop.report.length === 0 && (
+                <p className="text-center text-xs text-[var(--muted-foreground)] py-4">No repeat offenders detected in the last 180 days.</p>
+              )}
             </CardContent>
           </Card>
         )}
