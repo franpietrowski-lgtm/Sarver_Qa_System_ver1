@@ -54,6 +54,24 @@ async def get_crew_member(code: str):
     member = await deps.db.crew_members.find_one({"code": code, "active": True}, {"_id": 0})
     if not member:
         raise HTTPException(status_code=404, detail="Crew member not found")
+
+    # Sync division from parent crew link if it has changed
+    parent = await deps.db.crew_access_links.find_one(
+        {"code": member.get("parent_access_code", ""), "enabled": True}, {"_id": 0}
+    )
+    if parent and parent.get("division") and parent["division"] != member.get("division"):
+        await deps.db.crew_members.update_one(
+            {"code": code},
+            {
+                "$set": {"division": parent["division"], "updated_at": now_iso()},
+                "$push": {"audit_history": audit_entry(
+                    "division_sync", code,
+                    f"Division synced to '{parent['division']}' from parent crew link",
+                )},
+            },
+        )
+        member["division"] = parent["division"]
+
     return {
         "code": member["code"],
         "name": member["name"],

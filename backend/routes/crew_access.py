@@ -84,6 +84,11 @@ async def update_crew_access_link(
     payload: CrewAccessUpdate,
     user: dict = Depends(require_roles("management", "owner")),
 ):
+    # Get the old link to detect division changes
+    old_link = await deps.db.crew_access_links.find_one({"id": crew_link_id}, {"_id": 0})
+    if not old_link:
+        raise HTTPException(status_code=404, detail="Crew link not found")
+
     await deps.db.crew_access_links.update_one(
         {"id": crew_link_id},
         {
@@ -98,9 +103,24 @@ async def update_crew_access_link(
             "$push": {"audit_history": audit_entry("updated", user["id"], "Crew QR metadata updated")},
         },
     )
+
+    # Cascade division change to all crew members under this link
+    if old_link.get("division") != payload.division:
+        await deps.db.crew_members.update_many(
+            {"parent_access_code": old_link["code"], "active": True},
+            {
+                "$set": {
+                    "division": payload.division,
+                    "updated_at": now_iso(),
+                },
+                "$push": {"audit_history": audit_entry(
+                    "division_switch", user["id"],
+                    f"Division changed from '{old_link.get('division', '')}' to '{payload.division}' via crew QR update",
+                )},
+            },
+        )
+
     crew_link = await deps.db.crew_access_links.find_one({"id": crew_link_id}, {"_id": 0})
-    if not crew_link:
-        raise HTTPException(status_code=404, detail="Crew link not found")
     return present_crew_link(crew_link)
 
 

@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, ArrowDown, ArrowUp, Boxes, CheckCircle2, CircleDot, ClipboardCheck, Copy, Download, FolderInput, Grid3X3, ShieldCheck, Smartphone, Target, TrendingUp, UploadCloud, Users, X, Zap } from "lucide-react";
+import { Activity, AlertTriangle, ArrowDown, ArrowUp, Boxes, CheckCircle2, CircleDot, ClipboardCheck, Copy, FolderInput, Grid3X3, ShieldCheck, Smartphone, Target, TrendingUp, UploadCloud, Users, X, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 
@@ -39,7 +39,6 @@ export default function OverviewPage({ user }) {
   // Role-specific widget states
   const [pmDash, setPmDash] = useState(null);
   const [crewLeaders, setCrewLeaders] = useState(null);
-  const [amReport, setAmReport] = useState(null);
   const [supervisorCheck, setSupervisorCheck] = useState(null);
   const [insights, setInsights] = useState(null);
   const [digest, setDigest] = useState(null);
@@ -100,9 +99,6 @@ export default function OverviewPage({ user }) {
     if (title === "Production Manager") {
       authGet(`/metrics/pm-dashboard?division=${encodeURIComponent(div)}`).then(setPmDash).catch(() => {});
       authGet(`/metrics/crew-leader-performance?division=${encodeURIComponent(div)}`).then(setCrewLeaders).catch(() => {});
-    }
-    if (title === "Account Manager" || isOwnerOrGM) {
-      authGet("/metrics/account-manager-report").then(setAmReport).catch(() => {});
     }
     if (title === "Supervisor" || isOwnerOrGM) {
       authGet("/metrics/supervisor-checklist").then(setSupervisorCheck).catch(() => {});
@@ -337,9 +333,9 @@ export default function OverviewPage({ user }) {
           </Card>
         </div>
 
-        {/* ─── METRICS WIDGETS ROW — hover to expand ─── */}
+        {/* ─── METRICS WIDGETS ROW — hover to expand, full width ─── */}
         <div
-          className="grid gap-4 transition-all duration-500 ease-in-out"
+          className="col-span-full grid gap-4 transition-all duration-500 ease-in-out"
           style={{
             gridTemplateColumns:
               hoveredMetric === "quality"  ? "2.2fr 0.9fr 0.9fr" :
@@ -604,68 +600,6 @@ export default function OverviewPage({ user }) {
           </Card>
         )}
 
-        {/* AM Client Report */}
-        {amReport && (user?.title === "Account Manager" || isOwnerOrGM) && amReport.properties?.length > 0 && (
-          <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="widget-am-report">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Boxes className="h-4 w-4 text-[#59a5d8]" />
-                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Client Quality Report — {amReport.total_properties} Properties</p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 gap-1.5 text-[10px] font-bold uppercase"
-                  data-testid="am-export-pdf-btn"
-                  onClick={() => {
-                    const token = localStorage.getItem("field-quality-token");
-                    const url = `${process.env.REACT_APP_BACKEND_URL}/api/exports/am-report-pdf`;
-                    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-                      .then(r => r.blob())
-                      .then(blob => {
-                        const a = document.createElement("a");
-                        a.href = URL.createObjectURL(blob);
-                        a.download = `SarverLandscape_ClientReport.pdf`;
-                        a.click();
-                        toast.success("PDF downloaded");
-                      })
-                      .catch(() => toast.error("PDF export failed"));
-                  }}
-                >
-                  <Download className="h-3 w-3" /> Export PDF
-                </Button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border/60">
-                      <th className="pb-2 text-[10px] font-bold uppercase text-[var(--muted-foreground)]">Property</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase text-[var(--muted-foreground)] text-center">Subs</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase text-[var(--muted-foreground)] text-center">Avg Score</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase text-[var(--muted-foreground)] text-center">Pass</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase text-[var(--muted-foreground)] text-center">Fail</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase text-[var(--muted-foreground)]">Divisions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {amReport.properties.map((p, i) => (
-                      <tr key={i} className="border-b border-border/30" data-testid={`am-property-${i}`}>
-                        <td className="py-2 font-medium text-[var(--foreground)] text-xs">{p.property}</td>
-                        <td className="py-2 text-center text-xs text-[var(--foreground)]">{p.submissions}</td>
-                        <td className="py-2 text-center text-xs font-black text-[var(--foreground)]">{p.avg_score}</td>
-                        <td className="py-2 text-center text-xs text-emerald-400">{p.pass_count}</td>
-                        <td className="py-2 text-center text-xs text-red-400">{p.fail_count}</td>
-                        <td className="py-2"><div className="flex gap-1 flex-wrap">{p.divisions.map(d => <Badge key={d} className="border-0 bg-[var(--accent)] text-[9px] text-[var(--foreground)]">{d}</Badge>)}</div></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Supervisor Daily Checklist */}
         {supervisorCheck && (user?.title === "Supervisor" || isOwnerOrGM) && (
           <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="widget-supervisor-checklist">
@@ -823,8 +757,8 @@ export default function OverviewPage({ user }) {
           </Card>
         )}
 
-        {/* Coaching Loop Report */}
-        {coachingLoop && (
+        {/* Coaching Loop Report — hidden for Account Managers */}
+        {coachingLoop && user?.title !== "Account Manager" && (
           <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="widget-coaching-loop">
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-4">
