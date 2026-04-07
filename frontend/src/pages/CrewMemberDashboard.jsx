@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Camera, ClipboardList, Copy, Crosshair, GraduationCap, MapPinned, Upload, X } from "lucide-react";
+import { AlertTriangle, BookOpen, Camera, ClipboardList, Copy, Crosshair, GraduationCap, MapPinned, Upload, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { authPostForm, publicGet } from "@/lib/api";
@@ -19,6 +20,9 @@ const DIVISION_TASKS = {
   "Plant Healthcare": ["Fert and Chem treatments", "Air Spade", "Dormant pruning", "Deer fencing and shrub treatment"],
   "Winter Services": ["Snow removal", "Plow", "Salting"],
 };
+
+const INCIDENT_TYPES = ["Slip / trip / fall", "Cut / laceration", "Struck by object", "Equipment malfunction / injury", "Heat / cold illness", "Chemical exposure", "Vehicle accident", "Near miss (no injury)", "Other"];
+const BODY_PARTS = ["Head / face", "Neck", "Back", "Shoulder", "Arm / hand", "Leg / foot", "Torso / abdomen", "Multiple areas"];
 
 const GPS_TARGET = 2;
 const GPS_POLL_MS = 10000;
@@ -54,6 +58,18 @@ export default function CrewMemberDashboard() {
 
   // Submissions state
   const [submissions, setSubmissions] = useState([]);
+
+  // Incident state
+  const [incidentEnabled, setIncidentEnabled] = useState(false);
+  const [incidentType, setIncidentType] = useState("");
+  const [incidentDateTime, setIncidentDateTime] = useState("");
+  const [incidentLocation, setIncidentLocation] = useState("");
+  const [incidentDescription, setIncidentDescription] = useState("");
+  const [injuredPerson, setInjuredPerson] = useState("");
+  const [bodyPart, setBodyPart] = useState("");
+  const [treatmentGiven, setTreatmentGiven] = useState("");
+  const [witnessName, setWitnessName] = useState("");
+  const [incidentPhotos, setIncidentPhotos] = useState([]);
 
   const availableTasks = DIVISION_TASKS[member?.division] || DIVISION_TASKS.Maintenance;
 
@@ -128,8 +144,9 @@ export default function CrewMemberDashboard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const isEmergency = incidentEnabled && incidentType;
     if (!jobName || !truckNumber || !gps) { toast.error("Job name, truck number, and GPS are required."); return; }
-    if (!photos.length) { toast.error("Add photos before submitting."); return; }
+    if (!isEmergency && !photos.length) { toast.error("Add photos before submitting."); return; }
 
     const formData = new FormData();
     formData.append("access_code", member.parent_access_code);
@@ -145,16 +162,31 @@ export default function CrewMemberDashboard() {
     formData.append("member_code", code);
     photos.forEach((photo) => formData.append("photos", photo));
 
+    if (isEmergency) {
+      const incidentPayload = [
+        `INCIDENT REPORT — ${incidentType}`,
+        `Date/Time: ${incidentDateTime || "Not specified"}`,
+        `Location: ${incidentLocation}`,
+        `Injured person: ${injuredPerson || "N/A"}`,
+        `Body part affected: ${bodyPart || "N/A"}`,
+        `First aid / treatment: ${treatmentGiven || "None given"}`,
+        `Witness: ${witnessName || "None listed"}`,
+        `Description: ${incidentDescription}`,
+      ].join("\n");
+      formData.append("issue_type", `Incident: ${incidentType}`);
+      formData.append("issue_notes", incidentPayload);
+      incidentPhotos.forEach((photo) => formData.append("issue_photos", photo));
+    }
+
     setSubmitting(true);
     try {
       await authPostForm("/public/submissions", formData);
-      toast.success("Submission captured — sent to review queue.");
-      setJobName("");
-      setNote("");
-      setAreaTag("");
-      setPhotos([]);
+      toast.success(isEmergency ? "Emergency report filed — all admins notified." : "Submission captured — sent to review queue.");
+      setJobName(""); setNote(""); setAreaTag(""); setPhotos([]);
+      setIncidentEnabled(false); setIncidentType(""); setIncidentDateTime(""); setIncidentLocation("");
+      setIncidentDescription(""); setInjuredPerson(""); setBodyPart(""); setTreatmentGiven("");
+      setWitnessName(""); setIncidentPhotos([]);
       requestGps();
-      // Reload submissions
       const subRes = await publicGet(`/public/crew-member/${code}/submissions`);
       setSubmissions(subRes.submissions || []);
     } catch (error) {
@@ -284,8 +316,49 @@ export default function CrewMemberDashboard() {
                     </div>
                   )}
 
-                  <Button type="submit" disabled={submitting || !gps} className="h-14 w-full rounded-[22px] bg-[#243e36] text-base font-semibold text-white hover:bg-[#1a2c26]" data-testid="member-submit-button">
-                    <Camera className="mr-2 h-5 w-5" />{submitting ? "Submitting..." : "Submit capture set"}
+                  {/* ──────────── INCIDENT / ACCIDENT REPORTING ──────────── */}
+                  <div className="rounded-[24px] border border-[#ead2d2] bg-[#fef5f5] p-4" data-testid="member-incident-report-card">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-[#7a2323]">Workplace incident / accident</p>
+                        <p className="mt-1 text-xs text-[#9e6060]">Report injuries, near-misses, or safety events. Submits immediately without photo requirement.</p>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-full bg-white px-3 py-2" data-testid="member-incident-toggle-box">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#7a2323]">Incident</span>
+                        <Switch checked={incidentEnabled} onCheckedChange={setIncidentEnabled} data-testid="member-incident-toggle" />
+                      </div>
+                    </div>
+                    {incidentEnabled && (
+                      <div className="mt-4 grid gap-3" data-testid="member-incident-fields">
+                        <select value={incidentType} onChange={(e) => setIncidentType(e.target.value)} className="h-12 w-full rounded-2xl border border-transparent bg-white px-4 text-sm" data-testid="member-incident-type-select">
+                          <option value="">Select incident type</option>
+                          {INCIDENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <Input type="datetime-local" value={incidentDateTime} onChange={(e) => setIncidentDateTime(e.target.value)} className="h-12 rounded-2xl border-transparent bg-white" data-testid="member-incident-datetime" />
+                        <Input value={incidentLocation} onChange={(e) => setIncidentLocation(e.target.value)} placeholder="Where on the jobsite?" className="h-12 rounded-2xl border-transparent bg-white" data-testid="member-incident-location" />
+                        <Input value={injuredPerson} onChange={(e) => setInjuredPerson(e.target.value)} placeholder="Name of injured person (or 'self')" className="h-12 rounded-2xl border-transparent bg-white" data-testid="member-incident-injured" />
+                        <select value={bodyPart} onChange={(e) => setBodyPart(e.target.value)} className="h-12 w-full rounded-2xl border border-transparent bg-white px-4 text-sm" data-testid="member-incident-body-part">
+                          <option value="">Body part affected (if applicable)</option>
+                          {BODY_PARTS.map((b) => <option key={b} value={b}>{b}</option>)}
+                        </select>
+                        <Textarea value={incidentDescription} onChange={(e) => setIncidentDescription(e.target.value)} placeholder="Describe exactly what happened" className="min-h-[80px] rounded-2xl border-transparent bg-white" data-testid="member-incident-description" />
+                        <Input value={treatmentGiven} onChange={(e) => setTreatmentGiven(e.target.value)} placeholder="First aid or treatment given" className="h-12 rounded-2xl border-transparent bg-white" data-testid="member-incident-treatment" />
+                        <Input value={witnessName} onChange={(e) => setWitnessName(e.target.value)} placeholder="Witness name and contact" className="h-12 rounded-2xl border-transparent bg-white" data-testid="member-incident-witness" />
+                        <label htmlFor="member-incident-photo-input" className="flex h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#ead2d2] bg-white text-sm font-semibold text-[#7a2323]"><Upload className="h-4 w-4" />Add incident photos</label>
+                        <input id="member-incident-photo-input" type="file" multiple accept="image/*" className="hidden" onChange={(e) => setIncidentPhotos(Array.from(e.target.files || []))} data-testid="member-incident-photo-input" />
+                        <div className="rounded-2xl bg-[#fbeded] px-4 py-3 text-xs text-[#9e6060]">
+                          <strong>Notice:</strong> Only record what you personally saw or experienced. This report may be used for safety records and OSHA compliance.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <Button type="submit" disabled={submitting || !gps} className={`h-14 w-full rounded-[22px] text-base font-semibold text-white ${incidentEnabled && incidentType ? "bg-red-600 hover:bg-red-700 animate-pulse" : "bg-[#243e36] hover:bg-[#1a2c26]"}`} data-testid="member-submit-button">
+                    {incidentEnabled && incidentType ? (
+                      <><AlertTriangle className="mr-2 h-5 w-5" />{submitting ? "Filing emergency..." : "FILE EMERGENCY REPORT"}</>
+                    ) : (
+                      <><Camera className="mr-2 h-5 w-5" />{submitting ? "Submitting..." : "Submit capture set"}</>
+                    )}
                   </Button>
                 </form>
               </TabsContent>

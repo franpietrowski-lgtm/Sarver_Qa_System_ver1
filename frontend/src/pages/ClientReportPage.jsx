@@ -16,25 +16,22 @@ const PERIODS = [
   { value: "quarterly", label: "Quarterly" },
 ];
 
+const MIN_SEARCH_CHARS = 2;
 
 export default function ClientReportPage({ user }) {
   const [period, setPeriod] = useState("monthly");
   const [jobQuery, setJobQuery] = useState("");
   const [jobResults, setJobResults] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
-  const [searching, setSearching] = useState(false);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef(null);
 
-  // Close dropdown on click outside
   useEffect(() => {
     const handler = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        setShowDropdown(false);
-      }
+      if (searchRef.current && !searchRef.current.contains(e.target)) setShowDropdown(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -58,26 +55,22 @@ export default function ClientReportPage({ user }) {
   }, [period, selectedJob, loadReport]);
 
   const searchJobs = useCallback(async (q) => {
-    setSearching(true);
     try {
       const data = await authGet(`/reports/job-search?q=${encodeURIComponent(q)}`);
       setJobResults(data.results || []);
       setShowDropdown(true);
     } catch {
       setJobResults([]);
-    } finally {
-      setSearching(false);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (jobQuery.length >= 1) {
-        searchJobs(jobQuery);
-      } else if (jobQuery.length === 0) {
-        searchJobs("");
-      }
-    }, 300);
+    if (jobQuery.length < MIN_SEARCH_CHARS) {
+      setJobResults([]);
+      setShowDropdown(false);
+      return;
+    }
+    const timer = setTimeout(() => searchJobs(jobQuery), 300);
     return () => clearTimeout(timer);
   }, [jobQuery, searchJobs]);
 
@@ -136,8 +129,7 @@ export default function ClientReportPage({ user }) {
             <Input
               value={jobQuery}
               onChange={(e) => setJobQuery(e.target.value)}
-              onFocus={() => { if (jobResults.length || jobQuery === "") searchJobs(jobQuery); }}
-              placeholder="Search by job name, property, or ID..."
+              placeholder="Type 2+ characters to search jobs..."
               className="h-12 rounded-2xl border-border bg-[var(--card)] pl-10 pr-10 text-sm text-[var(--foreground)]"
               data-testid="client-report-job-search-input"
             />
@@ -154,23 +146,37 @@ export default function ClientReportPage({ user }) {
           </div>
           {showDropdown && jobResults.length > 0 && (
             <div
-              className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-2xl border border-border bg-[var(--card)] shadow-xl"
+              className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-72 overflow-y-auto rounded-2xl border border-border/60 bg-[var(--card)]/80 shadow-2xl ring-1 ring-black/5"
+              style={{ backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", background: "color-mix(in srgb, var(--card) 85%, transparent)" }}
               data-testid="client-report-job-dropdown"
             >
+              <p className="sticky top-0 z-10 border-b border-border/40 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--muted-foreground)]" style={{ backdropFilter: "blur(20px)", background: "color-mix(in srgb, var(--card) 92%, transparent)" }}>
+                {jobResults.length} match{jobResults.length !== 1 ? "es" : ""} found
+              </p>
               {jobResults.map((job) => (
                 <button
                   key={job.id}
                   type="button"
                   onClick={() => handleSelectJob(job)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-[var(--accent)]"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--accent)]/60"
                   data-testid={`client-report-job-option-${job.id}`}
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-[var(--foreground)]">{job.job_name || job.property_name}</p>
                     <p className="text-[10px] text-[var(--muted-foreground)]">{job.job_id} · {job.division} · {job.service_type}</p>
                   </div>
+                  <Badge className="shrink-0 border-0 bg-[var(--accent)] text-[9px] text-[var(--foreground)]">{job.division}</Badge>
                 </button>
               ))}
+            </div>
+          )}
+          {showDropdown && jobResults.length === 0 && jobQuery.length >= MIN_SEARCH_CHARS && (
+            <div
+              className="absolute left-0 right-0 top-full z-50 mt-1.5 rounded-2xl border border-border/60 p-4 shadow-2xl"
+              style={{ backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", background: "color-mix(in srgb, var(--card) 85%, transparent)" }}
+              data-testid="client-report-no-results"
+            >
+              <p className="text-center text-xs text-[var(--muted-foreground)]">No jobs matching "{jobQuery}"</p>
             </div>
           )}
         </div>

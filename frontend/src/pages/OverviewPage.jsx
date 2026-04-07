@@ -1,5 +1,5 @@
 import { Activity, AlertTriangle, ArrowDown, ArrowUp, Boxes, CheckCircle2, CircleDot, ClipboardCheck, Copy, FolderInput, Grid3X3, ShieldCheck, Smartphone, Target, TrendingUp, UploadCloud, Users, X, Zap } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback, Fragment } from "react";
 import { Link } from "react-router-dom";
 
 import { QRCodeSVG } from "qrcode.react";
@@ -44,6 +44,9 @@ export default function OverviewPage({ user }) {
   const [digest, setDigest] = useState(null);
   const [onboarding, setOnboarding] = useState(null);
   const [coachingLoop, setCoachingLoop] = useState(null);
+  const [incidents, setIncidents] = useState([]);
+  const [selectedIncident, setSelectedIncident] = useState(null);
+  const [hoveredIncident, setHoveredIncident] = useState(null);
 
   const isOwnerOrGM = user?.role === "owner" || user?.title === "GM";
 
@@ -87,6 +90,7 @@ export default function OverviewPage({ user }) {
       authGet("/metrics/weekly-digest").then(setDigest).catch(() => {});
       authGet("/onboarding/progress?division=all").then(setOnboarding).catch(() => {});
       authGet("/coaching/loop-report?division=all").then(setCoachingLoop).catch(() => {});
+      authGet("/incidents/active").then(d => setIncidents(d?.incidents || [])).catch(() => {});
     };
     load();
   }, []);
@@ -246,7 +250,61 @@ export default function OverviewPage({ user }) {
         </div>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className={`grid gap-4 ${incidents.length > 0 ? "xl:grid-cols-[0.7fr_1fr_0.85fr]" : "xl:grid-cols-[1.15fr_0.85fr]"}`}>
+        {/* ─── EMERGENCY INCIDENTS WIDGET ─── */}
+        {incidents.length > 0 && (
+          <Card className="rounded-[24px] border-2 border-red-500/60 bg-[var(--card)] shadow-lg animate-pulse-slow relative" data-testid="overview-emergency-incidents-card">
+            <div className="absolute inset-0 rounded-[24px] pointer-events-none" style={{ boxShadow: "inset 0 0 40px rgba(239,68,68,0.08)" }} />
+            <CardContent className="p-5 relative">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500/15">
+                  <AlertTriangle className="h-4 w-4 text-red-500 animate-pulse" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-red-500">Emergency</p>
+                  <p className="text-xs font-bold text-[var(--foreground)]">{incidents.length} Incident{incidents.length !== 1 ? "s" : ""}</p>
+                </div>
+              </div>
+              <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+                {incidents.map((inc) => (
+                  <div
+                    key={inc.id}
+                    className="group relative rounded-[16px] border border-red-500/30 bg-red-500/5 px-3 py-2.5 cursor-pointer transition-all hover:border-red-500/50 hover:bg-red-500/10"
+                    data-testid={`overview-incident-card-${inc.id}`}
+                    onClick={() => setSelectedIncident(inc)}
+                    onMouseEnter={() => setHoveredIncident(inc.id)}
+                    onMouseLeave={() => setHoveredIncident(null)}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-red-600">{inc.crew_label}</p>
+                        <p className="truncate text-[10px] text-[var(--muted-foreground)]">{inc.job_name_input} · {inc.division}</p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-red-500/15 px-2 py-0.5 text-[9px] font-bold text-red-500">{inc.work_date}</span>
+                    </div>
+                    {/* Glass hover preview */}
+                    {hoveredIncident === inc.id && (
+                      <div
+                        className="absolute left-full top-0 z-50 ml-2 w-72 rounded-2xl border border-red-500/30 p-4 shadow-2xl"
+                        style={{ backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", background: "color-mix(in srgb, var(--card) 88%, transparent)" }}
+                        data-testid={`overview-incident-hover-${inc.id}`}
+                      >
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-red-500 mb-1">Incident Preview</p>
+                        <p className="text-xs font-bold text-[var(--foreground)]">{inc.crew_label} — {inc.job_name_input}</p>
+                        <p className="text-[10px] text-[var(--muted-foreground)] mt-0.5">{inc.division} · Truck: {inc.truck_number} · {inc.work_date}</p>
+                        <div className="mt-2 rounded-xl bg-red-500/5 px-3 py-2">
+                          <p className="text-[10px] font-semibold text-red-600 mb-0.5">Report type: {inc.field_report?.type || "Unknown"}</p>
+                          <p className="text-[10px] text-[var(--muted-foreground)] line-clamp-4 whitespace-pre-line">{inc.field_report?.notes || inc.note || "No details provided"}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="overview-recent-submissions-card">
           <CardContent className="p-5">
             <div className="flex items-center justify-between gap-3">
@@ -812,6 +870,76 @@ export default function OverviewPage({ user }) {
           </Card>
         )}
       </div>
+
+      {/* ─── EMERGENCY INCIDENT DETAIL MODAL ─── */}
+      {selectedIncident && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setSelectedIncident(null)} data-testid="incident-detail-overlay">
+          <div
+            className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-[28px] border border-red-500/40 shadow-2xl"
+            style={{ backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", background: "color-mix(in srgb, var(--card) 94%, transparent)" }}
+            onClick={(e) => e.stopPropagation()}
+            data-testid="incident-detail-modal"
+          >
+            <div className="border-b border-red-500/20 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/15">
+                  <AlertTriangle className="h-5 w-5 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-red-500">Emergency Incident Report</p>
+                  <p className="text-sm font-bold text-[var(--foreground)]">{selectedIncident.crew_label}</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setSelectedIncident(null)} className="rounded-full p-2 hover:bg-[var(--accent)]" data-testid="incident-detail-close">
+                <X className="h-5 w-5 text-[var(--muted-foreground)]" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-[14px] border border-border bg-[var(--accent)] p-3">
+                  <p className="text-[10px] font-bold uppercase text-[var(--muted-foreground)]">Job</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">{selectedIncident.job_name_input}</p>
+                </div>
+                <div className="rounded-[14px] border border-border bg-[var(--accent)] p-3">
+                  <p className="text-[10px] font-bold uppercase text-[var(--muted-foreground)]">Division</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">{selectedIncident.division}</p>
+                </div>
+                <div className="rounded-[14px] border border-border bg-[var(--accent)] p-3">
+                  <p className="text-[10px] font-bold uppercase text-[var(--muted-foreground)]">Truck</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">{selectedIncident.truck_number}</p>
+                </div>
+                <div className="rounded-[14px] border border-border bg-[var(--accent)] p-3">
+                  <p className="text-[10px] font-bold uppercase text-[var(--muted-foreground)]">Work date</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">{selectedIncident.work_date}</p>
+                </div>
+              </div>
+              {selectedIncident.gps && (
+                <div className="rounded-[14px] border border-border bg-[var(--accent)] p-3">
+                  <p className="text-[10px] font-bold uppercase text-[var(--muted-foreground)]">GPS Location</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">{selectedIncident.gps.lat}, {selectedIncident.gps.lng} (±{selectedIncident.gps.accuracy}m)</p>
+                </div>
+              )}
+              <div className="rounded-[18px] border-2 border-red-500/20 bg-red-500/5 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-red-500 mb-2">Report type: {selectedIncident.field_report?.type || "Unknown"}</p>
+                <p className="text-sm text-[var(--foreground)] whitespace-pre-line leading-relaxed">{selectedIncident.field_report?.notes || selectedIncident.note || "No details provided"}</p>
+              </div>
+              {selectedIncident.field_report?.photo_files?.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase text-[var(--muted-foreground)] mb-2">Incident Photos ({selectedIncident.field_report.photo_files.length})</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedIncident.field_report.photo_files.map((f, fi) => (
+                      <div key={fi} className="aspect-[4/3] overflow-hidden rounded-2xl bg-[var(--accent)]">
+                        {f.media_url && <img src={f.media_url} alt={f.filename} className="h-full w-full object-cover" />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <p className="text-[10px] text-[var(--muted-foreground)]">Status: {selectedIncident.status} · Submitted: {selectedIncident.created_at?.slice(0, 16).replace("T", " ")}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

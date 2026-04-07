@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Camera, ChevronDown, ChevronUp, Copy, Crosshair, ExternalLink, MapPinned, Upload, UserPlus, Users, Wrench, X } from "lucide-react";
+import { AlertTriangle, BookOpen, Camera, ChevronDown, ChevronUp, Copy, Crosshair, ExternalLink, MapPinned, Upload, UserPlus, Users, Wrench, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -182,8 +182,9 @@ export default function CrewCapturePage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const isEmergency = incidentEnabled && incidentType;
     if (!jobName || !truckNumber || !gps) { toast.error("Job Name, truck number, and GPS are required."); return; }
-    if (!photos.length) { toast.error("Please attach photos before submitting."); return; }
+    if (!isEmergency && !photos.length) { toast.error("Please attach photos before submitting."); return; }
 
     const formData = new FormData();
     formData.append("access_code", code);
@@ -542,8 +543,12 @@ export default function CrewCapturePage() {
                     </div>
                   )}
 
-                  <Button type="submit" disabled={submitting || !gps} className="h-14 w-full rounded-[22px] bg-[#243e36] text-base font-semibold text-white hover:bg-[#1a2c26]" data-testid="crew-submit-photos-button">
-                    <Camera className="mr-2 h-5 w-5" />{submitting ? "Submitting proof..." : "Submit capture set"}
+                  <Button type="submit" disabled={submitting || !gps} className={`h-14 w-full rounded-[22px] text-base font-semibold text-white ${incidentEnabled && incidentType ? "bg-red-600 hover:bg-red-700 animate-pulse" : "bg-[#243e36] hover:bg-[#1a2c26]"}`} data-testid="crew-submit-photos-button">
+                    {incidentEnabled && incidentType ? (
+                      <><AlertTriangle className="mr-2 h-5 w-5" />{submitting ? "Filing emergency..." : "FILE EMERGENCY REPORT"}</>
+                    ) : (
+                      <><Camera className="mr-2 h-5 w-5" />{submitting ? "Submitting proof..." : "Submit capture set"}</>
+                    )}
                   </Button>
                 </form>
               </TabsContent>

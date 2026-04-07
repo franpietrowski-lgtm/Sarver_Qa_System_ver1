@@ -80,7 +80,7 @@ async def create_submission(
     work_date: str = Form(""),
     issue_type: str = Form(""),
     issue_notes: str = Form(""),
-    photos: list[UploadFile] = File(...),
+    photos: list[UploadFile] = File([]),
     issue_photos: list[UploadFile] = File([]),
     member_code: str = Form(""),
 ):
@@ -95,7 +95,10 @@ async def create_submission(
     if job and job.get("service_type"):
         rubric = await get_active_rubric(job["service_type"])
         required_photo_count = rubric.get("min_photos", 3)
-    if len(photos) < required_photo_count:
+
+    # Emergency submissions (incident/damage) bypass photo requirement
+    is_emergency = bool(issue_type and ("incident" in issue_type.lower() or "accident" in issue_type.lower()))
+    if not is_emergency and len(photos) < required_photo_count:
         raise HTTPException(
             status_code=400,
             detail=f"At least {required_photo_count} photos are required for this submission",
@@ -204,6 +207,7 @@ async def create_submission(
         "device_metadata": {"user_agent": request.headers.get("user-agent", "unknown")},
         "storage_status": "stored",
         "member_code": member_code if member_code else None,
+        "is_emergency": is_emergency,
         "created_at": now_iso(),
         "updated_at": now_iso(),
         "audit_history": [
@@ -235,14 +239,26 @@ async def create_submission(
         notification_type="new_submission",
     )
     if submission["field_report"]["reported"]:
+        # Determine if this is a true emergency (incident/accident)
+        notification_type_val = "emergency_incident" if is_emergency else "field_issue"
+        notification_title = (
+            "EMERGENCY: Incident/Accident Report Filed"
+            if is_emergency
+            else "Crew reported an issue or damage"
+        )
+        target_roles = (
+            ["Supervisor", "Production Manager", "Account Manager", "GM", "Owner"]
+            if is_emergency
+            else ["Supervisor", "Production Manager", "Account Manager", "GM"]
+        )
         await create_notification(
-            title="Crew reported an issue or damage",
+            title=notification_title,
             message=f"{crew_link['label']} reported '{issue_type or 'field issue'}' on {job_name_value}.",
-            audience="management",
-            target_titles=["Supervisor", "Production Manager", "Account Manager", "GM"],
+            audience="management" if not is_emergency else "all",
+            target_titles=target_roles,
             related_submission_id=submission_id,
             related_job_id=job_key,
-            notification_type="field_issue",
+            notification_type=notification_type_val,
         )
     return {"submission": hydrate_submission_media(submission)}
 

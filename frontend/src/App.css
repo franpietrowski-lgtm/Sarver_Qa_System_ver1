@@ -1211,3 +1211,12 @@ h4,
 /* Scrollbar hide utility */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Emergency incident slow pulse */
+@keyframes pulse-slow-border {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.6); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  50% { border-color: rgba(239, 68, 68, 0.9); box-shadow: 0 0 20px 2px rgba(239, 68, 68, 0.15); }
+}
+.animate-pulse-slow {
+  animation: pulse-slow-border 2.5s ease-in-out infinite;
+}
