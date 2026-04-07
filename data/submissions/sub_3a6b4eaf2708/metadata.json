@@ -1,0 +1,73 @@
+{
+  "id": "sub_3a6b4eaf2708",
+  "submission_code": "SUB_3A6B4EAF2708",
+  "access_code": "6ef4489a",
+  "crew_label": "Test_Friend",
+  "job_key": "forest highlands",
+  "job_id": null,
+  "job_name_input": "forest highlands",
+  "matched_job_id": null,
+  "match_status": "unmatched",
+  "match_confidence": 0.0,
+  "truck_number": "04",
+  "division": "Maintenance",
+  "service_type": "pruning",
+  "task_type": "Pruning",
+  "status": "Pending Match",
+  "note": "",
+  "area_tag": "",
+  "field_report": {
+    "type": "Incident: Other",
+    "notes": "INCIDENT REPORT — Other\r\nDate/Time: 2026-04-06T20:21\r\nLocation: home test\r\nInjured person: self\r\nBody part affected: N/A\r\nFirst aid / treatment: None given\r\nWitness: person 2\r\nDescription: bullshit happened and im catching it in real time for testing purposes",
+    "photo_files": [
+      {
+        "id": "issuefile_ec385a51ac34",
+        "filename": "issue_01_c26730.png",
+        "original_name": "franpietrowski_PsychicDark_Type_is_a_humanoid_Pokmon_with_a_sle_10eade40-9197-4a5c-b020-462066cd208a.png",
+        "mime_type": "image/png",
+        "sequence": 1,
+        "size_bytes": 2030428,
+        "bucket": "qa-images",
+        "storage_path": "sarver-landscape/submissions/sub_3a6b4eaf2708/issues/issue_01_c26730.png",
+        "relative_api_path": "/api/submissions/files/sub_3a6b4eaf2708/issue_01_c26730.png",
+        "media_url": "https://quality-hub-32.preview.emergentagent.com/api/submissions/files/sub_3a6b4eaf2708/issue_01_c26730.png",
+        "source_type": "supabase"
+      }
+    ],
+    "reported": true
+  },
+  "gps": {
+    "lat": 40.465179,
+    "lng": -80.211998,
+    "accuracy": 162.0
+  },
+  "gps_low_confidence": true,
+  "work_date": "2026-04-07",
+  "captured_at": "2026-04-07T00:22:58.703173+00:00",
+  "required_photo_count": 3,
+  "photo_count": 0,
+  "photo_files": [],
+  "local_folder_path": "/app/data/submissions/sub_3a6b4eaf2708",
+  "device_metadata": {
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+  },
+  "storage_status": "stored",
+  "member_code": null,
+  "is_emergency": true,
+  "created_at": "2026-04-07T00:22:58.703190+00:00",
+  "updated_at": "2026-04-07T00:22:58.703193+00:00",
+  "audit_history": [
+    {
+      "timestamp": "2026-04-07T00:22:58.703196+00:00",
+      "action": "submitted",
+      "actor_id": "6ef4489a",
+      "note": "Crew submission created"
+    },
+    {
+      "timestamp": "2026-04-07T00:22:58.703198+00:00",
+      "action": "status_change",
+      "actor_id": "6ef4489a",
+      "note": "Lifecycle moved to Pending Match"
+    }
+  ]
+}
