@@ -6,17 +6,16 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 ## Core Architecture
 - **Frontend**: React + TailwindCSS + Shadcn UI + Framer Motion
 - **Backend**: FastAPI (modular routes in `/app/backend/routes/`)
-  - `server.py` (~120 lines) — app setup, startup, router registration
-  - `shared/seed_data.py` — rubric library, default users, seed logic
+  - `server.py` (~138 lines) — app setup, startup, router registration
+  - `shared/seed_data.py` — rubric library, default users, seed logic (15 jobs total)
   - `shared/deps.py` — auth, helpers, Supabase client
-  - `routes/` — 23 modular routers
+  - `routes/` — 24 modular routers (including incidents)
 - **Database**: MongoDB
 - **Storage**: Supabase Object Storage
 - **Auth**: JWT with role-based routing
-- **Image Processing**: rembg (avatar background removal)
-- **PDF Generation**: fpdf2 (client reports with clickable image links)
+- **PDF Generation**: fpdf2
 
-## Implemented Features (V1.0–V1.8)
+## Implemented Features (V1.0–V1.9)
 
 ### Core System
 - JWT auth, role-based routing (Owner, GM, PM, AM, Supervisor, Crew Leader, Crew Member)
@@ -36,31 +35,37 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - PM Dashboard, Crew Leader Performance, Supervisor Checklist, Weekly Digest
 - Smart Insights bar (auto-generated score alerts)
 
-### V1.7 (Apr 4, 2026)
-- **Server Refactor**: server.py 819→120 lines. Seed data → shared/seed_data.py. Dead files cleaned.
-- **Full-Detail PDF Export**: Per-submission detail grouped by property. Includes crew notes, field/damage reports, GPS+time data, review scores, equipment logs. Clickable image links for all photos.
-- **Onboarding Progress Tracker**: 6 milestones per crew. Widget with progress bars and milestone badges.
-- **Closed-Loop Coaching Reports**: Links repeat offenders → coaching actions → training.
+### V1.7 — Server Refactor & Reporting
+- Server refactor: server.py 819→120 lines
+- Full-Detail PDF Export with clickable image links
+- Onboarding Progress Tracker (6 milestones)
+- Closed-Loop Coaching Reports
 
-### V1.8 (Apr 6, 2026)
-- **Standalone Client Quality Report Page** (`/client-report`): Dedicated page for Account Managers, GM, and Owner with job-specific search dropdown, timeframe cycling (Daily/Weekly/Monthly/Quarterly), executive summary table, per-property detail cards, and PDF export. Removed from Overview dashboard.
-- **Overview Dashboard Cleanup**: AM Report widget removed. 3 metric cards (Division Quality Trend, Standards Compliance, Training Funnel) now span full row width. Coaching Loop widget hidden from Account Manager dashboard.
-- **Crew Division Cascade**: When admin updates a crew QR link's division, all active crew members under that link automatically inherit the new division. Runtime sync also occurs when a crew member loads their dashboard.
+### V1.8 — Client Report Page & Division Cascade
+- Standalone Client Quality Report page (`/client-report`) with job search, timeframe cycling, PDF export
+- Overview cleanup: AM Report removed, full-width metrics, coaching loop hidden from AM
+- Crew division cascade: admin QR updates propagate to all active crew members
 
-## Key API Endpoints (23 route modules)
+### V1.9 (Apr 7, 2026) — Emergency Incidents & Search Enhancement
+- **Client Report Dropdown Fix**: Dropdown only appears on ≥2 typed characters (no empty-focus populating). Glass backdrop-blur effect on dropdown. Shows "X matches found" header. Click-outside dismissal.
+- **12 New Demo Jobs**: LMN-4201 through LMN-4212 covering spring cleanup, mulching, bed edging, pruning, weeding, property maintenance. Varied names (Birch Hill, Brighton Commons, Cedar Court, Cedar Point, Greenfield Plaza, Glen Meadow, Highland Ridge, Hilltop Gardens, Lakeshore Commons, Lakewood Estates, Oakridge Valley, Oak Summit) for search/sort testing.
+- **Emergency Incident/Accident Reporting**: Crew Lead and Crew Member apps can file incident reports WITHOUT the 3-photo requirement. Submit button turns red with pulse animation when incident toggle is active. OSHA-compliant fields (incident type, date/time, location, injured person, body part, treatment, witness).
+- **Emergency Broadcast Widget on Overview**: Flashing red card injected left of "Recent Submissions" when incidents exist. Hover shows glass popup with incident preview. Click opens full incident detail modal with all report fields.
+- **Backend**: `/api/incidents/active` and `/api/incidents/{id}` endpoints. `is_emergency` flag on submissions. Photos made optional for emergency submissions. Emergency notifications broadcast to all admin roles including Owner.
+
+## Key DB Schema Additions
+- `submissions.is_emergency` — boolean flag for emergency incident submissions
+- `submissions.field_report.type` — contains "Incident: ..." for emergency reports
+
+## Key API Endpoints (24 route modules)
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | /api/reports/job-search?q= | Fuzzy job search for Client Report |
-| GET | /api/reports/client-quality?period=&job_id= | Client quality report data (JSON preview) |
-| GET | /api/exports/am-report-pdf?period=&job_id= | Full-detail PDF with clickable photo links |
-| GET | /api/onboarding/progress?division= | Crew onboarding milestones |
-| GET | /api/coaching/loop-report?division= | Coaching completion loop |
-| POST | /api/coaching/assign | Assign coaching action |
-| PATCH | /api/coaching/{id}/complete | Complete coaching action |
-| PATCH | /api/crew-access-links/{id} | Update crew link (cascades division to members) |
-| GET | /api/public/crew-member/{code} | Get member (syncs division from parent) |
-| GET | /api/metrics/* | 7 metric endpoints |
-| GET | /api/analytics/* | Calibration/summary endpoints |
+| GET | /api/incidents/active | Active emergency incidents for Overview |
+| GET | /api/incidents/{id} | Full incident detail |
+| GET | /api/reports/job-search?q= | Fuzzy job search (min 2 chars recommended) |
+| GET | /api/reports/client-quality?period=&job_id= | Client quality report JSON |
+| GET | /api/exports/am-report-pdf?period=&job_id= | PDF export |
+| POST | /api/public/submissions | Create submission (photos now optional for emergencies) |
 
 ## Pending / Backlog
 - AI-assisted scoring backend (LLM integration) — ON HOLD per user request
