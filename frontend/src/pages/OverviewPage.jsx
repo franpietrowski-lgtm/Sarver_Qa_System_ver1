@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { authGet } from "@/lib/api";
+import { authGet, authPatch } from "@/lib/api";
 import { copyToClipboard } from "@/lib/clipboard";
 import { toast } from "sonner";
 
@@ -282,10 +282,10 @@ export default function OverviewPage({ user }) {
                       </div>
                       <span className="shrink-0 rounded-full bg-red-500/15 px-2 py-0.5 text-[9px] font-bold text-red-500">{inc.work_date}</span>
                     </div>
-                    {/* Glass hover preview */}
+                    {/* Glass hover preview — positioned below on small screens, right on large */}
                     {hoveredIncident === inc.id && (
                       <div
-                        className="absolute left-full top-0 z-50 ml-2 w-72 rounded-2xl border border-red-500/30 p-4 shadow-2xl"
+                        className="absolute z-50 w-72 rounded-2xl border border-red-500/30 p-4 shadow-2xl max-sm:left-0 max-sm:top-full max-sm:mt-2 sm:left-full sm:top-0 sm:ml-2"
                         style={{ backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", background: "color-mix(in srgb, var(--card) 88%, transparent)" }}
                         data-testid={`overview-incident-hover-${inc.id}`}
                       >
@@ -395,11 +395,12 @@ export default function OverviewPage({ user }) {
         <div
           className="col-span-full grid gap-4 transition-all duration-500 ease-in-out"
           style={{
-            gridTemplateColumns:
-              hoveredMetric === "quality"  ? "2.2fr 0.9fr 0.9fr" :
-              hoveredMetric === "compliance" ? "0.9fr 2.2fr 0.9fr" :
-              hoveredMetric === "funnel"   ? "0.9fr 0.9fr 2.2fr" :
-              "1fr 1fr 1fr",
+            gridTemplateColumns: typeof window !== "undefined" && window.innerWidth < 768
+              ? "1fr"
+              : hoveredMetric === "quality"  ? "2.2fr 0.9fr 0.9fr"
+              : hoveredMetric === "compliance" ? "0.9fr 2.2fr 0.9fr"
+              : hoveredMetric === "funnel"   ? "0.9fr 0.9fr 2.2fr"
+              : "1fr 1fr 1fr",
           }}
           data-testid="metrics-widgets-row"
         >
@@ -936,6 +937,23 @@ export default function OverviewPage({ user }) {
                 </div>
               )}
               <p className="text-[10px] text-[var(--muted-foreground)]">Status: {selectedIncident.status} · Submitted: {selectedIncident.created_at?.slice(0, 16).replace("T", " ")}</p>
+              <Button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await authPatch(`/incidents/${selectedIncident.id}/acknowledge`, {});
+                    toast.success("Incident acknowledged and cleared from alerts.");
+                    setIncidents((prev) => prev.filter((i) => i.id !== selectedIncident.id));
+                    setSelectedIncident(null);
+                  } catch {
+                    toast.error("Failed to acknowledge incident");
+                  }
+                }}
+                className="w-full h-12 rounded-2xl bg-red-600 text-sm font-bold text-white hover:bg-red-700"
+                data-testid="incident-acknowledge-btn"
+              >
+                <CheckCircle2 className="mr-2 h-4 w-4" /> Mark as Read & Dismiss
+              </Button>
             </div>
           </div>
         </div>

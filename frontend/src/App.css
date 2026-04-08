@@ -1220,3 +1220,23 @@ h4,
 .animate-pulse-slow {
   animation: pulse-slow-border 2.5s ease-in-out infinite;
 }
+
+/* Glass dropdown utility — applies to all native <select> elements */
+.glass-dropdown,
+select:not([class*="glass-dropdown"]) {
+  color: var(--foreground);
+  background-color: var(--accent);
+}
+.glass-dropdown option,
+select option {
+  color: var(--foreground);
+  background-color: var(--card);
+}
+
+/* Mobile responsive grid overrides */
+@media (max-width: 639px) {
+  .grid.xl\\:grid-cols-\\[0\\.7fr_1fr_0\\.85fr\\],
+  .grid.xl\\:grid-cols-\\[1\\.15fr_0\\.85fr\\] {
+    grid-template-columns: 1fr !important;
+  }
+}

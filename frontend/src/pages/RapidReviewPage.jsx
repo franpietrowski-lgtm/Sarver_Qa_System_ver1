@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, ChevronDown, ChevronUp, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -43,6 +43,8 @@ export default function RapidReviewPage({ user }) {
   const [imageViewStart, setImageViewStart] = useState(0);
   const [timerDisplay, setTimerDisplay] = useState(0);
   const [tooFast, setTooFast] = useState(false);
+  const [showRubricRef, setShowRubricRef] = useState(false);
+  const [rubricCategories, setRubricCategories] = useState([]);
 
   const surfaceRef = useRef(null);
   const timerRef = useRef(null);
@@ -95,6 +97,18 @@ export default function RapidReviewPage({ user }) {
     if (currentItem?.id) preloadDetail(currentItem.id);
     if (queue[currentIndex + 1]?.id) preloadDetail(queue[currentIndex + 1].id);
   }, [currentItem?.id, currentIndex, queue]);
+
+  // Load rubric guidance for current submission
+  useEffect(() => {
+    if (!currentDetail?.submission) return;
+    const sub = currentDetail.submission;
+    const svcType = sub.service_type || sub.task_type || "";
+    const div = sub.division || "";
+    if (!svcType) { setRubricCategories([]); return; }
+    authGet(`/rubrics/for-task?service_type=${encodeURIComponent(svcType)}&division=${encodeURIComponent(div)}`)
+      .then((data) => setRubricCategories(data.rubric_categories || []))
+      .catch(() => setRubricCategories([]));
+  }, [currentDetail?.submission?.id]);
 
   useEffect(() => {
     setImageViewStart(Date.now());
@@ -327,13 +341,77 @@ export default function RapidReviewPage({ user }) {
 
                 {/* Bottom job info overlay */}
                 <div className="pointer-events-none absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-4 pb-4 pt-10" data-testid="rapid-review-job-overlay">
-                  <p className="truncate text-sm font-semibold text-white/90" data-testid="rapid-review-current-job">
-                    {currentDetail.submission.job_name_input || currentDetail.submission.job_id || currentDetail.submission.submission_code}
-                  </p>
-                  <p className="mt-0.5 truncate text-xs text-white/50" data-testid="rapid-review-current-meta">
-                    {currentDetail.submission.crew_label} &middot; {currentDetail.submission.service_type}
-                  </p>
+                  <div className="flex items-end justify-between pointer-events-auto">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-white/90" data-testid="rapid-review-current-job">
+                        {currentDetail.submission.job_name_input || currentDetail.submission.job_id || currentDetail.submission.submission_code}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs text-white/50" data-testid="rapid-review-current-meta">
+                        {currentDetail.submission.crew_label} &middot; {currentDetail.submission.service_type} &middot; {currentDetail.submission.division}
+                      </p>
+                    </div>
+                    {rubricCategories.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowRubricRef(!showRubricRef)}
+                        className={`ml-3 flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${showRubricRef ? "bg-[#4a7c59] text-white" : "bg-white/15 text-white/70 hover:bg-white/25"}`}
+                        data-testid="rapid-review-rubric-toggle"
+                      >
+                        <BookOpen className="h-3.5 w-3.5" />Rubric
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {/* Rubric reference panel */}
+                <AnimatePresence>
+                  {showRubricRef && rubricCategories.length > 0 && (
+                    <motion.div
+                      initial={{ y: 200, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 200, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      className="pointer-events-auto absolute bottom-16 left-2 right-2 z-30 max-h-[40vh] overflow-y-auto rounded-[18px] border border-white/10 p-4 shadow-2xl"
+                      style={{ backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", background: "rgba(13,18,14,0.88)" }}
+                      data-testid="rapid-review-rubric-panel"
+                    >
+                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/40 mb-2">
+                        Task rubric — {currentDetail.submission.service_type}
+                      </p>
+                      <div className="space-y-2.5">
+                        {rubricCategories.map((cat, ci) => (
+                          <div key={ci} className="rounded-[12px] border border-white/8 bg-white/5 p-3" data-testid={`rapid-review-rubric-cat-${ci}`}>
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-xs font-bold text-white/90">{cat.name}</p>
+                              {cat.weight > 0 && <span className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] text-white/50">{cat.weight}%</span>}
+                            </div>
+                            {cat.criteria?.length > 0 && (
+                              <div className="mt-1.5 space-y-0.5">
+                                {cat.criteria.map((c, i) => (
+                                  <p key={i} className="text-[10px] text-white/55">• {c}</p>
+                                ))}
+                              </div>
+                            )}
+                            <div className="mt-1.5 flex gap-2">
+                              {cat.fail_indicators?.length > 0 && (
+                                <div className="flex-1 rounded-lg bg-[#7a2323]/20 px-2 py-1.5">
+                                  <p className="text-[8px] font-bold uppercase text-red-400/80 mb-0.5">Fail clues</p>
+                                  {cat.fail_indicators.map((f, i) => <p key={i} className="text-[9px] text-red-300/60">- {f}</p>)}
+                                </div>
+                              )}
+                              {cat.exemplary_indicators?.length > 0 && (
+                                <div className="flex-1 rounded-lg bg-[#2a5f73]/20 px-2 py-1.5">
+                                  <p className="text-[8px] font-bold uppercase text-cyan-400/80 mb-0.5">Top clues</p>
+                                  {cat.exemplary_indicators.map((e, i) => <p key={i} className="text-[9px] text-cyan-300/60">- {e}</p>)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             </motion.div>
           </AnimatePresence>
@@ -357,6 +435,29 @@ export default function RapidReviewPage({ user }) {
           >
             <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/40">Comment required</p>
             <h2 className="mt-1.5 font-[Outfit] text-lg font-semibold text-white">{RATING_CONFIG[pendingRating].label} &mdash; add context</h2>
+            {/* Dynamic rubric hints */}
+            {rubricCategories.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5" data-testid="rapid-review-rubric-hints">
+                {rubricCategories.flatMap((cat) => {
+                  const indicators = pendingRating === "fail" ? (cat.fail_indicators || []) : (cat.exemplary_indicators || []);
+                  return indicators.map((hint, i) => (
+                    <button
+                      key={`${cat.name}-${i}`}
+                      type="button"
+                      onClick={() => setReviewerComment((prev) => prev ? `${prev}; ${hint}` : hint)}
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${
+                        pendingRating === "fail"
+                          ? "bg-red-500/15 text-red-300/80 hover:bg-red-500/25"
+                          : "bg-cyan-500/15 text-cyan-300/80 hover:bg-cyan-500/25"
+                      }`}
+                      data-testid={`rapid-review-hint-${i}`}
+                    >
+                      {hint}
+                    </button>
+                  ));
+                })}
+              </div>
+            )}
             <Textarea
               value={reviewerComment}
               onChange={(event) => setReviewerComment(event.target.value)}

@@ -257,7 +257,7 @@ export default function CrewMemberDashboard() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-[#243e36]" htmlFor="member-task-select">Current task</label>
-                    <select id="member-task-select" value={taskType} onChange={(e) => setTaskType(e.target.value)} className="h-12 w-full rounded-2xl border border-transparent bg-[#edf0e7] px-4 text-sm" data-testid="member-task-select">
+                    <select id="member-task-select" value={taskType} onChange={(e) => setTaskType(e.target.value)} className="glass-dropdown h-12 w-full rounded-2xl border border-transparent bg-[var(--accent)] px-4 text-sm text-[var(--foreground)]" data-testid="member-task-select">
                       {availableTasks.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
@@ -330,14 +330,14 @@ export default function CrewMemberDashboard() {
                     </div>
                     {incidentEnabled && (
                       <div className="mt-4 grid gap-3" data-testid="member-incident-fields">
-                        <select value={incidentType} onChange={(e) => setIncidentType(e.target.value)} className="h-12 w-full rounded-2xl border border-transparent bg-white px-4 text-sm" data-testid="member-incident-type-select">
+                        <select value={incidentType} onChange={(e) => setIncidentType(e.target.value)} className="glass-dropdown h-12 w-full rounded-2xl border border-transparent bg-[var(--accent)] px-4 text-sm text-[var(--foreground)]" data-testid="member-incident-type-select">
                           <option value="">Select incident type</option>
                           {INCIDENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                         </select>
                         <Input type="datetime-local" value={incidentDateTime} onChange={(e) => setIncidentDateTime(e.target.value)} className="h-12 rounded-2xl border-transparent bg-white" data-testid="member-incident-datetime" />
                         <Input value={incidentLocation} onChange={(e) => setIncidentLocation(e.target.value)} placeholder="Where on the jobsite?" className="h-12 rounded-2xl border-transparent bg-white" data-testid="member-incident-location" />
                         <Input value={injuredPerson} onChange={(e) => setInjuredPerson(e.target.value)} placeholder="Name of injured person (or 'self')" className="h-12 rounded-2xl border-transparent bg-white" data-testid="member-incident-injured" />
-                        <select value={bodyPart} onChange={(e) => setBodyPart(e.target.value)} className="h-12 w-full rounded-2xl border border-transparent bg-white px-4 text-sm" data-testid="member-incident-body-part">
+                        <select value={bodyPart} onChange={(e) => setBodyPart(e.target.value)} className="glass-dropdown h-12 w-full rounded-2xl border border-transparent bg-[var(--accent)] px-4 text-sm text-[var(--foreground)]" data-testid="member-incident-body-part">
                           <option value="">Body part affected (if applicable)</option>
                           {BODY_PARTS.map((b) => <option key={b} value={b}>{b}</option>)}
                         </select>
