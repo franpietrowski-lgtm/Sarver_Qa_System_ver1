@@ -257,8 +257,8 @@ export default function CrewAssignmentPage() {
 
       {/* Assign Modal */}
       {showAssignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" data-testid="assignment-modal-overlay">
-          <Card className="w-full max-w-md rounded-[24px] border-border/80 bg-[var(--card)] shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" data-testid="assignment-modal-overlay">
+          <Card className="w-full max-w-md rounded-[24px] border border-white/10 shadow-2xl" style={{ background: "var(--modal-bg, var(--card))", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}>
             <CardContent className="p-6">
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm font-bold text-[var(--foreground)]">Assign job — {formatDate(showAssignModal)}</p>
