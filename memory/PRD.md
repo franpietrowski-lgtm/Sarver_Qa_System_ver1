@@ -10,6 +10,7 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
   - `shared/seed_data.py` — rubric library, default users, seed logic
   - `shared/deps.py` — auth, helpers, Supabase client
   - `routes/` — 24+ modular routers (including `incidents.py`, `rapid_reviews.py`, `rubrics.py`)
+  - `scripts/` — demo seed scripts (`demo_workflow_seed.py`, `demo_workflow_seed_phase2.py`)
 - **Database**: MongoDB
 - **Storage**: Supabase Object Storage
 - **Auth**: JWT with role-based routing
@@ -38,44 +39,56 @@ Build a lightweight, scalable internal application for a landscaping company (Sa
 - 12 demo jobs (LMN-4201-4212) for search testing
 
 ### V2.0 (Apr 9, 2026) — Rubric Grading, Crew History, Glass UI
-- **Glass effect on ALL dropdowns**: Client Report search, CrewCapturePage selects, CrewMemberDashboard selects, Settings page selects. All use `glass-dropdown` CSS class + `var(--accent)` backgrounds.
-- **Rapid Review rubric grading modal**: Toggleable overlay shows task-specific rubric categories with names, weights, fail/exemplary clue indicators. Click-to-autofill rubric hint chips in comments. Hard fail conditions (`no_image_captured`, `improper_image_quality`) on all 21 rubric definitions.
-- **Crew QR App History Tab**: Crew leaders can view submission history in a dedicated tab.
-- **Crew Leader member link integration**: Team members can register via `/member/join/{parentCode}`.
-- **Database curation**: Seeded real Longvue HOA jobs (LMN-5001–5005), retained "Fran" and "Tim" profiles, deleted photoless mock data.
-- **Mobile responsive fixes**: Metrics widgets collapse to single column. Incident preview repositions. Overview grid stacks vertically.
-- **Full theme compliance**: Settings page, theme cards, font cards fully converted to CSS variables. Compact 8-column theme cards, 4-column font cards.
+- Glass effect on ALL dropdowns with `glass-dropdown` CSS class
+- Rapid Review rubric grading modal with click-to-autofill rubric hint chips
+- Hard fail conditions (`no_image_captured`, `improper_image_quality`) on all 21 rubric definitions
+- Crew QR App History Tab + Crew Leader member link integration
+- Database curation with Longvue HOA demo jobs (LMN-5001-5005)
+- Mobile responsive fixes and full theme compliance
+
+### V2.1 (Apr 9, 2026) — Demo Workflow Seed
+- End-to-end demo data: Account Manager job creation -> PM assignment -> Crew Leader 3-photo submission -> Crew Member 3-photo submission -> Emergency damage report -> 7-reviewer grading
+- Job LMN-6001: "Longvue HOA - 291 Mailbox Bed Edging" with real field photos uploaded to Supabase
+- 5 real user-provided field photos (bed edging, mulch work, dump truck) stored in Supabase
+- 7 rapid reviews + 1 management review from diverse admin roles (excluding Owner, GM, and 3 others per user spec)
+- Emergency incident with dump truck plant damage photo, visible on dashboard alert widget
 
 ## Key API Endpoints
 | Method | Path | Description |
 |--------|------|-------------|
 | POST   | /api/auth/login | JWT login |
 | GET    | /api/rubrics | All rubric definitions |
-| GET    | /api/rubrics/for-task?service_type=&division= | Task-specific rubric categories with fail/top indicators |
+| GET    | /api/rubrics/for-task?service_type=&division= | Task-specific rubric categories |
 | GET    | /api/rapid-reviews/queue | Paginated queue of unreviewed submissions |
 | POST   | /api/rapid-reviews | Submit rapid review with rubric scoring |
 | PATCH  | /api/incidents/{id}/acknowledge | Mark emergency incident as read |
 | GET    | /api/incidents/active | Active (unacknowledged) emergency incidents |
 | GET    | /api/reports/job-search?q= | Fuzzy job search |
 | GET    | /api/reports/client-quality?period=&job_id= | Client quality report JSON |
-| GET    | /api/exports/am-report-pdf?period=&job_id= | PDF export |
 | POST   | /api/public/submissions | Create submission (photos optional for emergencies) |
 | GET    | /api/public/crew-link/{code}/submissions | Crew submission history |
+| GET    | /api/public/crew-submissions/{access_code} | Crew portal submission list |
 
 ## Key DB Schema
-- `users`: {email, hashed_password, role, active, name, division}
+- `users`: {email, hashed_password, role, active, name, division, title}
 - `crew_access_links`: {code, label, division, leader_name, truck_number, enabled}
-- `jobs`, `submissions`, `management_reviews`, `owner_reviews`, `exports`
-- `standards_library`: {title, category, rules, images}
-- `training_sessions`: {crew_id, modules, score}
-- `equipment_logs`: {equipment_number, pre_photo, post_photo, notes, red_tag}
-- `notifications`: {user_id, message, read}
-- `incidents`: {crew_id, submitter_type, notes, photos, acknowledged, timestamp}
-- `rubric_definitions`: {service_type, title, categories[{label, weight, key}], hard_fail_conditions[], is_active, version}
-- `rapid_reviews`: {submission_id, overall_rating, comments, rubric_scores, score_summary}
+- `jobs`: {job_id, job_name, property_name, address, service_type, division, truck_number, scheduled_date}
+- `submissions`: {id, access_code, crew_label, job_id, photo_files[], field_report{}, is_emergency, status}
+- `management_reviews`: {submission_id, reviewer_id, category_scores, total_score, disposition}
+- `rapid_reviews`: {submission_id (unique), reviewer_id, overall_rating, rubric_sum_percent, comment}
+- `rubric_definitions`: {service_type, categories[{label, weight, key, max_score}], hard_fail_conditions[]}
+- `incidents`: queried via submissions with is_emergency=true
+- `notifications`: {title, message, audience, status}
+
+## Demo Data Summary
+- 12 admin users across 5 role levels
+- 6 crew QR links (Install Alpha, Maintenance Alpha/Bravo, Tree Alpha, Fran's Crew, Tim's Crew)
+- 11+ submissions with real field photos from Supabase storage
+- 21 rubric definitions with hard fail conditions
+- Job LMN-6001 with full role-to-role workflow demonstration
 
 ## Pending / Backlog
 - AI-assisted scoring backend (LLM integration) — ON HOLD per user request
 - Quality Review Agent (pattern learning engine) — ON HOLD per user request
 - Closed-loop coaching system (auto training from repeat-offender thresholds) — P2
-- Refactoring: Extract `CrewCapturePage.jsx` and `OverviewPage.jsx` widgets into `/components/`
+- Refactoring: Extract large page components (`CrewCapturePage.jsx`, `OverviewPage.jsx`) into smaller widgets
