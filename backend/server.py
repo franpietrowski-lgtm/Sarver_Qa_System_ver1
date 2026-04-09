@@ -36,6 +36,7 @@ from routes.pdf_exports import router as pdf_exports_router
 from routes.onboarding import router as onboarding_router
 from routes.coaching_loop import router as coaching_loop_router
 from routes.incidents import router as incidents_router
+from routes.crew_assignments import router as crew_assignments_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
@@ -126,6 +127,7 @@ api_router.include_router(pdf_exports_router)
 api_router.include_router(onboarding_router)
 api_router.include_router(coaching_loop_router)
 api_router.include_router(incidents_router)
+api_router.include_router(crew_assignments_router)
 
 app.include_router(api_router)
 

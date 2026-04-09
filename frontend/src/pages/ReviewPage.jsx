@@ -134,10 +134,10 @@ export default function ReviewPage() {
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Management review queue</p>
               <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)]">Pending proof sets</h2>
             </div>
-            <ClipboardList className="h-6 w-6 text-[#243e36]" />
+            <ClipboardList className="h-6 w-6 text-[var(--foreground)]" />
           </div>
 
-          <select value={filterBy} onChange={(event) => { setFilterBy(event.target.value); loadPage(event.target.value, 1, false); }} className="mt-5 h-12 w-full rounded-2xl border border-transparent bg-[#edf0e7] px-4 text-sm" data-testid="review-filter-select">
+          <select value={filterBy} onChange={(event) => { setFilterBy(event.target.value); loadPage(event.target.value, 1, false); }} className="glass-dropdown mt-5 h-12 w-full rounded-2xl border border-[var(--form-card-border)] bg-[var(--chip-bg)] px-4 text-sm text-[var(--foreground)]" data-testid="review-filter-select">
             <option value="all">All items</option>
             <option value="low_confidence">Low confidence match</option>
             <option value="incomplete_photo_sets">Incomplete photo sets</option>
@@ -154,17 +154,17 @@ export default function ReviewPage() {
 
           <div className="mt-5 space-y-3">
             {submissions.map((submission) => (
-              <button key={submission.id} type="button" onClick={() => setSelectedId(submission.id)} className={`w-full rounded-[24px] border p-4 text-left transition-transform hover:-translate-y-0.5 ${selectedId === submission.id ? "border-[#243e36] bg-[#edf0e7]" : "border-border bg-[#f6f6f2]"}`} data-testid={`review-queue-item-${submission.id}`}>
+              <button key={submission.id} type="button" onClick={() => setSelectedId(submission.id)} className={`w-full rounded-[24px] border p-4 text-left transition-transform hover:-translate-y-0.5 ${selectedId === submission.id ? "border-[var(--btn-accent)] bg-[var(--chip-bg)]" : "border-[var(--form-card-border)] bg-[var(--form-card-bg)]"}`} data-testid={`review-queue-item-${submission.id}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-[#243e36]">{submission.job_name_input || submission.job_id || submission.submission_code}</p>
+                    <p className="text-sm font-semibold text-[var(--foreground)]">{submission.job_name_input || submission.job_id || submission.submission_code}</p>
                     <p className="mt-1 text-sm text-[var(--muted-foreground)]">{submission.crew_label} · {submission.truck_number}{submission.work_date ? ` · ${submission.work_date}` : ""}</p>
                   </div>
-                  <Badge className="border-0 bg-white px-3 py-1 text-[#243e36]">{submission.status}</Badge>
+                  <Badge className="border-0 bg-[var(--chip-bg)] px-3 py-1 text-[var(--foreground)]">{submission.status}</Badge>
                 </div>
               </button>
             ))}
-            {submissions.length === 0 && <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4 text-sm text-[var(--muted-foreground)]" data-testid="review-queue-empty-state">No management-review items match this page yet.</div>}
+            {submissions.length === 0 && <div className="rounded-[24px] border border-[var(--form-card-border)] bg-[var(--form-card-bg)] p-4 text-sm text-[var(--muted-foreground)]" data-testid="review-queue-empty-state">No management-review items match this page yet.</div>}
           </div>
         </CardContent>
       </Card>
@@ -174,9 +174,9 @@ export default function ReviewPage() {
           <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="review-detail-card">
             <CardContent className="p-8">
               {detail.rapid_review && (
-                <div className="mb-6 rounded-[24px] border border-[#d7e3d9] bg-[#edf0e7] p-4" data-testid="review-rapid-summary-card">
+                <div className="mb-6 rounded-[24px] border border-[var(--panel-border)] bg-[var(--chip-bg)] p-4" data-testid="review-rapid-summary-card">
                   <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Rapid review summary</p>
-                  <p className="mt-2 text-sm font-semibold text-[#243e36]">{detail.rapid_review.overall_rating} · rubric sum {detail.rapid_review.rubric_sum_percent}%</p>
+                  <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">{detail.rapid_review.overall_rating} · rubric sum {detail.rapid_review.rubric_sum_percent}%</p>
                   <p className="mt-1 text-sm text-[var(--muted-foreground)]">{detail.rapid_review.comment || "No comment attached."}</p>
                 </div>
               )}
@@ -186,14 +186,14 @@ export default function ReviewPage() {
                   <h2 className="mt-2 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[var(--foreground)]" data-testid="review-detail-title">{detail.submission.job_name_input || detail.submission.job_id || detail.submission.submission_code}</h2>
                   <p className="mt-2 text-sm text-[var(--muted-foreground)]" data-testid="review-detail-meta">{detail.submission.crew_label} · {selectedServiceType || "service type pending"} · Confidence {Math.round((detail.submission.match_confidence || 0) * 100)}%{detail.submission.work_date ? ` · Work date: ${detail.submission.work_date}` : ""}</p>
                 </div>
-                <Badge className="border-0 bg-[#edf0e7] px-3 py-1 text-[#243e36]" data-testid="review-match-status-badge">{detail.submission.match_status}</Badge>
+                <Badge className="border-0 bg-[var(--chip-bg)] px-3 py-1 text-[var(--foreground)]" data-testid="review-match-status-badge">{detail.submission.match_status}</Badge>
               </div>
 
               <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3" data-testid="review-photo-grid">
                 {detail.submission.photo_files?.map((photo) => (
-                  <div key={photo.id} className="overflow-hidden rounded-[28px] border border-border bg-[#f6f6f2]" data-testid={`review-photo-card-${photo.id}`}>
-                    <div className="aspect-[4/3] overflow-hidden bg-[#dde4d6]"><img src={photo.media_url} alt={photo.filename} className="h-full w-full object-cover" /></div>
-                    <div className="p-4 text-sm font-semibold text-[#243e36]">{photo.filename}</div>
+                  <div key={photo.id} className="overflow-hidden rounded-[28px] border border-[var(--form-card-border)] bg-[var(--form-card-bg)]" data-testid={`review-photo-card-${photo.id}`}>
+                    <div className="aspect-[4/3] overflow-hidden bg-[var(--chip-bg)]"><img src={photo.media_url} alt={photo.filename} className="h-full w-full object-cover" /></div>
+                    <div className="p-4 text-sm font-semibold text-[var(--foreground)]">{photo.filename}</div>
                   </div>
                 ))}
               </div>
@@ -204,20 +204,20 @@ export default function ReviewPage() {
             <CardContent className="p-8">
               <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
                 <div className="space-y-4">
-                  <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4">
-                    <div className="flex items-center gap-2 text-[#243e36]"><SearchCheck className="h-5 w-5" /><p className="text-sm font-semibold">Suggested job match</p></div>
-                    <select value={selectedJobId} onChange={(event) => setSelectedJobId(event.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-transparent bg-white px-4 text-sm" data-testid="review-match-job-select">
+                  <div className="rounded-[24px] border border-[var(--form-card-border)] bg-[var(--form-card-bg)] p-4">
+                    <div className="flex items-center gap-2 text-[var(--foreground)]"><SearchCheck className="h-5 w-5" /><p className="text-sm font-semibold">Suggested job match</p></div>
+                    <select value={selectedJobId} onChange={(event) => setSelectedJobId(event.target.value)} className="glass-dropdown mt-3 h-12 w-full rounded-2xl border border-[var(--form-card-border)] bg-[var(--chip-bg)] px-4 text-sm text-[var(--foreground)]" data-testid="review-match-job-select">
                       <option value="">No job matched yet</option>
                       {jobs.map((job) => {
                         const label = `${job.job_id} · ${job.property_name}`;
                         return <option key={job.id} value={job.id} label={label} />;
                       })}
                     </select>
-                    <Button type="button" onClick={handleMatchOverride} className="mt-3 h-11 w-full rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="review-confirm-match-button"><Link2 className="mr-2 h-4 w-4" />Confirm / override match</Button>
+                    <Button type="button" onClick={handleMatchOverride} className="mt-3 h-11 w-full rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid="review-confirm-match-button"><Link2 className="mr-2 h-4 w-4" />Confirm / override match</Button>
                   </div>
 
-                  <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4">
-                    <p className="text-sm font-semibold text-[#243e36]">Submission metadata</p>
+                  <div className="rounded-[24px] border border-[var(--form-card-border)] bg-[var(--form-card-bg)] p-4">
+                    <p className="text-sm font-semibold text-[var(--foreground)]">Submission metadata</p>
                     <div className="mt-3 space-y-2 text-sm text-[var(--muted-foreground)]">
                       <p data-testid="review-metadata-truck">Truck: {detail.submission.truck_number}</p>
                       <p data-testid="review-metadata-area">Area: {detail.submission.area_tag || "Not tagged"}</p>
@@ -226,18 +226,18 @@ export default function ReviewPage() {
                   </div>
 
                   {detail.submission.field_report?.reported && (
-                    <div className="rounded-[24px] border border-[#f2c9bc] bg-[#fff6f1] p-4" data-testid="review-field-report-card">
-                      <p className="text-sm font-semibold text-[#243e36]">Crew issue / damage report</p>
-                      <div className="mt-3 space-y-2 text-sm text-[var(--muted-foreground)]">
+                    <div className="rounded-[24px] border border-[var(--status-critical-border)] bg-[var(--status-critical-bg)] p-4" data-testid="review-field-report-card">
+                      <p className="text-sm font-semibold text-[var(--status-critical-text)]">Crew issue / damage report</p>
+                      <div className="mt-3 space-y-2 text-sm text-[var(--foreground)]">
                         <p data-testid="review-field-report-type">Type: {detail.submission.field_report.type || "General field report"}</p>
                         <p data-testid="review-field-report-notes">Notes: {detail.submission.field_report.notes || "No extra details"}</p>
                       </div>
                       {!!detail.submission.field_report.photo_files?.length && (
                         <div className="mt-4 grid grid-cols-2 gap-3" data-testid="review-field-report-photo-grid">
                           {detail.submission.field_report.photo_files.map((photo) => (
-                            <div key={photo.id} className="overflow-hidden rounded-[20px] border border-[#f2c9bc] bg-white">
-                              <div className="aspect-[4/3] overflow-hidden bg-[#f5e3db]"><img src={photo.media_url} alt={photo.filename} className="h-full w-full object-cover" /></div>
-                              <div className="p-3 text-xs font-semibold text-[#243e36]">{photo.filename}</div>
+                            <div key={photo.id} className="overflow-hidden rounded-[20px] border border-[var(--status-critical-border)] bg-[var(--form-card-bg)]">
+                              <div className="aspect-[4/3] overflow-hidden bg-[var(--status-critical-bg)]"><img src={photo.media_url} alt={photo.filename} className="h-full w-full object-cover" /></div>
+                              <div className="p-3 text-xs font-semibold text-[var(--foreground)]">{photo.filename}</div>
                             </div>
                           ))}
                         </div>
@@ -248,17 +248,17 @@ export default function ReviewPage() {
 
                 <form className="space-y-4" onSubmit={handleSubmitReview} data-testid="review-scoring-form">
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-[#243e36]">Service type</label>
-                    <select value={selectedServiceType} onChange={(event) => setSelectedServiceType(event.target.value)} className="h-12 w-full rounded-2xl border border-transparent bg-[#edf0e7] px-4 text-sm" data-testid="review-service-type-select">
+                    <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">Service type</label>
+                    <select value={selectedServiceType} onChange={(event) => setSelectedServiceType(event.target.value)} className="glass-dropdown h-12 w-full rounded-2xl border border-[var(--form-card-border)] bg-[var(--chip-bg)] px-4 text-sm text-[var(--foreground)]" data-testid="review-service-type-select">
                       {rubrics.map((item) => <option key={item.id} value={item.service_type} label={item.service_type} />)}
                     </select>
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-2">
                     {rubric?.categories?.map((category) => (
-                      <div key={category.key} className="rounded-[24px] border border-border bg-[#f6f6f2] p-4" data-testid={`review-score-card-${category.key}`}>
-                        <label className="text-sm font-semibold text-[#243e36]">{category.label}</label>
-                        <Input type="number" min="0" max={category.max_score} step="0.5" value={scores[category.key] ?? ""} onChange={(event) => setScores((current) => ({ ...current, [category.key]: Number(event.target.value) }))} className="mt-3 h-11 rounded-2xl border-transparent bg-white" data-testid={`rubric-score-input-${category.key}`} />
+                      <div key={category.key} className="rounded-[24px] border border-[var(--form-card-border)] bg-[var(--form-card-bg)] p-4" data-testid={`review-score-card-${category.key}`}>
+                        <label className="text-sm font-semibold text-[var(--foreground)]">{category.label}</label>
+                        <Input type="number" min="0" max={category.max_score} step="0.5" value={scores[category.key] ?? ""} onChange={(event) => setScores((current) => ({ ...current, [category.key]: Number(event.target.value) }))} className="mt-3 h-11 rounded-2xl border-[var(--form-card-border)] bg-[var(--chip-bg)]" data-testid={`rubric-score-input-${category.key}`} />
                         <p className="mt-2 text-xs text-[var(--muted-foreground)]">Weight {Math.round(category.weight * 100)}% · Max {category.max_score}</p>
                       </div>
                     ))}
@@ -266,8 +266,8 @@ export default function ReviewPage() {
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-[#243e36]">Disposition</label>
-                      <select value={disposition} onChange={(event) => setDisposition(event.target.value)} className="h-12 w-full rounded-2xl border border-transparent bg-[#edf0e7] px-4 text-sm" data-testid="review-disposition-select">
+                      <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">Disposition</label>
+                      <select value={disposition} onChange={(event) => setDisposition(event.target.value)} className="glass-dropdown h-12 w-full rounded-2xl border border-[var(--form-card-border)] bg-[var(--chip-bg)] px-4 text-sm text-[var(--foreground)]" data-testid="review-disposition-select">
                         <option value="pass">pass</option>
                         <option value="pass with notes">pass with notes</option>
                         <option value="correction required">correction required</option>
@@ -276,25 +276,25 @@ export default function ReviewPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-[#243e36]">Flagged issues</label>
-                      <Input value={flaggedIssues} onChange={(event) => setFlaggedIssues(event.target.value)} placeholder="comma,separated,issues" className="h-12 rounded-2xl border-transparent bg-[#edf0e7]" data-testid="review-flagged-issues-input" />
+                      <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">Flagged issues</label>
+                      <Input value={flaggedIssues} onChange={(event) => setFlaggedIssues(event.target.value)} placeholder="comma,separated,issues" className="h-12 rounded-2xl border-[var(--form-card-border)] bg-[var(--chip-bg)]" data-testid="review-flagged-issues-input" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-[#243e36]">Reviewer comments</label>
-                    <Textarea value={comments} onChange={(event) => setComments(event.target.value)} className="min-h-[110px] rounded-2xl border-transparent bg-[#edf0e7]" data-testid="review-comments-input" />
+                    <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">Reviewer comments</label>
+                    <Textarea value={comments} onChange={(event) => setComments(event.target.value)} className="min-h-[110px] rounded-2xl border-[var(--form-card-border)] bg-[var(--chip-bg)]" data-testid="review-comments-input" />
                     <p className="mt-2 text-xs text-[var(--muted-foreground)]" data-testid="review-followup-hint">Choosing correction required or insufficient evidence automatically creates a crew-facing re-upload notification.</p>
                   </div>
 
-                  <Button type="submit" disabled={saving} className="h-12 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="review-submit-button"><Flag className="mr-2 h-4 w-4" />{saving ? "Saving review..." : "Save management review"}</Button>
+                  <Button type="submit" disabled={saving} className="h-12 rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid="review-submit-button"><Flag className="mr-2 h-4 w-4" />{saving ? "Saving review..." : "Save management review"}</Button>
                 </form>
               </div>
             </CardContent>
           </Card>
         </div>
       ) : (
-        <Card className="rounded-[32px] border-border/80 bg-white p-12 text-center text-[#243e36]" data-testid="review-empty-state">Select a queue item to review.</Card>
+        <Card className="rounded-[32px] border-border/80 bg-[var(--card)] p-12 text-center text-[var(--foreground)]" data-testid="review-empty-state">Select a queue item to review.</Card>
       )}
     </div>
   );

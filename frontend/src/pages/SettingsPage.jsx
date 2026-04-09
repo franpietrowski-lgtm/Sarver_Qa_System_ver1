@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { GitBranch, HardDrive, Network, Shapes } from "lucide-react";
+import { BookOpen, ChevronDown, ChevronRight, Download, Lock, Users as UsersIcon } from "lucide-react";
 
 import { useTheme, THEMES, THEME_SWATCHES, FONT_PACKAGES } from "@/components/theme/ThemeProvider";
 import { Badge } from "@/components/ui/badge";
@@ -15,8 +15,6 @@ const STAFF_TITLES = ["GM", "Account Manager", "Production Manager", "Supervisor
 
 export default function SettingsPage() {
   const { theme: currentTheme, setTheme, fontPkg, setFontPkg } = useTheme();
-  const [storageStatus, setStorageStatus] = useState(null);
-  const [blueprint, setBlueprint] = useState(null);
   const [users, setUsers] = useState([]);
   const [creatingUser, setCreatingUser] = useState(false);
   const [newUser, setNewUser] = useState({
@@ -29,13 +27,7 @@ export default function SettingsPage() {
   });
 
   const loadSettings = async () => {
-    const [storageResponse, blueprintResponse, usersResponse] = await Promise.all([
-      authGet("/integrations/storage/status"),
-      authGet("/system/blueprint"),
-      authGet("/users"),
-    ]);
-    setStorageStatus(storageResponse);
-    setBlueprint(blueprintResponse);
+    const usersResponse = await authGet("/users");
     setUsers(usersResponse);
   };
 
@@ -102,7 +94,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (!storageStatus || !blueprint) {
+  if (!users) {
     return <div className="rounded-[28px] border border-border bg-[var(--card)] p-10 text-center text-[var(--foreground)]" data-testid="settings-loading-state">Loading settings...</div>;
   }
 
@@ -164,171 +156,91 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
-        <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="settings-drive-card">
-          <CardContent className="p-8">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Supabase storage</p>
-                <h2 className="mt-2 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight text-[var(--foreground)]">Backend-managed image storage for every proof set</h2>
-              </div>
-              <HardDrive className="h-6 w-6 text-[var(--foreground)]" />
+      {/* Workflow Guides — Expandable Cards */}
+      <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="settings-workflow-guides-card">
+        <CardContent className="p-4 sm:p-5">
+          <div className="mb-1 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Workflow guides</p>
+              <p className="mt-1 text-sm text-[var(--muted-foreground)]">Step-by-step walkthroughs for every role and workflow in the Sarver QA system.</p>
             </div>
-
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Badge className="border-0 bg-[var(--accent)] px-3 py-1 text-[var(--foreground)]" data-testid="settings-drive-configured-badge">Configured: {storageStatus.configured ? "Yes" : "No"}</Badge>
-              <Badge className="border-0 bg-[var(--accent)] px-3 py-1 text-[var(--foreground)]" data-testid="settings-drive-connected-badge">Ready for uploads: {storageStatus.connected ? "Yes" : "No"}</Badge>
-            </div>
-
-            <div className="mt-6 rounded-[28px] border border-border bg-[var(--accent)] p-5" data-testid="settings-drive-path-card">
-              <p className="text-sm font-semibold text-[var(--foreground)]">Storage path structure</p>
-              <p className="mt-2 text-sm text-[var(--muted-foreground)]" data-testid="settings-drive-folder-structure">{storageStatus.bucket || "qa-images"}/sarver-landscape/submissions/{'{SubmissionID}'}/{'{captures|issues}'}/{'{file}'}</p>
-              <p className="mt-4 text-sm text-[var(--muted-foreground)]">Project URL: {storageStatus.project_url || "Not configured"}</p>
-              <p className="mt-2 text-sm text-[var(--muted-foreground)]">Required env values: {storageStatus.required_env.join(", ")}</p>
-            </div>
-
-            <div className="mt-6 rounded-[28px] border border-border bg-[var(--accent)] p-5" data-testid="settings-drive-connect-button">
-              <p className="text-sm font-semibold text-[var(--foreground)]">Storage mode</p>
-              <p className="mt-2 text-sm text-[var(--muted-foreground)]">Uploads are handled only by the backend service role. Crew, admin, and owner screens keep using stable review-friendly image routes.</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="settings-tech-stack-card">
-          <CardContent className="p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Suggested stack</p>
-            <h2 className="mt-2 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight">Implementation blueprint</h2>
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              {[
-                { icon: Shapes, label: "Frontend", value: blueprint.suggested_stack.frontend },
-                { icon: Network, label: "Backend", value: blueprint.suggested_stack.backend },
-                { icon: GitBranch, label: "Database", value: blueprint.suggested_stack.database },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.label} className="rounded-[28px] border border-white/10 bg-white/10 p-5" data-testid={`settings-stack-card-${item.label.toLowerCase()}`}>
-                    <Icon className="h-5 w-5 text-[#d8f3dc]" />
-                    <p className="mt-4 text-sm text-white/70">{item.label}</p>
-                    <p className="mt-2 text-sm font-semibold text-white">{item.value}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="settings-architecture-card">
-          <CardContent className="p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Application architecture</p>
-            <div className="mt-5 space-y-5">
-              {Object.entries(blueprint.architecture).map(([key, items]) => (
-                <div key={key} data-testid={`settings-architecture-section-${key}`}>
-                  <h3 className="font-[Cabinet_Grotesk] text-2xl font-black tracking-tight text-[var(--foreground)]">{key}</h3>
-                  <ul className="mt-3 space-y-2 text-sm text-[var(--muted-foreground)]">
-                    {items.map((item) => <li key={item}>• {item}</li>)}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="settings-schema-card">
-          <CardContent className="p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Schema, screens, workflow</p>
-            <div className="mt-5 grid gap-5">
-              <div data-testid="settings-schema-list">
-                <h3 className="font-[Cabinet_Grotesk] text-2xl font-black tracking-tight text-[var(--foreground)]">Collections</h3>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {blueprint.database_schema.map((item) => <Badge key={item} className="border-0 bg-[var(--accent)] px-3 py-1 text-[var(--foreground)]">{item}</Badge>)}
-                </div>
-              </div>
-              <div data-testid="settings-ui-screen-list">
-                <h3 className="font-[Cabinet_Grotesk] text-2xl font-black tracking-tight text-[var(--foreground)]">UI screens</h3>
-                <ul className="mt-3 space-y-2 text-sm text-[var(--muted-foreground)]">
-                  {blueprint.ui_screens.map((item) => <li key={item}>• {item}</li>)}
-                </ul>
-              </div>
-              <div data-testid="settings-workflow-list">
-                <h3 className="font-[Cabinet_Grotesk] text-2xl font-black tracking-tight text-[var(--foreground)]">Workflow diagram</h3>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {blueprint.workflow_diagram.map((item, index) => <Badge key={item} className="border-0 bg-[#243e36] px-3 py-1 text-white">{index + 1}. {item}</Badge>)}
-                </div>
-              </div>
-              <div data-testid="settings-plan-list">
-                <h3 className="font-[Cabinet_Grotesk] text-2xl font-black tracking-tight text-[var(--foreground)]">Implementation plan</h3>
-                <ul className="mt-3 space-y-2 text-sm text-[var(--muted-foreground)]">
-                  {blueprint.implementation_plan.map((item) => <li key={item}>• {item}</li>)}
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="settings-learning-roadmap-card">
-        <CardContent className="p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Learning roadmap</p>
-          <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)]">How this system can grow into automated quality checks</h3>
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            {[
-              'Phase 1: humans review photo batches and store rubric labels, comments, and variance data.',
-              'Phase 2: AI suggests likely scores and issues from the labeled image archive.',
-              'Phase 3: AI handles most grading while humans supervise edge cases and drift.',
-            ].map((step, index) => (
-              <div key={step} className="rounded-[24px] border border-border bg-[var(--accent)] p-4 text-sm text-[var(--muted-foreground)]" data-testid={`settings-learning-roadmap-step-${index + 1}`}>{step}</div>
-            ))}
+            <BookOpen className="h-5 w-5 text-[var(--foreground)]" />
           </div>
+          <WorkflowGuides />
         </CardContent>
       </Card>
 
-      {/* Change My Password */}
-      <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="settings-change-password-card">
-        <CardContent className="p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Account security</p>
-          <h3 className="mt-2 font-[Cabinet_Grotesk] text-xl font-bold tracking-tight text-[var(--foreground)]">Change my password</h3>
-          <form className="mt-4 grid gap-3 max-w-md" onSubmit={changeMyPassword} data-testid="settings-change-password-form">
-            <Input type="password" value={changePassForm.current} onChange={(e) => setChangePassForm((c) => ({ ...c, current: e.target.value }))} placeholder="Current password" className="h-11 rounded-2xl border-transparent bg-[var(--accent)]" data-testid="settings-current-password-input" required />
-            <Input type="password" value={changePassForm.next} onChange={(e) => setChangePassForm((c) => ({ ...c, next: e.target.value }))} placeholder="New password (min 6 characters)" className="h-11 rounded-2xl border-transparent bg-[var(--accent)]" data-testid="settings-new-password-input" required />
-            <Button type="submit" disabled={changingPass} className="h-11 w-fit rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="settings-change-password-button">{changingPass ? "Updating..." : "Update password"}</Button>
+      {/* System Reference PDF Download */}
+      <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="settings-system-ref-card">
+        <CardContent className="flex items-center justify-between gap-4 p-4 sm:p-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">System reference</p>
+            <p className="mt-1 text-sm text-[var(--foreground)]">Architecture, storage paths, tech stack, schema, and implementation blueprint.</p>
+            <p className="mt-1 text-xs text-[var(--muted-foreground)]">Downloads a document with all technical configuration and system details.</p>
+          </div>
+          <Button
+            type="button"
+            onClick={() => { const url = `${process.env.REACT_APP_BACKEND_URL}/api/exports/system-reference-pdf`; const token = localStorage.getItem("token"); window.open(`${url}?token=${token}`, "_blank"); }}
+            className="h-10 shrink-0 rounded-xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]"
+            data-testid="settings-download-system-pdf"
+          >
+            <Download className="mr-2 h-4 w-4" />Download PDF
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Account Security */}
+      <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="settings-change-password-card">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex items-center gap-2">
+            <Lock className="h-4 w-4 text-[var(--foreground)]" />
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Account security</p>
+          </div>
+          <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">Change my password</p>
+          <form className="mt-3 grid gap-3 max-w-md" onSubmit={changeMyPassword} data-testid="settings-change-password-form">
+            <Input type="password" value={changePassForm.current} onChange={(e) => setChangePassForm((c) => ({ ...c, current: e.target.value }))} placeholder="Current password" className="h-11 rounded-2xl border-[var(--form-card-border)] bg-[var(--chip-bg)]" data-testid="settings-current-password-input" required />
+            <Input type="password" value={changePassForm.next} onChange={(e) => setChangePassForm((c) => ({ ...c, next: e.target.value }))} placeholder="New password (min 6 characters)" className="h-11 rounded-2xl border-[var(--form-card-border)] bg-[var(--chip-bg)]" data-testid="settings-new-password-input" required />
+            <Button type="submit" disabled={changingPass} className="h-11 w-fit rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid="settings-change-password-button">{changingPass ? "Updating..." : "Update password"}</Button>
           </form>
         </CardContent>
       </Card>
 
-      <Card className="rounded-[32px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="settings-staff-management-card">
-        <CardContent className="p-8">
+      {/* Staff Management */}
+      <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="settings-staff-management-card">
+        <CardContent className="p-4 sm:p-5">
           <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Sarver staff access</p>
-              <h3 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)]">Create and authorize implementation accounts</h3>
-              <form className="mt-6 grid gap-4" onSubmit={createUser} data-testid="settings-create-user-form">
-                <Input value={newUser.name} onChange={(event) => setNewUser((current) => ({ ...current, name: event.target.value }))} placeholder="Staff name" className="h-12 rounded-2xl border-transparent bg-[var(--accent)]" data-testid="settings-user-name-input" />
-                <Input value={newUser.email} onChange={(event) => setNewUser((current) => ({ ...current, email: event.target.value }))} placeholder="Email" className="h-12 rounded-2xl border-transparent bg-[var(--accent)]" data-testid="settings-user-email-input" />
-                <Input value={newUser.password} onChange={(event) => setNewUser((current) => ({ ...current, password: event.target.value }))} placeholder="Temporary password" className="h-12 rounded-2xl border-transparent bg-[var(--accent)]" data-testid="settings-user-password-input" />
+              <div className="flex items-center gap-2">
+                <UsersIcon className="h-4 w-4 text-[var(--foreground)]" />
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Staff access management</p>
+              </div>
+              <p className="mt-2 text-sm text-[var(--foreground)]">Create and authorize Sarver team accounts. Each account is role-locked to their dashboard view.</p>
+              <form className="mt-5 grid gap-4" onSubmit={createUser} data-testid="settings-create-user-form">
+                <Input value={newUser.name} onChange={(event) => setNewUser((current) => ({ ...current, name: event.target.value }))} placeholder="Staff name" className="h-12 rounded-2xl border-[var(--form-card-border)] bg-[var(--chip-bg)]" data-testid="settings-user-name-input" />
+                <Input value={newUser.email} onChange={(event) => setNewUser((current) => ({ ...current, email: event.target.value }))} placeholder="Email" className="h-12 rounded-2xl border-[var(--form-card-border)] bg-[var(--chip-bg)]" data-testid="settings-user-email-input" />
+                <Input value={newUser.password} onChange={(event) => setNewUser((current) => ({ ...current, password: event.target.value }))} placeholder="Temporary password" className="h-12 rounded-2xl border-[var(--form-card-border)] bg-[var(--chip-bg)]" data-testid="settings-user-password-input" />
                 <div className="grid gap-4 md:grid-cols-2">
-                  <select value={newUser.role} onChange={(event) => setNewUser((current) => ({ ...current, role: event.target.value, title: event.target.value === "owner" ? "Owner" : current.title }))} className="glass-dropdown h-12 rounded-2xl border border-transparent bg-[var(--accent)] px-4 text-sm text-[var(--foreground)]" data-testid="settings-user-role-select">
+                  <select value={newUser.role} onChange={(event) => setNewUser((current) => ({ ...current, role: event.target.value, title: event.target.value === "owner" ? "Owner" : current.title }))} className="glass-dropdown h-12 rounded-2xl border border-[var(--form-card-border)] bg-[var(--chip-bg)] px-4 text-sm text-[var(--foreground)]" data-testid="settings-user-role-select">
                     <option value="management">Admin</option>
                     <option value="owner">Owner</option>
                   </select>
-                  <select value={newUser.title} onChange={(event) => setNewUser((current) => ({ ...current, title: event.target.value }))} className="glass-dropdown h-12 rounded-2xl border border-transparent bg-[var(--accent)] px-4 text-sm text-[var(--foreground)]" data-testid="settings-user-title-select">
+                  <select value={newUser.title} onChange={(event) => setNewUser((current) => ({ ...current, title: event.target.value }))} className="glass-dropdown h-12 rounded-2xl border border-[var(--form-card-border)] bg-[var(--chip-bg)] px-4 text-sm text-[var(--foreground)]" data-testid="settings-user-title-select">
                     {STAFF_TITLES.filter((title) => newUser.role === "owner" ? title === "Owner" : title !== "Owner").map((title) => <option key={title} value={title}>{title}</option>)}
                   </select>
                 </div>
-                <label className="flex items-center gap-3 rounded-2xl bg-[var(--accent)] px-4 py-3 text-sm text-[var(--foreground)]" data-testid="settings-user-active-toggle">
+                <label className="flex items-center gap-3 rounded-2xl bg-[var(--chip-bg)] px-4 py-3 text-sm text-[var(--foreground)]" data-testid="settings-user-active-toggle">
                   <input type="checkbox" checked={newUser.is_active} onChange={(event) => setNewUser((current) => ({ ...current, is_active: event.target.checked }))} />
                   Authorize immediately
                 </label>
-                <Button type="submit" disabled={creatingUser} className="h-12 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="settings-create-user-button">{creatingUser ? "Creating account..." : "Create staff account"}</Button>
+                <Button type="submit" disabled={creatingUser} className="h-12 rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid="settings-create-user-button">{creatingUser ? "Creating account..." : "Create staff account"}</Button>
               </form>
             </div>
 
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Current staff access</p>
-              <div className="mt-6 space-y-3">
+              <div className="mt-5 space-y-3">
                 {users.map((user) => (
-                  <div key={user.id} className="rounded-[24px] border border-border bg-[var(--accent)] p-4" data-testid={`settings-user-row-${user.id}`}>
+                  <div key={user.id} className="rounded-[20px] border border-[var(--form-card-border)] bg-[var(--form-card-bg)] p-4" data-testid={`settings-user-row-${user.id}`}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-[var(--foreground)]">{user.name}</p>
@@ -337,8 +249,8 @@ export default function SettingsPage() {
                       <Badge className={`border-0 px-3 py-1 ${user.is_active ? "bg-emerald-500/15 text-emerald-600" : "bg-red-500/15 text-red-500"}`}>{user.is_active ? "authorized" : "inactive"}</Badge>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <Button type="button" variant="outline" onClick={() => toggleUserStatus(user.id, !user.is_active)} className="h-10 rounded-2xl border-border bg-[var(--card)] text-[var(--foreground)] hover:bg-[var(--accent)]" data-testid={`settings-user-status-button-${user.id}`}>{user.is_active ? "Deactivate" : "Authorize"}</Button>
-                      <Button type="button" variant="outline" onClick={() => resetUserPassword(user.id, user.name)} className="h-10 rounded-2xl border-border bg-[var(--card)] text-[var(--foreground)] hover:bg-[var(--accent)]" data-testid={`settings-user-reset-pw-${user.id}`}>Reset password</Button>
+                      <Button type="button" variant="outline" onClick={() => toggleUserStatus(user.id, !user.is_active)} className="h-10 rounded-2xl border-[var(--form-card-border)] bg-[var(--card)] text-[var(--foreground)] hover:bg-[var(--chip-bg)]" data-testid={`settings-user-status-button-${user.id}`}>{user.is_active ? "Deactivate" : "Authorize"}</Button>
+                      <Button type="button" variant="outline" onClick={() => resetUserPassword(user.id, user.name)} className="h-10 rounded-2xl border-[var(--form-card-border)] bg-[var(--card)] text-[var(--foreground)] hover:bg-[var(--chip-bg)]" data-testid={`settings-user-reset-pw-${user.id}`}>Reset password</Button>
                     </div>
                     {tempPassword && tempPassword.user_email === user.email && (
                       <div className="mt-3 rounded-2xl border p-3" style={{ backgroundColor: "var(--status-watch-bg)", borderColor: "var(--status-watch-border)" }} data-testid={`settings-temp-pw-${user.id}`}>
@@ -353,6 +265,119 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// ── Workflow Guide Cards ────────────────────────────────────────────────
+const WORKFLOW_GUIDES = [
+  {
+    id: "onboarding",
+    title: "New Staff Onboarding",
+    summary: "How to create accounts, set roles, and get a new team member into the system.",
+    steps: [
+      { label: "Create Account", detail: "Navigate to Settings > Staff Access Management. Enter the team member's name, email, and a temporary password. Select their role (Admin or Owner) and title (GM, PM, AM, Supervisor)." },
+      { label: "Authorize Access", detail: "Check 'Authorize immediately' to give instant access, or leave unchecked to activate later. The new user can log in at /login with their temp credentials." },
+      { label: "Set Division", detail: "Production Managers should be assigned to a division. This controls which crew assignments and reviews they see by default." },
+      { label: "First Login", detail: "The new user logs in, gets routed to their role-specific dashboard. They should change their password in Settings > Account Security immediately." },
+    ],
+  },
+  {
+    id: "job-allocation",
+    title: "Job Creation & Crew Allocation",
+    summary: "Account Managers create jobs, PMs assign crews via the daily assignment board.",
+    steps: [
+      { label: "Create Job (AM)", detail: "Account Managers navigate to QJA (Quality Job Assignments) and create a new job with property name, address, service type, division, and truck number." },
+      { label: "Assign Crew (PM)", detail: "Production Managers open Crew Assignments and drag jobs onto crew columns for each day of the week. Use 'Pre-load week forecast' to auto-assign based on division and truck matching." },
+      { label: "Crew Receives Work", detail: "When a crew leader opens their QR portal (/crew/{code}), they see jobs assigned to their truck number. They capture photos and submit quality proof sets." },
+      { label: "Review Cycle", detail: "Submitted work enters the Review Queue for management scoring. Rapid Review (mobile swipe) handles high-volume QA. Detailed management reviews score by rubric category." },
+    ],
+  },
+  {
+    id: "rapid-review",
+    title: "Rapid Review (Mobile Swipe QA)",
+    summary: "Fast-track quality review from your phone using swipe gestures.",
+    steps: [
+      { label: "Access", detail: "Scan the QR code on the Overview dashboard or navigate to the Rapid Review link. Works best on mobile — optimized for one-handed swipe operation." },
+      { label: "Swipe Right", detail: "Standard pass — the work meets quality expectations. No comment required." },
+      { label: "Swipe Left", detail: "Fail — work does not meet standards. A comment is required explaining the deficiency. This triggers coaching recommendations." },
+      { label: "Swipe Up", detail: "Exemplary — work exceeds expectations. A comment is required noting what was exceptional. This contributes positive data to crew performance metrics." },
+      { label: "Speed Alerts", detail: "Reviews under 4 seconds are flagged as 'fast swipes.' Three or more fast swipes in a session triggers an Owner notification to ensure review integrity." },
+    ],
+  },
+  {
+    id: "incident-reporting",
+    title: "Emergency Incident Reporting",
+    summary: "When accidents or property damage occur, crews file an emergency report that bypasses photo requirements.",
+    steps: [
+      { label: "Crew Files Report", detail: "In the Crew QR app, toggle 'Emergency: Incident/Accident' on. This removes the 3-photo minimum requirement. Describe the incident in the notes field and attach any available photos." },
+      { label: "Dashboard Alert", detail: "A red-flashing alert appears on the Overview dashboard for all Supervisors, PMs, GMs, and the Owner. Click to see the full incident details." },
+      { label: "Acknowledge", detail: "A manager reviews the incident, takes action (client notification, crew coaching), and clicks 'Acknowledge' to clear the alert. Dismissed incidents remain in the submission history." },
+    ],
+  },
+  {
+    id: "coaching-loop",
+    title: "Closed-Loop Coaching",
+    summary: "Crews flagged as repeat offenders receive auto-generated training based on their weakest rubric areas.",
+    steps: [
+      { label: "Repeat Offender Detection", detail: "The system monitors flagged issues per crew over a rolling window. Crews exceeding thresholds (3 = Warning, 5 = Critical) are surfaced on the Repeat Offenders page." },
+      { label: "Auto-Generate Coaching", detail: "Click 'Auto-generate coaching sessions' on the Repeat Offenders page. The system creates targeted training sessions loaded with division-relevant standards." },
+      { label: "Crew Completes Training", detail: "Crew leaders and members access training sessions via their portal. Each session includes a quiz on the relevant standards." },
+      { label: "Loop Closure", detail: "When coaching is assigned AND training is completed, the coaching loop status moves from 'Open' to 'Closed.' This is tracked on the Overview dashboard widget." },
+    ],
+  },
+  {
+    id: "client-report",
+    title: "Client Quality Reports",
+    summary: "Generate professional quality reports for client-facing presentations.",
+    steps: [
+      { label: "Navigate", detail: "Open Client Report from the sidebar. Select a job using the search dropdown — it filters as you type and shows glass-effect suggestions." },
+      { label: "Set Timeframe", detail: "Choose Monthly, Quarterly, or Annual to control the reporting period. Data aggregates across all submissions for the selected job and timeframe." },
+      { label: "Review Metrics", detail: "The report shows average scores, photo count, crew performance, and quality trends over the selected period." },
+      { label: "Export PDF", detail: "Click 'Download PDF' to generate a professional client-ready report document with all metrics and photo references." },
+    ],
+  },
+];
+
+function WorkflowGuides() {
+  const [expanded, setExpanded] = useState(null);
+
+  return (
+    <div className="mt-4 space-y-2" data-testid="workflow-guides-list">
+      {WORKFLOW_GUIDES.map((guide) => (
+        <div key={guide.id} className="rounded-[16px] border border-[var(--form-card-border)] bg-[var(--form-card-bg)] transition-shadow hover:shadow-sm" data-testid={`workflow-guide-${guide.id}`}>
+          <button
+            type="button"
+            onClick={() => setExpanded(expanded === guide.id ? null : guide.id)}
+            className="flex w-full items-center justify-between gap-3 p-4 text-left"
+            data-testid={`workflow-guide-toggle-${guide.id}`}
+          >
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[var(--foreground)]">{guide.title}</p>
+              <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">{guide.summary}</p>
+            </div>
+            {expanded === guide.id
+              ? <ChevronDown className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" />
+              : <ChevronRight className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" />
+            }
+          </button>
+          {expanded === guide.id && (
+            <div className="border-t border-[var(--form-card-border)] px-4 pb-4 pt-3" data-testid={`workflow-guide-content-${guide.id}`}>
+              <div className="space-y-3">
+                {guide.steps.map((step, idx) => (
+                  <div key={idx} className="flex gap-3">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--btn-accent)] text-[10px] font-bold text-white">{idx + 1}</div>
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--foreground)]">{step.label}</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-[var(--muted-foreground)]">{step.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

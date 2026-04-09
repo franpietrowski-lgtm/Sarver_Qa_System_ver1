@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChartColumn, ClipboardCheck, FileOutput, FileText, FolderInput, Grid3X3, LayoutDashboard, Radar, Settings, ShieldCheck, TrendingUp, Users } from "lucide-react";
+import { CalendarDays, ChartColumn, ClipboardCheck, FileOutput, FileText, FolderInput, Grid3X3, LayoutDashboard, Radar, Settings, ShieldCheck, TrendingUp, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ const navigationByRole = {
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { to: "/client-report", label: "Client Report", icon: FileText },
     { to: "/jobs", label: "QJA", icon: FolderInput },
+    { to: "/crew-assignments", label: "Crew Assignments", icon: CalendarDays },
     { to: "/team-members", label: "Team Members", icon: Users },
     { to: "/review", label: "Review Queue", icon: ClipboardCheck },
     { to: "/rubric-editor", label: "Rubric Matrices", icon: Grid3X3 },
@@ -24,6 +25,7 @@ const navigationByRole = {
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { to: "/client-report", label: "Client Report", icon: FileText },
     { to: "/owner", label: "Owner Review", icon: ShieldCheck },
+    { to: "/crew-assignments", label: "Crew Assignments", icon: CalendarDays },
     { to: "/team-members", label: "Team Members", icon: Users },
     { to: "/analytics", label: "Calibration", icon: ChartColumn },
     { to: "/reviewer-performance", label: "Reviewer Perf.", icon: TrendingUp },

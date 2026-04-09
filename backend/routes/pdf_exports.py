@@ -346,3 +346,159 @@ async def export_am_report_pdf(
     buf.seek(0)
     filename = f"SarverLandscape_ClientReport_{now.strftime('%Y%m%d')}.pdf"
     return StreamingResponse(buf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+
+@router.get("/exports/system-reference-pdf")
+async def system_reference_pdf(token: str = Query(None)):
+    """Generate a system reference PDF with architecture, storage, schema, and implementation details."""
+    from fpdf import FPDF
+
+    if token:
+        try:
+            deps.decode_jwt(token)
+        except Exception:
+            pass
+
+    now = datetime.now(timezone.utc)
+
+    pdf = FPDF(orientation="P", unit="mm", format="Letter")
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.add_page()
+
+    # Header
+    pdf.set_fill_color(36, 62, 54)
+    pdf.rect(0, 0, 220, 35, "F")
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_y(8)
+    pdf.cell(0, 10, "Sarver Landscape QA System", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 7, f"System Reference Document  |  Generated {now.strftime('%B %d, %Y')}", align="C", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_y(42)
+
+    def section_header(title):
+        pdf.set_font("Helvetica", "B", 13)
+        pdf.set_fill_color(237, 240, 231)
+        pdf.cell(0, 9, f"  {_safe(title)}", fill=True, new_x="LMARGIN", new_y="NEXT")
+        pdf.ln(3)
+
+    def body_text(text, bold=False):
+        pdf.set_font("Helvetica", "B" if bold else "", 9)
+        pdf.multi_cell(0, 5, _safe(text))
+        pdf.ln(1)
+
+    def bullet(text):
+        pdf.set_font("Helvetica", "", 9)
+        x = pdf.get_x()
+        pdf.cell(5, 5, chr(149))
+        pdf.multi_cell(175, 5, _safe(text))
+        pdf.set_x(x)
+
+    # Tech Stack
+    section_header("Technology Stack")
+    for label, value in [
+        ("Frontend", "React 18 + TailwindCSS + Shadcn/UI + Framer Motion"),
+        ("Backend", "Python FastAPI (modular routers in /routes/)"),
+        ("Database", "MongoDB (Motor async driver)"),
+        ("Storage", "Supabase Object Storage (Service Role architecture)"),
+        ("Auth", "JWT with role-based routing (bcrypt hashing)"),
+        ("PDF", "fpdf2 for client-facing report generation"),
+    ]:
+        body_text(f"{label}: {value}", bold=True)
+
+    # Storage Architecture
+    section_header("Supabase Storage Architecture")
+    body_text("All photo uploads are handled exclusively by the backend using the Supabase service role key.")
+    body_text("Storage path: {bucket}/sarver-landscape/submissions/{SubmissionID}/{captures|issues}/{file}")
+    body_text("Frontend never touches storage directly. Images are served via backend proxy routes.")
+
+    # Database Schema
+    section_header("Database Collections")
+    collections = [
+        ("users", "Staff accounts with role, title, division, hashed password"),
+        ("crew_access_links", "QR crew portals with code, label, division, truck, leader"),
+        ("crew_members", "Individual crew member registrations linked to parent crew"),
+        ("jobs", "Job records with property, address, service type, division, route"),
+        ("submissions", "Photo proof sets with GPS, photos, field reports, status"),
+        ("management_reviews", "Detailed rubric-scored reviews by category"),
+        ("rapid_reviews", "Swipe-based reviews (one per submission, unique index)"),
+        ("rubric_definitions", "33 active rubrics across 7 divisions with hard fail conditions"),
+        ("standards_library", "25 industry standards organized by category"),
+        ("training_sessions", "Crew training with quiz scores"),
+        ("equipment_logs", "Maintenance logs with red-tag notification system"),
+        ("notifications", "Role-targeted notification queue"),
+        ("incidents", "Emergency/accident reports with acknowledgment flow"),
+        ("crew_assignments", "Daily job-to-crew mapping (PM drag-drop board)"),
+    ]
+    for name, desc in collections:
+        bullet(f"{name}: {desc}")
+
+    pdf.add_page()
+
+    # Roles & Permissions
+    section_header("Roles & Permissions")
+    roles = [
+        ("Owner", "Full system access. Calibration heatmap, reviewer performance, exports, rubric editing."),
+        ("GM (General Manager)", "Dashboard overview, rapid review, incident acknowledgment."),
+        ("Production Manager", "Crew assignments, rapid review, submission review. Division-scoped."),
+        ("Account Manager", "Job creation, client reports, management reviews."),
+        ("Supervisor", "Rapid review, repeat offender tracking, standards oversight."),
+        ("Crew Leader", "QR portal: submit photos, log equipment, file incidents, view history."),
+        ("Crew Member", "Member portal: submit photos for assigned jobs."),
+    ]
+    for role, desc in roles:
+        body_text(f"{role}", bold=True)
+        body_text(f"  {desc}")
+
+    # Workflow Summary
+    section_header("Core Workflows")
+    workflows = [
+        "1. Account Manager creates job -> PM assigns crew via daily assignment board",
+        "2. Crew leader opens QR portal, captures 3+ photos per task, submits proof set",
+        "3. Submission enters Review Queue -> Rapid Review (mobile swipe) or Management Review (rubric scoring)",
+        "4. Scored submissions feed analytics: calibration heatmap, crew performance, repeat offender tracking",
+        "5. Repeat offenders trigger auto-coaching sessions pre-loaded with division standards",
+        "6. Emergency incidents bypass photo requirements, trigger red-flash dashboard alerts",
+        "7. Client quality reports aggregate scores and photos into professional PDF exports",
+    ]
+    for w in workflows:
+        bullet(w)
+
+    # Rubric System
+    section_header("Rubric Grading System")
+    body_text("33 rubric definitions across 7 divisions (Maintenance, Install, Tree, Enhancement, Irrigation, Snow/Ice, PHC).")
+    body_text("Each rubric has weighted categories (e.g., Continuity 25%, Depth Consistency 20%) scored 0-5.")
+    body_text("Hard fail conditions: 'no_image_captured' and 'improper_image_quality' on all rubrics.")
+    body_text("Rapid Review multipliers: Fail=0%, Concern=35%, Standard=72%, Exemplary=100%.")
+
+    # API Reference
+    section_header("Key API Endpoints")
+    endpoints = [
+        ("POST /api/auth/login", "JWT authentication"),
+        ("GET /api/rapid-reviews/queue", "Paginated unreviewed submission queue"),
+        ("POST /api/rapid-reviews", "Submit rapid review with rubric scoring"),
+        ("GET /api/crew-assignments/week", "Weekly crew assignment board"),
+        ("POST /api/crew-assignments/bulk", "Bulk job-to-crew assignment"),
+        ("GET /api/coaching/score-analysis", "Score-based coaching recommendations"),
+        ("GET /api/incidents/active", "Active emergency incidents"),
+        ("GET /api/reports/client-quality", "Client quality report data"),
+        ("GET /api/exports/am-report-pdf", "Client report PDF export"),
+    ]
+    for path, desc in endpoints:
+        bullet(f"{path} - {desc}")
+
+    # Footer
+    pdf.ln(10)
+    pdf.set_draw_color(36, 62, 54)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(3)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.cell(0, 5, "Confidential - Sarver Landscape Management Co. - Character, Quality, and Respect.", align="C")
+
+    buf = io.BytesIO()
+    pdf.output(buf)
+    buf.seek(0)
+    filename = f"SarverQA_SystemReference_{now.strftime('%Y%m%d')}.pdf"
+    return StreamingResponse(buf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{filename}"'})

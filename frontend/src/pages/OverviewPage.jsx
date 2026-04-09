@@ -341,12 +341,15 @@ export default function OverviewPage({ user }) {
 
         <div className="space-y-4">
           <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="overview-rapid-review-launch-card">
-            <CardContent className="flex items-center justify-between gap-4 p-5">
-              <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Rapid review</p>
-                <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[var(--foreground)]">Mobile swipe lane</h3>
-                <p className="mt-1 flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]">
-                  Scan or copy to open admin review on phone.
+            <CardContent className="p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Rapid review</p>
+              <h3 className="mt-1 font-[Outfit] text-lg font-bold text-[var(--foreground)]">Mobile swipe lane</h3>
+              <div className="mt-4 flex flex-col items-center gap-4">
+                <div className="rounded-[16px] bg-white p-3 shadow-sm" data-testid="overview-rapid-review-qr-card">
+                  <QRCodeSVG value={rapidReviewUrl} size={140} bgColor="#ffffff" fgColor="#000000" level="H" />
+                </div>
+                <p className="flex items-center gap-1.5 text-center text-xs text-[var(--muted-foreground)]">
+                  Scan QR to open rapid review on your phone. Swipe right to pass, left to fail, up for exemplary.
                   <HelpPopover title="Rapid review swipe controls" side="left">
                     <p className="mb-2"><strong>Swipe right</strong> — Standard pass</p>
                     <p className="mb-2"><strong>Swipe left</strong> — Fail (comment required)</p>
@@ -355,24 +358,19 @@ export default function OverviewPage({ user }) {
                     <p><strong>Concern</strong> — Marks the submission for manual rescore by a senior reviewer.</p>
                   </HelpPopover>
                 </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <div className="rounded-[14px] border border-border bg-[var(--accent)] p-2" data-testid="overview-rapid-review-qr-card">
-                  <QRCodeSVG value={rapidReviewUrl} size={72} bgColor="transparent" fgColor="#243e36" />
-                </div>
-                <div className="space-y-1.5">
-                  <Button asChild size="sm" className="h-8 w-full rounded-xl bg-[#243e36] text-xs hover:bg-[#1a2c26]" data-testid="overview-open-mobile-rapid-review-button">
-                    <Link to="/rapid-review/mobile"><Smartphone className="mr-1.5 h-3 w-3" />Open</Link>
+                <div className="flex w-full gap-2">
+                  <Button asChild size="sm" className="h-9 flex-1 rounded-xl bg-[var(--btn-accent)] text-xs hover:bg-[var(--btn-accent-hover)]" data-testid="overview-open-mobile-rapid-review-button">
+                    <Link to="/rapid-review/mobile"><Smartphone className="mr-1.5 h-3.5 w-3.5" />Open</Link>
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={copyRapidReviewLink} className="h-8 w-full rounded-xl border-[#243e36]/15 text-xs text-[var(--foreground)]" data-testid="overview-copy-rapid-review-link-button">
-                    <Copy className="mr-1.5 h-3 w-3" />Copy link
+                  <Button type="button" variant="outline" size="sm" onClick={copyRapidReviewLink} className="h-9 flex-1 rounded-xl border-[var(--form-card-border)] text-xs text-[var(--foreground)]" data-testid="overview-copy-rapid-review-link-button">
+                    <Copy className="mr-1.5 h-3.5 w-3.5" />Copy link
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-[24px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="overview-lifecycle-card">
+          <Card className="rounded-[24px] border-border/80 bg-[var(--btn-accent)] text-white shadow-sm" data-testid="overview-lifecycle-card">
             <CardContent className="p-5">
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Workflow lifecycle</p>
               <h3 className="mt-1 font-[Outfit] text-lg font-bold">Submission states</h3>

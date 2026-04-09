@@ -26,6 +26,7 @@ import TeamMembersPage from "@/pages/TeamMembersPage";
 import ClientReportPage from "@/pages/ClientReportPage";
 import CrewMemberRegisterPage from "@/pages/CrewMemberRegisterPage";
 import CrewMemberDashboard from "@/pages/CrewMemberDashboard";
+import CrewAssignmentPage from "@/pages/CrewAssignmentPage";
 
 
 function ProtectedRoute({ authState, allowedRoles, onLogout, shell = true, children }) {
@@ -128,6 +129,7 @@ function App() {
             <Route path="/reviewer-performance" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><ReviewerPerformancePage {...pageProps} /></ProtectedRoute>} />
             <Route path="/exports" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["owner"]}><ExportsPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/rubric-editor" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management", "owner"]}><RubricEditorPage {...pageProps} /></ProtectedRoute>} />
+            <Route path="/crew-assignments" element={<ProtectedRoute authState={authState} onLogout={handleLogout} allowedRoles={["management", "owner"]}><CrewAssignmentPage {...pageProps} /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute authState={authState} onLogout={handleLogout}><SettingsPage {...pageProps} /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
