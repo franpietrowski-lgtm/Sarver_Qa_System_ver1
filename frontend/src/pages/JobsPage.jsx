@@ -204,14 +204,14 @@ export default function JobsPage() {
             <div className="mt-5 rounded-[24px] border border-dashed border-[#cdd3c8] bg-[#edf0e7] p-5" data-testid="jobs-import-dropzone">
               <div className="flex items-center gap-3 text-[#243e36]"><FileSpreadsheet className="h-5 w-5" /><p className="text-sm font-semibold">Expected columns: Job ID, Job Name, Property Name, Address, Service Type, Scheduled Date, Division, Truck Number, Route.</p></div>
               <Input type="file" accept=".csv" onChange={(event) => setCsvFile(event.target.files?.[0] || null)} className="mt-4 h-12 rounded-2xl border-transparent bg-white" data-testid="jobs-csv-file-input" />
-              <Button onClick={handleImport} disabled={importing} className="mt-4 h-12 w-full rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="jobs-csv-import-button">
+              <Button onClick={handleImport} disabled={importing} className="mt-4 h-12 w-full rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid="jobs-csv-import-button">
                 <UploadCloud className="mr-2 h-4 w-4" />{importing ? "Importing jobs..." : "Import CSV jobs"}
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="jobs-create-crew-link-card">
+        <Card className="rounded-[32px] border-border/80 bg-[var(--btn-accent)] text-white shadow-sm" data-testid="jobs-create-crew-link-card">
           <CardContent className="p-6 lg:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Crew QR control</p>
             <h2 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight lg:text-4xl">Create or update QR entries for field access.</h2>
@@ -292,7 +292,7 @@ export default function JobsPage() {
                   <QRCodeSVG value={crewUrl} size={128} includeMargin data-testid={`crew-qr-svg-${link.code}`} />
                 </div>
                 <Input value={crewUrl} readOnly className="mt-4 h-10 rounded-2xl border-transparent bg-white text-xs" data-testid={`crew-qr-url-${link.code}`} />
-                <Button type="button" onClick={() => window.open(crewUrl, "_blank", "noopener,noreferrer")} className="mt-3 h-10 w-full rounded-2xl bg-[#243e36] text-sm hover:bg-[#1a2c26]" data-testid={`crew-qr-open-button-${link.code}`}>Open crew portal</Button>
+                <Button type="button" onClick={() => window.open(crewUrl, "_blank", "noopener,noreferrer")} className="mt-3 h-10 w-full rounded-2xl bg-[var(--btn-accent)] text-sm hover:bg-[var(--btn-accent-hover)]" data-testid={`crew-qr-open-button-${link.code}`}>Open crew portal</Button>
                 <Button type="button" variant="outline" onClick={() => handleToggleCrewLink(link.id, false)} className="mt-2 h-10 w-full rounded-2xl border-[#243e36]/15 bg-white text-sm text-[#243e36] hover:bg-[#edf0e7]" data-testid={`crew-qr-deactivate-button-${link.code}`}>Remove from active</Button>
               </div>
             );
@@ -326,7 +326,7 @@ export default function JobsPage() {
                   </p>
                 )}
                 <div className="mt-4 flex gap-2">
-                  <Button type="button" onClick={() => handleToggleCrewLink(link.id, true)} className="h-10 flex-1 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid={`inactive-crew-reactivate-button-${link.code}`}>Reactivate</Button>
+                  <Button type="button" onClick={() => handleToggleCrewLink(link.id, true)} className="h-10 flex-1 rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid={`inactive-crew-reactivate-button-${link.code}`}>Reactivate</Button>
                   <Button type="button" variant="outline" onClick={() => handleDeleteCrewLink(link.id)} className="h-10 rounded-2xl border-red-200 text-red-600 hover:bg-red-50" data-testid={`inactive-crew-delete-button-${link.code}`}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>

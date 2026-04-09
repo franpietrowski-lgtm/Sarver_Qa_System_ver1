@@ -91,7 +91,7 @@ function StandardDetailPopup({ item, onClose, onEdit, onDelete }) {
           {item.shoutout && <p className="mt-3 text-sm text-[var(--muted-foreground)]">Shoutout: {item.shoutout}</p>}
         </div>
         <div className="flex shrink-0 gap-2 border-t border-border/50 p-4">
-          <Button type="button" onClick={() => { onEdit(item); onClose(); }} className="h-10 flex-1 rounded-2xl bg-[#243e36] text-white hover:bg-[#1a2c26]" data-testid="standard-detail-edit-btn"><Pencil className="mr-2 h-4 w-4" />Edit</Button>
+          <Button type="button" onClick={() => { onEdit(item); onClose(); }} className="h-10 flex-1 rounded-2xl bg-[var(--btn-accent)] text-white hover:bg-[var(--btn-accent-hover)]" data-testid="standard-detail-edit-btn"><Pencil className="mr-2 h-4 w-4" />Edit</Button>
           {confirming ? (
             <Button type="button" onClick={() => { onDelete(item.id); onClose(); }} className="h-10 flex-1 rounded-2xl bg-red-600 text-white hover:bg-red-700" data-testid="standard-detail-confirm-delete-btn"><Trash2 className="mr-2 h-4 w-4" />Confirm delete</Button>
           ) : (
@@ -311,7 +311,7 @@ export default function StandardsLibraryPage() {
             <p className="mt-3 text-sm text-[var(--muted-foreground)]" data-testid="standards-total-count">{pagination.total} standards in the current view.</p>
           </CardContent>
         </Card>
-        <Card className="rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="standards-training-session-card">
+        <Card className="rounded-[32px] border-border/80 bg-[var(--btn-accent)] text-white shadow-sm" data-testid="standards-training-session-card">
           <CardContent className="p-6 lg:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Training Mode launch</p>
             <h2 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight lg:text-4xl">Generate a no-login crew session from the library.</h2>
@@ -398,7 +398,7 @@ export default function StandardsLibraryPage() {
                 <div className="rounded-[20px] bg-[#f6f6f2] p-4">
                   <p className="text-sm font-semibold text-[#243e36]">Division targets</p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {DIVISIONS.map((item) => <button key={item} type="button" onClick={() => toggleDivision(item)} className={`rounded-full px-3 py-1.5 text-sm font-semibold ${form.division_targets.includes(item) ? "bg-[#243e36] text-white" : "bg-white text-[#243e36]"}`} data-testid={`standards-division-chip-${item.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{item}</button>)}
+                    {DIVISIONS.map((item) => <button key={item} type="button" onClick={() => toggleDivision(item)} className={`rounded-full px-3 py-1.5 text-sm font-semibold ${form.division_targets.includes(item) ? "bg-[var(--btn-accent)] text-white" : "bg-[var(--form-card-bg)] text-[var(--foreground)]"}`} data-testid={`standards-division-chip-${item.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>{item}</button>)}
                   </div>
                 </div>
                 <Textarea value={form.checklistText} onChange={(event) => setForm((current) => ({ ...current, checklistText: event.target.value }))} placeholder="Checklist items, one per line" className="min-h-[90px] rounded-2xl border-transparent bg-[#edf0e7]" data-testid="standards-checklist-input" />
@@ -418,7 +418,7 @@ export default function StandardsLibraryPage() {
                   <div><p className="text-sm font-semibold text-[#243e36]">Training enabled</p><p className="text-xs text-[var(--muted-foreground)]">Allow this standard to appear in training sessions.</p></div>
                   <Switch checked={form.training_enabled} onCheckedChange={(value) => setForm((current) => ({ ...current, training_enabled: value }))} data-testid="standards-training-enabled-switch" />
                 </div>
-                <Button type="submit" disabled={creating} className="h-11 w-full rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="standards-save-button">{creating ? "Saving..." : editingId ? "Update standard" : "Create standard"}</Button>
+                <Button type="submit" disabled={creating} className="h-11 w-full rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid="standards-save-button">{creating ? "Saving..." : editingId ? "Update standard" : "Create standard"}</Button>
               </form>
             </ToggleSection>
           </CardContent>

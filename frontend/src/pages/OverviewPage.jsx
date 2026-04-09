@@ -44,6 +44,7 @@ export default function OverviewPage({ user }) {
   const [digest, setDigest] = useState(null);
   const [onboarding, setOnboarding] = useState(null);
   const [coachingLoop, setCoachingLoop] = useState(null);
+  const [scoreAnalysis, setScoreAnalysis] = useState(null);
   const [incidents, setIncidents] = useState([]);
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [hoveredIncident, setHoveredIncident] = useState(null);
@@ -90,6 +91,7 @@ export default function OverviewPage({ user }) {
       authGet("/metrics/weekly-digest").then(setDigest).catch(() => {});
       authGet("/onboarding/progress?division=all").then(setOnboarding).catch(() => {});
       authGet("/coaching/loop-report?division=all").then(setCoachingLoop).catch(() => {});
+      authGet("/coaching/score-analysis?window_days=90").then(setScoreAnalysis).catch(() => {});
       authGet("/incidents/active").then(d => setIncidents(d?.incidents || [])).catch(() => {});
     };
     load();
@@ -145,8 +147,8 @@ export default function OverviewPage({ user }) {
         <CardContent className="grid gap-4 p-5 lg:grid-cols-[1.3fr_0.7fr] lg:p-6">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]" data-testid="overview-kicker-text">Operations pulse</p>
-            <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)] lg:text-4xl" data-testid="overview-title">Crews fast. Labels consistent. Data clean.</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--muted-foreground)]" data-testid="overview-description">Capture volume, review queues, storage status, and export momentum at a glance.</p>
+            <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)] lg:text-4xl" data-testid="overview-title">Character, quality, respect — in every proof set.</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--muted-foreground)]" data-testid="overview-description">Live field capture, review velocity, crew performance, and export readiness for every crew, every site.</p>
           </div>
           <div className="grid gap-3 rounded-[20px] border border-border bg-[var(--accent)] p-4" data-testid="overview-workflow-health-card">
             <div>
@@ -372,8 +374,8 @@ export default function OverviewPage({ user }) {
 
           <Card className="rounded-[24px] border-border/80 bg-[var(--btn-accent)] text-white shadow-sm" data-testid="overview-lifecycle-card">
             <CardContent className="p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Workflow lifecycle</p>
-              <h3 className="mt-1 font-[Outfit] text-lg font-bold">Submission states</h3>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/70">Workflow lifecycle</p>
+              <h3 className="mt-1 font-[Outfit] text-lg font-bold">Proof set journey</h3>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {(isOwnerOrGM
                   ? ["Draft", "Submitted", "Pending Match", "Ready for Review", "Mgmt Reviewed", "Owner Reviewed", "Finalized", "Export Ready", "Exported"]
@@ -865,6 +867,39 @@ export default function OverviewPage({ user }) {
               {coachingLoop.report.length === 0 && (
                 <p className="text-center text-xs text-[var(--muted-foreground)] py-4">No repeat offenders detected in the last 180 days.</p>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Score-Based Coaching Analysis */}
+        {scoreAnalysis && scoreAnalysis.crews && scoreAnalysis.crews.length > 0 && user?.title !== "Account Manager" && (
+          <Card className="rounded-[24px] border-border/80 bg-[var(--card)] shadow-sm" data-testid="widget-score-coaching">
+            <CardContent className="p-4 sm:p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <Target className="h-5 w-5 text-[var(--foreground)]" />
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Score-Based Coaching</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">90-day crew performance by task — weakest areas surface first</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {scoreAnalysis.crews.map((crew) => (
+                  <div key={crew.crew_code} className="flex items-center gap-3 rounded-[14px] border border-[var(--form-card-border)] bg-[var(--form-card-bg)] p-3" data-testid={`score-crew-${crew.crew_code}`}>
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${crew.coaching_priority === "high" ? "bg-red-500" : crew.coaching_priority === "medium" ? "bg-amber-500" : "bg-emerald-500"}`}>
+                      {Math.round(crew.overall_avg_score)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[var(--foreground)]">{crew.crew_label}</p>
+                      <p className="truncate text-[11px] text-[var(--muted-foreground)]">
+                        {crew.division} · {crew.total_reviews} reviews · {crew.weak_tasks.length > 0 ? `Weak: ${crew.weak_tasks.map(t => t.task).join(", ")}` : "All tasks on track"}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${crew.coaching_priority === "high" ? "bg-red-500/15 text-red-500" : crew.coaching_priority === "medium" ? "bg-amber-500/15 text-amber-500" : "bg-emerald-500/15 text-emerald-500"}`}>
+                      {crew.coaching_priority}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}

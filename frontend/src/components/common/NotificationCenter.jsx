@@ -58,7 +58,7 @@ export default function NotificationCenter({ user }) {
                     <Badge className="border-0 bg-[var(--card)] px-3 py-1 text-[var(--foreground)]">{item.status}</Badge>
                   </div>
                   {item.status === "unread" && (
-                    <Button type="button" onClick={() => markRead(item.id)} className="mt-3 h-10 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid={`notification-read-button-${item.id}`}>
+                    <Button type="button" onClick={() => markRead(item.id)} className="mt-3 h-10 rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid={`notification-read-button-${item.id}`}>
                       <CheckCircle2 className="mr-2 h-4 w-4" />Mark read
                     </Button>
                   )}

@@ -131,8 +131,8 @@ export default function ReviewPage() {
         <CardContent className="p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Management review queue</p>
-              <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)]">Pending proof sets</h2>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--muted-foreground)]">Quality review queue</p>
+              <h2 className="mt-2 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight text-[var(--foreground)]">Score every proof set with care</h2>
             </div>
             <ClipboardList className="h-6 w-6 text-[var(--foreground)]" />
           </div>

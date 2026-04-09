@@ -83,7 +83,7 @@ export default function CrewMemberRegisterPage() {
     return (
       <div className="min-h-screen bg-[linear-gradient(180deg,_#f6f6f2_0%,_#edf0e7_100%)] px-4 py-8">
         <div className="mx-auto max-w-md space-y-5">
-          <Card className="overflow-hidden rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="member-register-success-card">
+          <Card className="overflow-hidden rounded-[32px] border-border/80 bg-[var(--btn-accent)] text-white shadow-sm" data-testid="member-register-success-card">
             <CardContent className="p-6 text-center">
               <CheckCircle2 className="mx-auto h-12 w-12 text-[#d8f3dc]" />
               <h1 className="mt-4 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight" data-testid="member-register-success-title">You're all set, {registered.name}!</h1>
@@ -104,7 +104,7 @@ export default function CrewMemberRegisterPage() {
                   size={220}
                   level="H"
                   bgColor="#ffffff"
-                  fgColor="#243e36"
+                  fgColor="currentColor"
                   data-testid="member-qr-svg"
                 />
               </div>
@@ -114,7 +114,7 @@ export default function CrewMemberRegisterPage() {
               <Button
                 onClick={copyLink}
                 variant="outline"
-                className="mt-5 h-12 w-full rounded-2xl border-[#243e36]/15 bg-white text-[#243e36] hover:bg-[#edf0e7]"
+                className="mt-5 h-12 w-full rounded-2xl border-[var(--form-card-border)] bg-[var(--form-card-bg)] text-[var(--foreground)] hover:bg-[var(--chip-bg)]"
                 data-testid="member-copy-link-button"
               >
                 <Copy className="mr-2 h-4 w-4" /> Copy dashboard link
@@ -128,7 +128,7 @@ export default function CrewMemberRegisterPage() {
 
           <Button
             onClick={() => window.open(dashboardUrl, "_self")}
-            className="h-14 w-full rounded-[22px] bg-[#243e36] text-base font-semibold text-white hover:bg-[#1a2c26]"
+            className="h-14 w-full rounded-[22px] bg-[var(--btn-accent)] text-base font-semibold text-white hover:bg-[var(--btn-accent-hover)]"
             data-testid="member-go-to-dashboard-button"
           >
             Open my dashboard
@@ -141,7 +141,7 @@ export default function CrewMemberRegisterPage() {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,_#f6f6f2_0%,_#edf0e7_100%)] px-4 py-8">
       <div className="mx-auto max-w-md space-y-5">
-        <Card className="overflow-hidden rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="member-register-header-card">
+        <Card className="overflow-hidden rounded-[32px] border-border/80 bg-[var(--btn-accent)] text-white shadow-sm" data-testid="member-register-header-card">
           <CardContent className="p-6">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]" data-testid="member-register-kicker">Sarver Landscape</p>
             <h1 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight" data-testid="member-register-title">Crew Member Registration</h1>
@@ -188,7 +188,7 @@ export default function CrewMemberRegisterPage() {
               <Button
                 type="submit"
                 disabled={submitting || !name.trim()}
-                className="h-14 w-full rounded-[22px] bg-[#243e36] text-base font-semibold text-white hover:bg-[#1a2c26]"
+                className="h-14 w-full rounded-[22px] bg-[var(--btn-accent)] text-base font-semibold text-white hover:bg-[var(--btn-accent-hover)]"
                 data-testid="member-register-submit-button"
               >
                 <UserPlus className="mr-2 h-5 w-5" />

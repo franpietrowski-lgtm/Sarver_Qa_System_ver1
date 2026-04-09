@@ -8,7 +8,7 @@ export function HelpPopover({ title, children, side = "bottom", align = "start",
         <span
           role="button"
           tabIndex={0}
-          className={`inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#243e36]/8 text-[#243e36] transition hover:bg-[#243e36]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#243e36]/30 ${className}`}
+          className={`inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[var(--btn-accent)]/8 text-[var(--foreground)] transition hover:bg-[var(--btn-accent)]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--btn-accent)]/30 ${className}`}
           data-testid="help-popover-trigger"
           aria-label={`Help: ${title}`}
         >

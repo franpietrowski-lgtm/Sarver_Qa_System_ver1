@@ -68,7 +68,7 @@ function HoverStats({ profileId }) {
             key={m}
             type="button"
             onClick={(e) => { e.stopPropagation(); setMonths(m); }}
-            className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition ${months === m ? "bg-[#243e36] text-white" : "bg-[var(--accent)] text-[var(--muted-foreground)] hover:bg-[var(--border)]"}`}
+            className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition ${months === m ? "bg-[var(--btn-accent)] text-white" : "bg-[var(--accent)] text-[var(--muted-foreground)] hover:bg-[var(--border)]"}`}
             data-testid={`timeline-btn-${m}m`}
           >
             {m}mo
@@ -274,7 +274,7 @@ function ProfileOverlay({ profile, onClose, onAvatarDone }) {
                 <div className="flex flex-wrap gap-1.5 pb-2" data-testid="profile-timeline-selector">
                   {TIMELINES.map((m) => (
                     <button key={m} type="button" onClick={() => setStatsMonths(m)}
-                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold transition ${statsMonths === m ? "bg-[#243e36] text-white" : "bg-[var(--accent)] text-[var(--muted-foreground)] hover:bg-[var(--border)]"}`}
+                      className={`rounded-full px-2.5 py-1 text-[10px] font-bold transition ${statsMonths === m ? "bg-[var(--btn-accent)] text-white" : "bg-[var(--accent)] text-[var(--muted-foreground)] hover:bg-[var(--border)]"}`}
                       data-testid={`profile-timeline-btn-${m}m`}
                     >
                       {m} mo
@@ -351,7 +351,7 @@ function BottomStatsPanel({ profile }) {
         <div className="flex gap-1" data-testid="bottom-stats-timeline">
           {TIMELINES.map(m => (
             <button key={m} type="button" onClick={() => setMonths(m)}
-              className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition ${months === m ? "bg-[#243e36] text-white" : "bg-[var(--accent)] text-[var(--muted-foreground)] hover:bg-[var(--border)]"}`}
+              className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition ${months === m ? "bg-[var(--btn-accent)] text-white" : "bg-[var(--accent)] text-[var(--muted-foreground)] hover:bg-[var(--border)]"}`}
               data-testid={`bottom-timeline-${m}m`}>{m}mo</button>
           ))}
         </div>

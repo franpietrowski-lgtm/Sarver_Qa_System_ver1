@@ -60,7 +60,7 @@ export default function AppShell({ user, onLogout, children }) {
               <p className="mt-2 text-sm text-[#41534a]" data-testid="shell-app-subtitle">Character, quality, and respect across crew capture, review, and automation readiness.</p>
             </div>
 
-            <div className="rounded-2xl border border-border bg-[#243e36] p-4 text-white shadow-sm" data-testid="shell-user-card">
+            <div className="rounded-2xl border border-border bg-[var(--btn-accent)] p-4 text-white shadow-sm" data-testid="shell-user-card">
               <p className="text-lg font-semibold" data-testid="shell-user-name">{user?.name}</p>
               <p className="text-sm text-white/70" data-testid="shell-user-title">{user?.title || user?.role}</p>
             </div>

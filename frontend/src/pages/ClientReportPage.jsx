@@ -190,7 +190,7 @@ export default function ClientReportPage({ user }) {
               onClick={() => setPeriod(p.value)}
               className={`rounded-xl px-4 py-2.5 text-xs font-bold transition ${
                 period === p.value
-                  ? "bg-[#243e36] text-white shadow-sm"
+                  ? "bg-[var(--btn-accent)] text-white shadow-sm"
                   : "text-[var(--muted-foreground)] hover:bg-[var(--accent)]"
               }`}
               data-testid={`client-report-period-${p.value}`}
@@ -204,7 +204,7 @@ export default function ClientReportPage({ user }) {
         <Button
           onClick={handleExportPdf}
           disabled={exporting || loading}
-          className="h-12 gap-2 rounded-2xl bg-[#243e36] px-5 text-sm font-bold text-white hover:bg-[#1a2c26]"
+          className="h-12 gap-2 rounded-2xl bg-[var(--btn-accent)] px-5 text-sm font-bold text-white hover:bg-[var(--btn-accent-hover)]"
           data-testid="client-report-export-pdf-btn"
         >
           <Download className="h-4 w-4" />
@@ -218,7 +218,7 @@ export default function ClientReportPage({ user }) {
           {PERIODS.find((p) => p.value === period)?.label || period}
         </Badge>
         {selectedJob && (
-          <Badge className="border-0 bg-[#243e36]/10 px-3 py-1 text-xs font-semibold text-[var(--foreground)]" data-testid="client-report-job-badge">
+          <Badge className="border-0 bg-[var(--btn-accent)]/10 px-3 py-1 text-xs font-semibold text-[var(--foreground)]" data-testid="client-report-job-badge">
             Job: {selectedJob.job_name || selectedJob.property_name}
           </Badge>
         )}

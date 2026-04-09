@@ -71,7 +71,7 @@ export default function GettingStartedPanel({ user }) {
         </button>
         <div className="flex items-center gap-1.5">
           <ChevronDown className={`h-4 w-4 text-[var(--muted-foreground)] transition-transform ${expanded ? "rotate-180" : ""}`} />
-          <button type="button" onClick={dismiss} className="rounded-full p-1 text-[var(--muted-foreground)] transition hover:bg-[#243e36]/10 hover:text-[#243e36]" data-testid="getting-started-dismiss" aria-label="Dismiss guide">
+          <button type="button" onClick={dismiss} className="rounded-full p-1 text-[var(--muted-foreground)] transition hover:bg-[var(--btn-accent)]/10 hover:text-[var(--foreground)]" data-testid="getting-started-dismiss" aria-label="Dismiss guide">
             <X className="h-4 w-4" />
           </button>
         </div>

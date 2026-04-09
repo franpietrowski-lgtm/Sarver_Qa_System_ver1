@@ -272,12 +272,12 @@ export default function CrewCapturePage() {
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,_#f6f6f2_0%,_#edf0e7_100%)] px-4 py-5 sm:px-6">
       <div className="mx-auto max-w-md space-y-5">
-        <Card className="overflow-hidden rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="crew-capture-header-card">
+        <Card className="overflow-hidden rounded-[32px] border-border/80 bg-[var(--btn-accent)] text-white shadow-sm" data-testid="crew-capture-header-card">
           <CardContent className="p-6">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]" data-testid="crew-capture-kicker">Sarver landscape field capture</p>
-            <h1 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight" data-testid="crew-capture-title">Capture work proof in one clean pass</h1>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/70" data-testid="crew-capture-kicker">Sarver landscape field capture</p>
+            <h1 className="mt-3 font-[Cabinet_Grotesk] text-4xl font-black tracking-tight" data-testid="crew-capture-title">Every proof set builds our reputation</h1>
             <p className="mt-3 flex items-center gap-1.5 text-sm text-white/80" data-testid="crew-capture-description">
-              Enter the job name, confirm the truck, add clear photos, and send the work set to review.
+              Name the job, confirm your truck, capture clear photos, and send to review. Character shows in every detail.
               <HelpPopover title="Crew submission workflow" side="bottom">
                 <p className="mb-2"><strong>Step-by-step:</strong></p>
                 <ol className="mb-2 list-inside list-decimal space-y-1 text-xs">
@@ -548,7 +548,7 @@ export default function CrewCapturePage() {
                     </div>
                     {gpsPolling && (
                       <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#dde4d6]" data-testid="crew-gps-progress-bar">
-                        <div className="h-full rounded-full bg-[#243e36]" style={{ animation: "gpsProgress 10s linear forwards" }} />
+                        <div className="h-full rounded-full bg-[var(--btn-accent)]" style={{ animation: "gpsProgress 10s linear forwards" }} />
                       </div>
                     )}
                   </div>
@@ -564,7 +564,7 @@ export default function CrewCapturePage() {
                     </div>
                   )}
 
-                  <Button type="submit" disabled={submitting || !gps} className={`h-14 w-full rounded-[22px] text-base font-semibold text-white ${incidentEnabled && incidentType ? "bg-red-600 hover:bg-red-700 animate-pulse" : "bg-[#243e36] hover:bg-[#1a2c26]"}`} data-testid="crew-submit-photos-button">
+                  <Button type="submit" disabled={submitting || !gps} className={`h-14 w-full rounded-[22px] text-base font-semibold text-white ${incidentEnabled && incidentType ? "bg-red-600 hover:bg-red-700 animate-pulse" : "bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]"}`} data-testid="crew-submit-photos-button">
                     {incidentEnabled && incidentType ? (
                       <><AlertTriangle className="mr-2 h-5 w-5" />{submitting ? "Filing emergency..." : "FILE EMERGENCY REPORT"}</>
                     ) : (
@@ -633,7 +633,7 @@ export default function CrewCapturePage() {
                           key={div}
                           type="button"
                           onClick={() => handleDivisionSwitch(div)}
-                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${currentDivision === div ? "bg-[#243e36] text-white" : "bg-white text-[#5c6d64] hover:bg-[#edf0e7]"}`}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${currentDivision === div ? "bg-[var(--btn-accent)] text-white" : "bg-[var(--form-card-bg)] text-[var(--muted-foreground)] hover:bg-[var(--chip-bg)]"}`}
                           data-testid={`crew-division-btn-${div.toLowerCase().replace(/\s+/g, "-")}`}
                         >
                           {div}
@@ -708,7 +708,7 @@ export default function CrewCapturePage() {
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => setEquipmentLog((c) => ({ ...c, post_photo: e.target.files?.[0] || null }))} data-testid="crew-equipment-post-photo-input" />
                     </label>
                   </div>
-                  <Button type="submit" disabled={equipmentSubmitting} className="h-14 w-full rounded-[22px] bg-[#243e36] text-base font-semibold text-white hover:bg-[#1a2c26]" data-testid="crew-equipment-submit-button">
+                  <Button type="submit" disabled={equipmentSubmitting} className="h-14 w-full rounded-[22px] bg-[var(--btn-accent)] text-base font-semibold text-white hover:bg-[var(--btn-accent-hover)]" data-testid="crew-equipment-submit-button">
                     {equipmentSubmitting ? "Submitting record..." : "Submit equipment record"}
                   </Button>
                 </form>

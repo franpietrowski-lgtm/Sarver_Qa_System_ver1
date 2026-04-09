@@ -423,7 +423,7 @@ export default function RapidReviewPage({ user }) {
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-center" data-testid="rapid-review-empty-state">
             <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/30">Queue clear</p>
-            <h2 className="mt-2 font-[Outfit] text-2xl font-semibold text-white/80">You&apos;re caught up.</h2>
+            <h2 className="mt-2 font-[Outfit] text-2xl font-semibold text-white/80">Every proof set reviewed — quality holds.</h2>
             <Button type="button" onClick={loadQueue} className="mt-4 rounded-full bg-white/10 text-sm text-white hover:bg-white/15" data-testid="rapid-review-refresh-button">Refresh queue</Button>
           </div>
         )}

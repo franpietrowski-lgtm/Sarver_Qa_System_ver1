@@ -100,7 +100,7 @@ export default function LoginPage({ onLogin, authUser }) {
               <button
                 type="button"
                 onClick={() => setMode("admin")}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition ${mode === "admin" ? "bg-[#243e36] text-white shadow-sm" : "text-[#5c6d64]"}`}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition ${mode === "admin" ? "bg-[var(--btn-accent)] text-white shadow-sm" : "text-[var(--muted-foreground)]"}`}
                 data-testid="login-mode-admin"
               >
                 <ShieldCheck className="h-4 w-4" />Admin
@@ -108,7 +108,7 @@ export default function LoginPage({ onLogin, authUser }) {
               <button
                 type="button"
                 onClick={() => setMode("crew")}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition ${mode === "crew" ? "bg-[#243e36] text-white shadow-sm" : "text-[#5c6d64]"}`}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition ${mode === "crew" ? "bg-[var(--btn-accent)] text-white shadow-sm" : "text-[var(--muted-foreground)]"}`}
                 data-testid="login-mode-crew"
               >
                 <Users className="h-4 w-4" />Crew
@@ -148,7 +148,7 @@ export default function LoginPage({ onLogin, authUser }) {
                       </div>
                     )}
                     <div className="mt-auto">
-                      <Button type="submit" disabled={loading} className="h-11 w-full rounded-xl bg-[#243e36] text-sm text-white hover:bg-[#1a2c26]" data-testid="login-submit-button">
+                      <Button type="submit" disabled={loading} className="h-11 w-full rounded-xl bg-[var(--btn-accent)] text-sm text-white hover:bg-[var(--btn-accent-hover)]" data-testid="login-submit-button">
                         {loading ? "Signing in..." : "Sign in"}
                       </Button>
                     </div>

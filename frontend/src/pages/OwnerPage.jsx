@@ -136,7 +136,7 @@ export default function OwnerPage() {
               </CardContent>
             </Card>
           )}
-          <Card className="rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="owner-summary-card">
+          <Card className="rounded-[32px] border-border/80 bg-[var(--btn-accent)] text-white shadow-sm" data-testid="owner-summary-card">
             <CardContent className="grid gap-4 p-8 md:grid-cols-3">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]">Submission</p>
@@ -227,7 +227,7 @@ export default function OwnerPage() {
                   </div>
                 </div>
 
-                <Button type="submit" disabled={saving} className="h-12 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="owner-submit-button"><ShieldCheck className="mr-2 h-4 w-4" />{saving ? "Saving owner review..." : "Finalize owner calibration"}</Button>
+                <Button type="submit" disabled={saving} className="h-12 rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid="owner-submit-button"><ShieldCheck className="mr-2 h-4 w-4" />{saving ? "Saving owner review..." : "Finalize owner calibration"}</Button>
               </form>
             </CardContent>
           </Card>

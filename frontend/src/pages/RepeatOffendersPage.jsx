@@ -77,7 +77,7 @@ function CrewCarousel({ entries, onCreateTraining }) {
             <div className="mt-3 flex flex-wrap gap-1.5">
               {Object.entries(entry.issue_types).map(([issue, count]) => <Badge key={issue} className="border-0 bg-white text-[10px] text-[#243e36]">{issue} · {count}</Badge>)}
             </div>
-            <Button onClick={() => onCreateTraining(entry)} className="mt-4 h-9 w-full rounded-xl bg-[#243e36] text-xs hover:bg-[#1a2c26]" data-testid={`repeat-offender-create-training-${entry.crew.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}>Create training session</Button>
+            <Button onClick={() => onCreateTraining(entry)} className="mt-4 h-9 w-full rounded-xl bg-[var(--btn-accent)] text-xs hover:bg-[var(--btn-accent-hover)]" data-testid={`repeat-offender-create-training-${entry.crew.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`}>Create training session</Button>
             <p className="mt-2 text-center text-[10px] text-[var(--muted-foreground)]">View generated session in Standards Library.</p>
           </div>
         ))}
@@ -168,7 +168,7 @@ export default function RepeatOffendersPage() {
                 <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">Days</label>
                 <Input type="number" min="7" max="365" value={windowDays} onChange={(event) => setWindowDays(Number(event.target.value) || 30)} className="h-10 w-28 rounded-xl border-transparent bg-white" data-testid="repeat-offenders-window-input" />
               </div>
-              <Button onClick={() => loadData(windowDays)} className="rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="repeat-offenders-refresh-button">Refresh</Button>
+              <Button onClick={() => loadData(windowDays)} className="rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid="repeat-offenders-refresh-button">Refresh</Button>
             </div>
           </div>
         </CardContent>

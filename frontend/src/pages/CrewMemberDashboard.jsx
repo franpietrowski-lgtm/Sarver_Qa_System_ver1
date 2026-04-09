@@ -221,7 +221,7 @@ export default function CrewMemberDashboard() {
     <div className="min-h-screen bg-[linear-gradient(180deg,_#f6f6f2_0%,_#edf0e7_100%)] px-4 py-5 sm:px-6">
       <div className="mx-auto max-w-md space-y-5">
         {/* Header */}
-        <Card className="overflow-hidden rounded-[32px] border-border/80 bg-[#243e36] text-white shadow-sm" data-testid="member-dashboard-header">
+        <Card className="overflow-hidden rounded-[32px] border-border/80 bg-[var(--btn-accent)] text-white shadow-sm" data-testid="member-dashboard-header">
           <CardContent className="p-6">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#d8f3dc]" data-testid="member-dashboard-kicker">Crew member</p>
             <h1 className="mt-3 font-[Cabinet_Grotesk] text-3xl font-black tracking-tight" data-testid="member-dashboard-name">{member.name}</h1>
@@ -353,7 +353,7 @@ export default function CrewMemberDashboard() {
                     )}
                   </div>
 
-                  <Button type="submit" disabled={submitting || !gps} className={`h-14 w-full rounded-[22px] text-base font-semibold text-white ${incidentEnabled && incidentType ? "bg-red-600 hover:bg-red-700 animate-pulse" : "bg-[#243e36] hover:bg-[#1a2c26]"}`} data-testid="member-submit-button">
+                  <Button type="submit" disabled={submitting || !gps} className={`h-14 w-full rounded-[22px] text-base font-semibold text-white ${incidentEnabled && incidentType ? "bg-red-600 hover:bg-red-700 animate-pulse" : "bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]"}`} data-testid="member-submit-button">
                     {incidentEnabled && incidentType ? (
                       <><AlertTriangle className="mr-2 h-5 w-5" />{submitting ? "Filing emergency..." : "FILE EMERGENCY REPORT"}</>
                     ) : (
@@ -438,7 +438,7 @@ export default function CrewMemberDashboard() {
                         ) : (
                           <Button
                             size="sm"
-                            className="rounded-2xl bg-[#243e36] text-white hover:bg-[#1a2c26]"
+                            className="rounded-2xl bg-[var(--btn-accent)] text-white hover:bg-[var(--btn-accent-hover)]"
                             onClick={() => window.open(`/training/${s.code}`, "_blank")}
                             data-testid={`member-training-start-${s.code}`}
                           >

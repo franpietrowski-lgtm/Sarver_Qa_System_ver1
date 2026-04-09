@@ -291,7 +291,7 @@ export default function RubricEditorPage({ user }) {
             </SelectContent>
           </Select>
           {isGmOrOwner && (
-            <Button type="button" onClick={startCreate} className="h-10 rounded-2xl bg-[#243e36] hover:bg-[#1a2e28]" data-testid="rubric-editor-create-button">
+            <Button type="button" onClick={startCreate} className="h-10 rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid="rubric-editor-create-button">
               <Plus className="mr-2 h-4 w-4" />New rubric
             </Button>
           )}

@@ -67,9 +67,9 @@ export default function ExportsPage() {
             <p className="mt-4 text-sm leading-6 text-[#5c6d64]">Full Dataset includes every review layer. Owner Gold includes only owner-approved calibration records.</p>
           </div>
           <div className="grid gap-3 rounded-[28px] border border-border bg-[#edf0e7] p-5">
-            <Button onClick={() => runExport("full", "jsonl")} disabled={running === "full-jsonl"} className="h-12 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="export-full-jsonl-button"><FileJson className="mr-2 h-4 w-4" />{running === "full-jsonl" ? "Building export..." : "Full Dataset · JSONL"}</Button>
+            <Button onClick={() => runExport("full", "jsonl")} disabled={running === "full-jsonl"} className="h-12 rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid="export-full-jsonl-button"><FileJson className="mr-2 h-4 w-4" />{running === "full-jsonl" ? "Building export..." : "Full Dataset · JSONL"}</Button>
             <Button onClick={() => runExport("full", "csv")} disabled={running === "full-csv"} className="h-12 rounded-2xl bg-white text-[#243e36] hover:bg-[#f6f6f2]" data-testid="export-full-csv-button"><FileSpreadsheet className="mr-2 h-4 w-4" />{running === "full-csv" ? "Building export..." : "Full Dataset · CSV"}</Button>
-            <Button onClick={() => runExport("owner_gold", "jsonl")} disabled={running === "owner_gold-jsonl"} className="h-12 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid="export-owner-jsonl-button"><FileJson className="mr-2 h-4 w-4" />{running === "owner_gold-jsonl" ? "Building export..." : "Owner Gold · JSONL"}</Button>
+            <Button onClick={() => runExport("owner_gold", "jsonl")} disabled={running === "owner_gold-jsonl"} className="h-12 rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid="export-owner-jsonl-button"><FileJson className="mr-2 h-4 w-4" />{running === "owner_gold-jsonl" ? "Building export..." : "Owner Gold · JSONL"}</Button>
             <Button onClick={() => runExport("owner_gold", "csv")} disabled={running === "owner_gold-csv"} className="h-12 rounded-2xl bg-white text-[#243e36] hover:bg-[#f6f6f2]" data-testid="export-owner-csv-button"><FileSpreadsheet className="mr-2 h-4 w-4" />{running === "owner_gold-csv" ? "Building export..." : "Owner Gold · CSV"}</Button>
           </div>
         </CardContent>
@@ -100,7 +100,7 @@ export default function ExportsPage() {
                   <p className="text-sm font-semibold text-[#243e36]" data-testid={`exports-row-title-${item.id}`}>{item.dataset_type} · {item.export_format.toUpperCase()}</p>
                   <p className="mt-1 text-sm text-[#5c6d64]" data-testid={`exports-row-meta-${item.id}`}>{item.row_count} rows · {item.created_at.slice(0, 19).replace("T", " ")}</p>
                 </div>
-                <Button type="button" onClick={() => downloadExport(item)} className="h-11 rounded-2xl bg-[#243e36] hover:bg-[#1a2c26]" data-testid={`exports-download-button-${item.id}`}><Download className="mr-2 h-4 w-4" />Download</Button>
+                <Button type="button" onClick={() => downloadExport(item)} className="h-11 rounded-2xl bg-[var(--btn-accent)] hover:bg-[var(--btn-accent-hover)]" data-testid={`exports-download-button-${item.id}`}><Download className="mr-2 h-4 w-4" />Download</Button>
               </div>
             ))}
             {exportsList.length === 0 && <div className="rounded-[24px] border border-border bg-[#f6f6f2] p-4 text-sm text-[#5c6d64]" data-testid="exports-empty-state">No exports have been generated on this page yet.</div>}
