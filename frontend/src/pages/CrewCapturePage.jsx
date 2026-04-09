@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, BookOpen, Camera, ChevronDown, ChevronUp, Copy, Crosshair, ExternalLink, MapPinned, Upload, UserPlus, Users, Wrench, X } from "lucide-react";
+import { AlertTriangle, BookOpen, Camera, ChevronDown, ChevronUp, ClipboardList, Copy, Crosshair, ExternalLink, MapPinned, Upload, UserPlus, Users, Wrench, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +80,8 @@ export default function CrewCapturePage() {
   const [activeDivision, setActiveDivision] = useState("");
   const [standards, setStandards] = useState([]);
   const [loadingStandards, setLoadingStandards] = useState(false);
+  const [crewHistory, setCrewHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const currentDivision = activeDivision || crewLink?.division || "Maintenance";
   const availableTasks = DIVISION_TASKS[currentDivision] || DIVISION_TASKS.Maintenance;
@@ -111,6 +113,16 @@ export default function CrewCapturePage() {
     publicGet(`/public/crew-member-stats/${code}`)
       .then((res) => setTeamMembers(res.members || []))
       .catch(() => {});
+  }, [code]);
+
+  // Load crew submission history
+  useEffect(() => {
+    if (!code) return;
+    setLoadingHistory(true);
+    publicGet(`/public/crew-submissions/${code}`)
+      .then((res) => setCrewHistory(res.submissions || []))
+      .catch(() => setCrewHistory([]))
+      .finally(() => setLoadingHistory(false));
   }, [code]);
 
   const stopGpsPolling = () => {
@@ -331,17 +343,25 @@ export default function CrewCapturePage() {
         )}
 
         {teamMembers.length > 0 && (
-          <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="crew-team-panel-card">
+          <Card className="rounded-[32px] border-border/80 bg-[var(--card,white)] shadow-sm" data-testid="crew-team-panel-card">
             <CardContent className="p-5">
               <button type="button" onClick={() => setTeamOpen((v) => !v)} className="flex w-full items-center justify-between gap-3" data-testid="crew-team-toggle">
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-[#243e36]" />
-                  <p className="text-sm font-semibold text-[#243e36]">My Team <span className="ml-1 text-xs font-normal text-[#5c6d64]">({teamMembers.length})</span></p>
+                  <Users className="h-4 w-4 text-[var(--foreground)]" />
+                  <p className="text-sm font-semibold text-[var(--foreground)]">My Team <span className="ml-1 text-xs font-normal text-[var(--muted-foreground)]">({teamMembers.length})</span></p>
                 </div>
-                {teamOpen ? <ChevronUp className="h-4 w-4 text-[#5c6d64]" /> : <ChevronDown className="h-4 w-4 text-[#5c6d64]" />}
+                {teamOpen ? <ChevronUp className="h-4 w-4 text-[var(--muted-foreground)]" /> : <ChevronDown className="h-4 w-4 text-[var(--muted-foreground)]" />}
               </button>
               {teamOpen && (
                 <div className="mt-4 space-y-3" data-testid="crew-team-list">
+                  {/* Crew leader's own member link */}
+                  {crewLink?.leader_name && (
+                    <div className="rounded-[22px] border-2 border-[var(--foreground)]/20 bg-[var(--accent,#f6f6f2)] px-4 py-3" data-testid="crew-leader-member-link">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--muted-foreground)] mb-1">Crew Leader</p>
+                      <p className="text-sm font-semibold text-[var(--foreground)]">{crewLink.leader_name}</p>
+                      <p className="text-[10px] text-[var(--muted-foreground)]">{crewLink.division} · Truck: {crewLink.truck_number}</p>
+                    </div>
+                  )}
                   {teamMembers.map((m) => {
                     const trainingPct = m.training_total > 0 ? Math.round((m.training_completed / m.training_total) * 100) : 0;
                     return (
@@ -371,8 +391,9 @@ export default function CrewCapturePage() {
         <Card className="rounded-[32px] border-border/80 bg-white/95 shadow-sm" data-testid="crew-capture-form-card">
           <CardContent className="p-6">
             <Tabs defaultValue="capture" className="space-y-4" data-testid="crew-portal-tabs">
-              <TabsList className="grid h-auto w-full grid-cols-3 rounded-[22px] bg-[#edf0e7] p-1" data-testid="crew-portal-tab-list">
+              <TabsList className="grid h-auto w-full grid-cols-4 rounded-[22px] bg-[var(--accent,#edf0e7)] p-1" data-testid="crew-portal-tab-list">
                 <TabsTrigger value="capture" className="flex items-center justify-center gap-2 rounded-[18px] py-3 text-sm font-semibold" data-testid="crew-capture-tab-trigger"><Camera className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">Capture</span></TabsTrigger>
+                <TabsTrigger value="history" className="flex items-center justify-center gap-2 rounded-[18px] py-3 text-sm font-semibold" data-testid="crew-history-tab-trigger"><ClipboardList className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">History</span></TabsTrigger>
                 <TabsTrigger value="standards" className="flex items-center justify-center gap-2 rounded-[18px] py-3 text-sm font-semibold" data-testid="crew-standards-tab-trigger"><BookOpen className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">Standards</span></TabsTrigger>
                 <TabsTrigger value="equipment" className="flex items-center justify-center gap-2 rounded-[18px] py-3 text-sm font-semibold" data-testid="crew-equipment-tab-trigger"><Wrench className="h-4 w-4 shrink-0" /><span className="hidden sm:inline">Equipment</span></TabsTrigger>
               </TabsList>
@@ -551,6 +572,54 @@ export default function CrewCapturePage() {
                     )}
                   </Button>
                 </form>
+              </TabsContent>
+
+
+              <TabsContent value="history" data-testid="crew-history-tab-panel">
+                <div className="space-y-3">
+                  <div className="rounded-[24px] border border-border bg-[var(--accent,#f6f6f2)] p-4">
+                    <p className="text-sm font-semibold text-[var(--foreground,#243e36)]">Crew submission history</p>
+                    <p className="mt-1 text-xs text-[var(--muted-foreground,#5c6d64)]">Past submissions from this crew. Scores populate after management review.</p>
+                  </div>
+                  {loadingHistory && <p className="text-center text-xs text-[var(--muted-foreground)] py-6 animate-pulse">Loading history...</p>}
+                  {!loadingHistory && crewHistory.length === 0 && (
+                    <div className="rounded-[24px] border border-border bg-[var(--accent,#f6f6f2)] p-8 text-center">
+                      <ClipboardList className="mx-auto h-8 w-8 text-[var(--muted-foreground,#a9b5ac)]" />
+                      <p className="mt-2 text-sm font-medium text-[var(--foreground)]">No submissions yet</p>
+                      <p className="text-xs text-[var(--muted-foreground)]">Capture sets will appear here after submission.</p>
+                    </div>
+                  )}
+                  {crewHistory.map((sub) => (
+                    <div key={sub.id} className="rounded-[20px] border border-border bg-[var(--card,white)] p-4" data-testid={`crew-history-item-${sub.id}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-[var(--foreground,#243e36)] truncate">{sub.job_name_input || sub.job_id}</p>
+                          <p className="text-[10px] text-[var(--muted-foreground,#5c6d64)]">{sub.service_type} · {sub.division} · {sub.work_date}</p>
+                          {sub.note && <p className="mt-1 text-[10px] italic text-[var(--muted-foreground)]">"{sub.note}"</p>}
+                        </div>
+                        <div className="text-right shrink-0">
+                          {sub.management_review_score ? (
+                            <div>
+                              <p className={`text-lg font-black ${sub.management_review_verdict?.toLowerCase().includes("pass") ? "text-emerald-500" : sub.management_review_verdict?.toLowerCase().includes("fail") ? "text-red-500" : "text-[var(--foreground)]"}`}>
+                                {typeof sub.management_review_score === "number" ? sub.management_review_score.toFixed(1) : sub.management_review_score}
+                              </p>
+                              <p className="text-[9px] text-[var(--muted-foreground)]">{sub.management_review_verdict || "Reviewed"}</p>
+                            </div>
+                          ) : (
+                            <span className="inline-block rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-bold text-amber-600">{sub.status}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2 text-[9px] text-[var(--muted-foreground)]">
+                        <span>{sub.photo_count || 0} photos</span>
+                        <span>·</span>
+                        <span>Truck: {sub.truck_number}</span>
+                        {sub.area_tag && <><span>·</span><span>{sub.area_tag}</span></>}
+                        {sub.is_emergency && <span className="ml-1 rounded-full bg-red-500/15 px-1.5 py-0.5 text-[8px] font-bold text-red-500">EMERGENCY</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </TabsContent>
 
               <TabsContent value="standards" data-testid="crew-standards-tab-panel">

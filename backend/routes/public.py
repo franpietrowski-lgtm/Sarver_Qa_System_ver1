@@ -420,3 +420,30 @@ async def submit_public_training_session(code: str, payload: TrainingSessionSubm
             "owner_message": "Great work — keep building standards that crews, clients, and reviewers can trust.",
         }
     }
+
+
+
+@router.get("/public/crew-submissions/{access_code}")
+async def get_crew_submissions(access_code: str, page: int = 1, limit: int = 20):
+    """Return submission history for a crew QR access code."""
+    crew_link = await deps.db.crew_access_links.find_one({"code": access_code}, {"_id": 0})
+    if not crew_link:
+        raise HTTPException(status_code=404, detail="Crew link not found")
+    skip = (max(page, 1) - 1) * limit
+    pipeline = [
+        {"$match": {"access_code": access_code}},
+        {"$sort": {"created_at": -1}},
+        {"$skip": skip},
+        {"$limit": limit},
+        {"$project": {
+            "_id": 0, "id": 1, "submission_code": 1, "job_name_input": 1, "job_id": 1,
+            "service_type": 1, "division": 1, "truck_number": 1, "work_date": 1,
+            "status": 1, "note": 1, "area_tag": 1, "photo_count": 1,
+            "is_emergency": 1, "created_at": 1,
+            "management_review_score": "$management_review.total_score",
+            "management_review_verdict": "$management_review.verdict",
+        }},
+    ]
+    docs = await deps.db.submissions.aggregate(pipeline).to_list(limit)
+    total = await deps.db.submissions.count_documents({"access_code": access_code})
+    return {"submissions": docs, "total": total, "page": page, "crew_label": crew_link.get("label", "")}

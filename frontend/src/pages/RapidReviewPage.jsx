@@ -45,6 +45,8 @@ export default function RapidReviewPage({ user }) {
   const [tooFast, setTooFast] = useState(false);
   const [showRubricRef, setShowRubricRef] = useState(false);
   const [rubricCategories, setRubricCategories] = useState([]);
+  const [gradingEntries, setGradingEntries] = useState([]);
+  const [hardFailConditions, setHardFailConditions] = useState([]);
 
   const surfaceRef = useRef(null);
   const timerRef = useRef(null);
@@ -106,8 +108,11 @@ export default function RapidReviewPage({ user }) {
     const div = sub.division || "";
     if (!svcType) { setRubricCategories([]); return; }
     authGet(`/rubrics/for-task?service_type=${encodeURIComponent(svcType)}&division=${encodeURIComponent(div)}`)
-      .then((data) => setRubricCategories(data.rubric_categories || []))
-      .catch(() => setRubricCategories([]));
+      .then((data) => {
+        setRubricCategories(data.rubric_categories || []);
+        setHardFailConditions(data.hard_fail_conditions || []);
+      })
+      .catch(() => { setRubricCategories([]); setHardFailConditions([]); });
   }, [currentDetail?.submission?.id]);
 
   useEffect(() => {
@@ -424,45 +429,153 @@ export default function RapidReviewPage({ user }) {
         )}
       </div>
 
-      {/* Comment modal for Fail/Exemplary */}
+      {/* Comment + Rubric Grading modal for Fail/Exemplary */}
       {pendingRating ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 px-3 pb-4" data-testid="rapid-review-comment-modal">
           <motion.div
             initial={{ y: 120, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="w-full max-w-lg rounded-[20px] border border-white/10 bg-[#141a15] p-5 shadow-2xl"
+            className="w-full max-w-lg rounded-[20px] border border-white/10 bg-[#141a15] p-5 shadow-2xl max-h-[80vh] overflow-hidden flex flex-col"
           >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/40">Comment required</p>
-            <h2 className="mt-1.5 font-[Outfit] text-lg font-semibold text-white">{RATING_CONFIG[pendingRating].label} &mdash; add context</h2>
-            {/* Dynamic rubric hints */}
+            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/40">
+              {pendingRating === "fail" ? "Failure grading" : "Exemplary grading"}
+            </p>
+            <h2 className="mt-1 font-[Outfit] text-lg font-semibold text-white">{RATING_CONFIG[pendingRating].label} — grade & comment</h2>
+
+            {/* Rubric grading buttons */}
             {rubricCategories.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5" data-testid="rapid-review-rubric-hints">
-                {rubricCategories.flatMap((cat) => {
-                  const indicators = pendingRating === "fail" ? (cat.fail_indicators || []) : (cat.exemplary_indicators || []);
-                  return indicators.map((hint, i) => (
+              <div className="mt-3 space-y-2" data-testid="rapid-review-rubric-grading">
+                <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/30">Tap rubric criteria to add grading</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {rubricCategories.map((cat, ci) => (
                     <button
-                      key={`${cat.name}-${i}`}
+                      key={ci}
                       type="button"
-                      onClick={() => setReviewerComment((prev) => prev ? `${prev}; ${hint}` : hint)}
-                      className={`rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${
+                      onClick={() => {
+                        if (pendingRating === "fail") {
+                          setReviewerComment((prev) => {
+                            const line = `[FAIL] ${cat.name}`;
+                            return prev ? `${prev}\n${line}` : line;
+                          });
+                        } else {
+                          setGradingEntries((prev) => {
+                            if (prev.some((e) => e.key === cat.key)) return prev;
+                            return [...prev, { key: cat.key, name: cat.name, score: 0, maxScore: cat.max_score || 5 }];
+                          });
+                        }
+                      }}
+                      className={`rounded-full px-3 py-1.5 text-[10px] font-semibold transition-colors ${
                         pendingRating === "fail"
-                          ? "bg-red-500/15 text-red-300/80 hover:bg-red-500/25"
-                          : "bg-cyan-500/15 text-cyan-300/80 hover:bg-cyan-500/25"
+                          ? "bg-red-500/15 text-red-300/80 hover:bg-red-500/30"
+                          : "bg-cyan-500/15 text-cyan-300/80 hover:bg-cyan-500/30"
                       }`}
-                      data-testid={`rapid-review-hint-${i}`}
+                      data-testid={`rapid-review-rubric-btn-${ci}`}
                     >
-                      {hint}
+                      {cat.name} {cat.weight > 0 && <span className="opacity-50">({Math.round(cat.weight * 100)}%)</span>}
                     </button>
-                  ));
-                })}
+                  ))}
+                </div>
+
+                {/* Fail indicator quick-add chips */}
+                {pendingRating === "fail" && (
+                  <div className="flex flex-wrap gap-1 mt-1" data-testid="rapid-review-fail-chips">
+                    {rubricCategories.flatMap((cat) =>
+                      (cat.fail_indicators || []).map((fi, i) => (
+                        <button
+                          key={`${cat.key}-fi-${i}`}
+                          type="button"
+                          onClick={() => setReviewerComment((prev) => prev ? `${prev}\n- ${fi}` : `- ${fi}`)}
+                          className="rounded-full bg-red-900/30 px-2 py-0.5 text-[9px] text-red-400/70 hover:bg-red-900/50 transition"
+                          data-testid={`rapid-review-fail-chip-${i}`}
+                        >
+                          {fi}
+                        </button>
+                      ))
+                    )}
+                    {hardFailConditions.length > 0 && hardFailConditions.map((hf, i) => (
+                      <button
+                        key={`hf-${i}`}
+                        type="button"
+                        onClick={() => setReviewerComment((prev) => prev ? `${prev}\n[HARD FAIL] ${hf.replace(/_/g, " ")}` : `[HARD FAIL] ${hf.replace(/_/g, " ")}`)}
+                        className="rounded-full bg-red-700/40 px-2 py-0.5 text-[9px] font-bold text-red-300 hover:bg-red-700/60 transition"
+                      >
+                        {hf.replace(/_/g, " ")}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Exemplary score selectors */}
+                {pendingRating !== "fail" && gradingEntries.length > 0 && (
+                  <div className="mt-2 space-y-1.5" data-testid="rapid-review-score-selectors">
+                    {gradingEntries.map((entry, gi) => (
+                      <div key={entry.key} className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2" data-testid={`rapid-review-score-row-${gi}`}>
+                        <span className="text-[10px] font-semibold text-cyan-300/90 min-w-[80px] truncate">{entry.name}</span>
+                        <div className="flex gap-1 flex-1">
+                          {Array.from({ length: entry.maxScore }, (_, i) => i + 1).map((val) => (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => {
+                                setGradingEntries((prev) => prev.map((e) => e.key === entry.key ? { ...e, score: val } : e));
+                                const line = `[${entry.name}] Score: ${val}/${entry.maxScore}`;
+                                setReviewerComment((prev) => {
+                                  const lines = prev.split("\n").filter((l) => !l.startsWith(`[${entry.name}]`));
+                                  return [...lines, line].filter(Boolean).join("\n");
+                                });
+                              }}
+                              className={`h-7 w-7 rounded-full text-[10px] font-bold transition-all ${
+                                entry.score === val
+                                  ? "bg-cyan-500 text-white scale-110 shadow-md"
+                                  : "bg-white/10 text-white/50 hover:bg-white/20"
+                              }`}
+                            >
+                              {val}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGradingEntries((prev) => prev.filter((e) => e.key !== entry.key));
+                            setReviewerComment((prev) => prev.split("\n").filter((l) => !l.startsWith(`[${entry.name}]`)).join("\n"));
+                          }}
+                          className="rounded-full p-1 text-white/30 hover:bg-white/10 hover:text-white/60"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Exemplary indicator quick-add */}
+                {pendingRating !== "fail" && (
+                  <div className="flex flex-wrap gap-1 mt-1" data-testid="rapid-review-top-chips">
+                    {rubricCategories.flatMap((cat) =>
+                      (cat.exemplary_indicators || []).map((ei, i) => (
+                        <button
+                          key={`${cat.key}-ei-${i}`}
+                          type="button"
+                          onClick={() => setReviewerComment((prev) => prev ? `${prev}\n+ ${ei}` : `+ ${ei}`)}
+                          className="rounded-full bg-cyan-900/30 px-2 py-0.5 text-[9px] text-cyan-400/70 hover:bg-cyan-900/50 transition"
+                        >
+                          {ei}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
             )}
+
+            {/* Scrollable comment box */}
             <Textarea
               value={reviewerComment}
               onChange={(event) => setReviewerComment(event.target.value)}
-              className="mt-3 min-h-[90px] rounded-[14px] border-white/10 bg-black/30 text-sm text-white placeholder:text-white/30"
-              placeholder="What did you observe?"
+              className="mt-3 min-h-[90px] max-h-[200px] overflow-y-auto rounded-[14px] border-white/10 bg-black/30 text-sm text-white placeholder:text-white/30 resize-none"
+              placeholder="Grading entries appear here. Add additional comments..."
               autoFocus
               data-testid="rapid-review-comment-input"
             />
@@ -470,7 +583,7 @@ export default function RapidReviewPage({ user }) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => { setPendingRating(""); setReviewerComment(""); }}
+                onClick={() => { setPendingRating(""); setReviewerComment(""); setGradingEntries([]); }}
                 className="flex-1 rounded-xl border-white/10 bg-transparent text-sm text-white hover:bg-white/10"
                 data-testid="rapid-review-comment-cancel-button"
               >
@@ -479,7 +592,7 @@ export default function RapidReviewPage({ user }) {
               <Button
                 type="button"
                 disabled={!reviewerComment.trim()}
-                onClick={() => submitRating(pendingRating, currentItem?.id, reviewerComment)}
+                onClick={() => { submitRating(pendingRating, currentItem?.id, reviewerComment); setGradingEntries([]); }}
                 className="flex-1 rounded-xl bg-[#2d5a27] text-sm hover:bg-[#22441d] disabled:opacity-40"
                 data-testid="rapid-review-comment-commit-button"
               >
